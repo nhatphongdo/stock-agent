@@ -1,12 +1,12 @@
 # Stock Trading Agent Framework
 
-A modular Python framework for building stock trading agents using Google's Gemini Pro.
+A modular Python framework for building stock trading agents using Google's Gemini Models.
 
 ## Features
-- **Vietnam Market Support**: Integrated with `vnstock3` for real-time VN stock data.
-- **Gemini Pro Integration**: Easy-to-use wrapper for asynchronous content generation.
-- **Agent Architecture**: Base class for defining custom agent logic.
-- **Config Management**: Environment variable handling via `pydantic-settings`.
+- **Vietnam Market Support**: Integrated with the modern `vnstock` library for real-time VN stock data.
+- **Dual Client Support**: Use either the **Gemini CLI** tool or the official **Google AI Studio SDK** (`google-genai`).
+- **Flexible Configuration**: Control model types, model names, and authentication via environment variables.
+- **Simplified Agent Logic**: Lightweight agent architecture without unnecessary abstractions.
 
 ## Setup
 
@@ -16,10 +16,12 @@ A modular Python framework for building stock trading agents using Google's Gemi
    ./setup.sh
    ```
    *This will create a virtual environment, install dependencies, and setup your `.env` file.*
-3. **Configure Authentication**:
-   - The framework uses the **`gemini`** CLI tool installed on your system.
-   - Ensure the `gemini` command is available in your terminal.
-   - You can test it with: `gemini -p "Are you working?"`
+
+3. **Configure Environment Variables**:
+   Edit the `.env` file to set your preferences:
+   - `GEMINI_CLIENT_TYPE`: Choose `studio` (SDK) or `cli` (sub-process). Default is `studio`.
+   - `GEMINI_MODEL_NAME`: Set your preferred model (e.g., `gemini-2.5-pro`, `gemini-2.5-flash`).
+   - `GEMINI_API_KEY`: Required if using `studio` client type.
 
 4. **Activate & Run**:
    ```bash
@@ -28,15 +30,19 @@ A modular Python framework for building stock trading agents using Google's Gemi
    ```
 
 ## Vietnam Market
-The framework uses the `vnstock3` library. You can use any VN stock ticker (e.g., `VNM`, `HPG`, `SSI`, `VCB`).
+The framework uses the `vnstock` library (version 3.x). You can use any VN stock ticker (e.g., `VNM`, `HPG`, `SSI`, `VCB`).
 
 ## Directory Structure
-- `app/agents/`: Define your agents here.
-- `app/tools/`: Add new tools for your agents to use.
-- `app/llm/`: LLM client configurations.
+- `app/agents/`: Define your trading agents here (e.g., `trading_agent.py`).
+- `app/tools/`: Add new tools for your agents to use (e.g., `stock_tools.py`).
+- `app/llm/`: Client implementations for Gemini CLI and Google AI Studio.
 - `config/`: App settings and configuration.
 
+## Customization
+- **TradingAgent**: Update `app/agents/trading_agent.py` to refine the system prompt and agent behavior.
+- **Tools**: Add generic tools in `app/tools/` and register them in the agent's prompt to expand capabilities.
+
 ## Next Steps
-- Implement advanced reasoning logic in `TradingAgent.run`.
-- Add more tools (e.g., technical indicators, news sentiment).
-- Integrate with trading platforms (e.g., Alpaca, Interactive Brokers).
+- Implement advanced technical indicators as tools.
+- Add real-time news sentiment analysis.
+- Integrate with trading platform APIs for automated execution.
