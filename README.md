@@ -1,28 +1,31 @@
-# Stock Trading Agent API
+# Stock Trading Agent (Trade Agent)
 
-A modular FastAPI web framework for building stock trading agents using Google's Gemini Models.
+A professional AI-powered stock analysis system built with FastAPI and Google's Gemini Models. Designed to provide deep insights into the Vietnam stock market with a premium, modern interface.
 
-## Features
-- **FastAPI Web Interface**: RESTful API endpoints for interacting with the agent.
-- **Vietnam Market Support**: Integrated with the modern `vnstock` library for real-time VN stock data.
-- **Dual Client Support**: Use either the **Gemini CLI** tool or the official **Google AI Studio SDK** (`google-genai`).
-- **Flexible Configuration**: Control model types, model names, and authentication via environment variables.
+## 🌟 Features
+- **Modern Premium Interface**: Responsive web UI with glassmorphism, dark mode (default), and resizable analysis panels.
+- **AI Streaming Content**: Real-time response generation using Gemini with a smooth typing effect.
+- **Vietnam Market Support**: Integrated with `vnstock` for real-time data on all VN tickers.
+- **Advanced Markdown Tables**: High-contrast tables with semantic color coding for "BUY", "WATCH", and "CAUTION" signals.
+- **Dual Client Support**: Seamlessly switch between **Gemini CLI** and **Google AI Studio SDK**.
 
-## API Endpoints
-- **POST /stock-analyze**: Nhận yêu cầu phân tích và trả về kết quả qua livestream (StreamingResponse).
-  - Body: `{"task": "nội dung yêu cầu"}`
+## 🚀 API & Web Interface
 
-### Ví dụ API
+- **Web UI**: Access the interactive dashboard at `http://localhost:8000/trade-agent`
+- **Streaming endpoint**: `POST /stock-analyze`
+    - Body: `{"task": "nội dung yêu cầu", "date": "YYYY-MM-DD", "stocks": ["SSI", "VND"]}`
+
+### Example CLI Query
 ```bash
 curl -X POST http://localhost:8000/stock-analyze \
      -H "Content-Type: application/json" \
-     -d '{"task": "Phân tích HPG"}'
+     -d '{"task": "Phân tích nhóm ngành ngân hàng"}'
 ```
 
-## Setup
+## 🛠 Setup
 
-1. **Clone the repository** (if not already done).
-2. **Setup the environment**:
+1. **Clone the repository**.
+2. **Environment Setup**:
    ```bash
    python3 -m venv venv
    source venv/bin/activate
@@ -31,32 +34,26 @@ curl -X POST http://localhost:8000/stock-analyze \
    ```
 
 3. **Configure Environment Variables**:
-   Edit the `.env` file to set your preferences:
-   - `GEMINI_CLIENT_TYPE`: Choose `studio` (SDK) or `cli` (sub-process). Default is `studio`.
-   - `GEMINI_MODEL_NAME`: Set your preferred model (e.g., `gemini-2.5-pro`, `gemini-2.5-flash`).
-   - `GEMINI_API_KEY`: Required if using `studio` client type.
+   Set up your `.env` file:
+   - `GEMINI_CLIENT_TYPE`: `studio` (SDK) or `cli`.
+   - `GEMINI_MODEL_NAME`: e.g., `gemini-2.5-pro`.
+   - `GEMINI_API_KEY`: Required for `studio` mode.
+   - `LOG_LEVEL`: Set processing verbosity.
 
-4. **Run the Server**:
+4. **Launch Application**:
    ```bash
    python -m app.main
    ```
-   Or using uvicorn directly:
-   ```bash
-   uvicorn app.main:app --reload
-   ```
 
-## API Documentation
-Once the server is running, you can access the interactive API docs at:
-- Swagger UI: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-- Redoc: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+## 📂 Project Structure
+- `app/main.py`: FastAPI application server and static file hosting.
+- `app/index.html`: Modern, single-page dashboard with vanilla JS and Tailwind CSS.
+- `app/agents/`: Core AI logic and prompt engineering for trading analysis.
+- `app/tools/`: Integration with financial data sources (vnstock, etc.).
+- `app/llm/`: Flexible LLM client bridge (CLI vs SDK).
 
-## Directory Structure
-- `app/main.py`: FastAPI application setup and routes.
-- `app/agents/`: Define your trading agents here (e.g., `trading_agent.py`).
-- `app/tools/`: Add new tools for your agents to use (e.g., `stock_tools.py`).
-- `app/llm/`: Client implementations for Gemini CLI and Google AI Studio.
-
-## Next Steps
-- Implement frontend UI (React/Next.js).
-- Add user authentication and session management.
-- Implement technical indicators as API tools.
+## 📈 Roadmap
+- [x] Modern Web Interface with Dark Mode
+- [x] Real-time Streaming Responses
+- [ ] Multi-chart technical analysis integration
+- [ ] User portfolio tracking and automated alerts
