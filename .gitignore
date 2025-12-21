@@ -161,3 +161,6 @@ cython_debug/
 
 # Seeding script
 app/db/seed_db.py
+
+# Database
+app/db/stock_agent.db
