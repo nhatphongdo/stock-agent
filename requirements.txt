@@ -4,3 +4,5 @@ vnstock
 requests
 pandas
 google-genai
+fastapi
+uvicorn

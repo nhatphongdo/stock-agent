@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class GoogleAIStudioClient:
-    def __init__(self, model_name: str = "gemini-2.5-pro"):
+    def __init__(self, model_name: str = "gemini-2.5-flash"):
         """
         Initializes the Gemini client using the modern Google Gen AI SDK.
         """
@@ -20,13 +20,16 @@ class GoogleAIStudioClient:
 
     async def generate_content(self, prompt: str):
         """
-        Generates content using the modern google-genai SDK.
+        Generates content using the modern google-genai SDK with streaming.
         """
         try:
-            response = self.client.models.generate_content(
+            # Use streaming API
+            response_stream = self.client.models.generate_content_stream(
                 model=self.model_name,
                 contents=prompt
             )
-            return response.text
+            for chunk in response_stream:
+                if chunk.text:
+                    yield chunk.text
         except Exception as e:
-            return f"❌ Error calling Google AI Studio SDK (Modern): {str(e)}"
+            yield f"❌ Error calling Google AI Studio SDK (Modern): {str(e)}"

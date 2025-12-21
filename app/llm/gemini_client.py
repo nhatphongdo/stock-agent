@@ -13,7 +13,7 @@ def get_gemini_client(model_name: str = None):
     client_type = os.getenv("GEMINI_CLIENT_TYPE", "studio").lower()
 
     if model_name is None:
-        model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-2.5-pro")
+        model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-2.5-flash")
 
     if client_type == "cli":
         return GeminiCLIClient(model_name=model_name)

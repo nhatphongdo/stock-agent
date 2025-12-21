@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trade Agent - Professional Stock Assistant</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Marked.js for Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f5f7ff',
+                            100: '#ebf0fe',
+                            200: '#dce4fd',
+                            300: '#c5d0fb',
+                            400: '#a3b3f8',
+                            500: '#7e8ef3',
+                            600: '#5c64eb',
+                            700: '#4c4dd8',
+                            800: '#3f3fb1',
+                            900: '#37388d',
+                            950: '#212152',
+                        },
+                        accent: {
+                            cyan: '#06b6d4',
+                            emerald: '#10b981',
+                            amber: '#f59e0b',
+                            rose: '#f43f5e',
+                            violet: '#8b5cf6',
+                        }
+                    },
+                    backgroundImage: {
+                        'premium-gradient': 'linear-gradient(135deg, #5c64eb 0%, #8b5cf6 100%)',
+                        'dark-premium-gradient': 'linear-gradient(135deg, #37388d 0%, #5c64eb 100%)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f8fafc;
+        }
+        .dark body { background-color: #020617; }
+
+        .bubble-bot {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 15px rgba(31, 38, 135, 0.05);
+        }
+        .dark .bubble-bot {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .bubble-user {
+            background: linear-gradient(135deg, #5c64eb 0%, #8b5cf6 100%);
+            color: white;
+            box-shadow: 0 8px 25px -5px rgba(99, 102, 241, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .dark .bubble-user {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            box-shadow: 0 8px 30px -5px rgba(0, 0, 0, 0.3);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+        .markdown-content h1 { font-size: 1.85rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1.25rem; color: #1e1b4b; letter-spacing: -0.02em; }
+        .markdown-content h2 { font-size: 1.5rem; font-weight: 600; margin-top: 1.75rem; margin-bottom: 1rem; color: #312e81; letter-spacing: -0.01em; }
+        .dark .markdown-content h1 { color: #e0e7ff; }
+        .dark .markdown-content h2 { color: #c7d2fe; }
+
+        .markdown-content p { margin-bottom: 1.25rem; line-height: 1.8; color: #334155; font-size: 1rem; }
+        .dark .markdown-content p { color: #f1f5f9; }
+
+        .markdown-content ul { list-style-type: none; padding-left: 0; margin-bottom: 1.5rem; }
+        .markdown-content li {
+            margin-bottom: 0.75rem;
+            padding-left: 1.75rem;
+            position: relative;
+            color: #475569;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+        .dark .markdown-content li { color: #e2e8f0; }
+        .markdown-content li::before {
+            content: "•";
+            position: absolute;
+            left: 0.25rem;
+            color: #6366f1;
+            font-weight: bold;
+        }
+
+        .markdown-content a {
+            color: #6366f1;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+        .markdown-content a:hover { opacity: 0.8; }
+        .dark .markdown-content a { color: #a5b4fc; }
+
+        /* Table Styling */
+        .markdown-content table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 2rem 0;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            font-variant-numeric: tabular-nums;
+        }
+        .dark .markdown-content table { border-color: #1e293b; background: rgba(15, 23, 42, 0.4); }
+
+        .markdown-content th {
+            background: #f8fafc;
+            font-weight: 700;
+            text-align: left;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+        }
+        .dark .markdown-content th {
+            background: #1e293b;
+            border-bottom-color: #334155;
+            color: #f1f5f9;
+        }
+
+        .markdown-content td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #1e293b;
+            font-size: 0.925rem;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+        .dark .markdown-content td {
+            border-bottom-color: #0f172a;
+            color: #e2e8f0;
+        }
+
+        .markdown-content tr:last-child td { border-bottom: none; }
+        .markdown-content tr:nth-child(even) { background-color: rgba(248, 250, 252, 0.5); }
+        .dark .markdown-content tr:nth-child(even) { background-color: rgba(15, 23, 42, 0.2); }
+        .markdown-content tr:hover { background-color: #f1f5f9; }
+        .dark .markdown-content tr:hover { background-color: #1e293b; }
+
+        /* Code Styling */
+        .markdown-content code {
+            background-color: #f1f5f9;
+            padding: 0.2rem 0.5rem;
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: #6366f1;
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            border: 1px solid #e2e8f0;
+        }
+        .dark .markdown-content code {
+            background-color: #1e293b;
+            color: #a5b4fc;
+            border-color: #334155;
+        }
+        .markdown-content pre {
+            background-color: #0f172a;
+            padding: 1.25rem;
+            border-radius: 16px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border: 1px solid #1e293b;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .markdown-content pre code {
+            background-color: transparent;
+            border: none;
+            padding: 0;
+            color: #e2e8f0;
+            font-size: 0.875rem;
+        }
+
+        .markdown-content blockquote {
+            border-left: 5px solid #6366f1;
+            padding: 0.75rem 1.25rem;
+            font-style: italic;
+            margin: 2rem 0;
+            color: #312e81;
+            background: linear-gradient(to right, #eef2ff, transparent);
+            border-radius: 4px 16px 16px 4px;
+        }
+        .dark .markdown-content blockquote {
+            color: #c7d2fe;
+            background: linear-gradient(to right, rgba(99, 102, 241, 0.1), transparent);
+        }
+
+        /* User Bubble Markdown Fix */
+        .user-markdown { color: white !important; }
+        .user-markdown p { color: white !important; margin-bottom: 0; }
+        .user-markdown * { color: white !important; }
+
+        /* Thinking Section Styling */
+        details.thinking-section {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin: 1rem 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .dark details.thinking-section {
+            background-color: rgba(30, 41, 59, 0.3);
+            border-color: rgba(99, 102, 241, 0.2);
+        }
+        details.thinking-section[open] {
+            border-color: #6366f1;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+        }
+        summary.thinking-header {
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #6366f1;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            user-select: none;
+            background: rgba(99, 102, 241, 0.05);
+        }
+        summary.thinking-header::-webkit-details-marker { display: none; }
+        summary.thinking-header::before {
+            content: '→';
+            display: inline-block;
+            transition: transform 0.2s ease;
+            font-size: 1rem;
+        }
+        details.thinking-section[open] summary.thinking-header::before {
+            transform: rotate(90deg);
+        }
+        .thinking-content {
+            padding: 1rem;
+            font-size: 0.9rem;
+            color: #64748b;
+            line-height: 1.6;
+            font-style: italic;
+            border-top: 1px solid rgba(99, 102, 241, 0.1);
+        }
+        .dark .thinking-content {
+            color: #94a3b8;
+        }
+
+        /* Skeleton Loading */
+        .skeleton {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.8s infinite ease-in-out;
+            border-radius: 6px;
+        }
+        .dark .skeleton {
+            background: linear-gradient(90deg, #0f172a 25%, #1e293b 50%, #0f172a 75%);
+            background-size: 200% 100%;
+        }
+        @keyframes skeleton-loading {
+            0% { background-position: 150% 0; }
+            100% { background-position: -150% 0; }
+        }
+
+        .skeleton-bar {
+            height: 0.85rem;
+            margin-bottom: 0.85rem;
+        }
+        .skeleton-bar:last-child { margin-bottom: 0; }
+
+        /* Resizer Styles */
+        #resizer {
+            width: 4px;
+            cursor: col-resize;
+            background-color: transparent;
+            transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 50;
+        }
+        #resizer:hover, #resizer.resizing {
+            background-color: #6366f1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 h-screen overflow-hidden flex flex-col">
+
+    <!-- Header -->
+    <header class="border-b border-slate-200/60 dark:border-white/5 bg-white/70 dark:bg-slate-950/70 backdrop-blur-xl px-8 py-4 flex items-center justify-between z-[60] sticky top-0">
+        <div class="flex items-center gap-3">
+            <div class="bg-premium-gradient p-2 rounded-xl shadow-lg shadow-primary-500/30 ring-2 ring-white/20">
+                <i data-lucide="trending-up" class="w-6 h-6 text-white"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-black bg-clip-text text-transparent bg-premium-gradient tracking-tight">Trade Agent</h1>
+                <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400 dark:text-slate-500 leading-none mt-1">AI-Powered Intelligence</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <button id="theme-toggle" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-200 dark:border-slate-800">
+                <i data-lucide="moon" id="theme-icon-dark" class="w-5 h-5 hidden"></i>
+                <i data-lucide="sun" id="theme-icon-light" class="w-5 h-5"></i>
+            </button>
+            <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 overflow-hidden flex items-center justify-center">
+                <i data-lucide="user" class="w-6 h-6 text-slate-500"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex overflow-hidden relative" id="main-container">
+        <!-- Left Column (initially 50%) -->
+        <div id="left-column" class="w-[50%] min-w-[300px] max-w-[70vw] flex flex-col border-r border-slate-200 dark:border-slate-800 overflow-hidden">
+            <!-- Top Segment (Input Area) -->
+            <div class="p-8 border-b border-slate-200/60 dark:border-white/5 bg-white/50 dark:bg-slate-900/30 backdrop-blur-sm">
+                <label for="user-task" class="block text-[11px] font-black text-primary-600 dark:text-primary-400 mb-3 uppercase tracking-[0.2em] px-1">Yêu cầu phân tích</label>
+                <div class="relative group mb-5">
+                    <textarea
+                        id="user-task"
+                        class="w-full h-36 p-5 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all resize-none custom-scrollbar text-sm font-medium placeholder-slate-400 dark:placeholder-slate-600 shadow-inner"
+                        placeholder="Ví dụ: Phân tích cổ phiếu VNM và đưa ra gợi ý chiến lược ngắn hạn..."
+                    ></textarea>
+                    <button
+                        id="submit-btn"
+                        class="absolute bottom-4 right-4 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-400 text-white p-3 rounded-xl shadow-xl shadow-primary-500/20 transition-all transform active:scale-90 disabled:opacity-50 disabled:cursor-not-allowed z-10"
+                        title="Gửi yêu cầu"
+                    >
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <button
+                    id="general-btn"
+                    class="w-full flex items-center justify-center gap-3 py-3.5 px-6 rounded-2xl font-bold transition-all border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
+                >
+                    <div class="absolute inset-0 bg-premium-gradient opacity-0 group-hover:opacity-[0.03] transition-opacity"></div>
+                    <i data-lucide="sparkles" class="w-5 h-5 text-accent-cyan"></i>
+                    <span class="tracking-tight">Phân tích tổng quan thị trường</span>
+                </button>
+            </div>
+
+            <!-- Bottom Segment (Conversation Display) -->
+            <div class="flex-1 overflow-y-auto p-8 custom-scrollbar bg-slate-50/30 dark:bg-slate-900/10" id="chat-container">
+                <div id="messages" class="space-y-8">
+                    <!-- Default Welcome Message -->
+                    <div class="flex gap-4 group">
+                        <div class="w-10 h-10 rounded-2xl bg-primary-600 shadow-lg shadow-primary-500/20 flex items-center justify-center flex-shrink-0 mt-1 ring-4 ring-primary-500/10">
+                            <i data-lucide="bot" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <div class="flex-1 bubble-bot p-5 rounded-3xl rounded-tl-none markdown-content">
+                            <p class="text-[15px] font-medium leading-relaxed">Xin chào! Tôi là <b>Stock Trading Assistant</b>. Hãy nhập yêu cầu phân tích để tôi có thể hỗ trợ bạn tìm kiếm cơ hội đầu tư tốt nhất.</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Loading Indicator -->
+                <div id="loading" class="hidden mt-6">
+                    <div class="flex gap-4 animate-pulse">
+                        <div class="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800"></div>
+                        <div class="flex-1 space-y-3">
+                            <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded-full w-3/4"></div>
+                            <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-1/2"></div>
+                            <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-5/6"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vertical Resizer -->
+        <div id="resizer" class="h-full"></div>
+
+        <!-- Right Column (initially 50%) -->
+        <div id="right-column" class="flex-1 bg-white dark:bg-[#020617] p-12 flex flex-col items-center justify-center relative overflow-hidden">
+            <!-- Background Decoration -->
+            <div class="absolute inset-0 opacity-[0.05] pointer-events-none dark:opacity-[0.02]">
+                <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="0.5"/>
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid)" />
+                </svg>
+            </div>
+
+            <!-- Floating Shapes -->
+            <div class="absolute top-[-10%] right-[-10%] w-64 h-64 bg-primary-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-accent-cyan/10 rounded-full blur-3xl"></div>
+
+            <div class="max-w-md text-center z-10">
+                <div class="w-24 h-24 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-primary-500/10 flex items-center justify-center mx-auto mb-8 border border-slate-100 dark:border-white/5 transform rotate-12">
+                    <i data-lucide="pie-chart" class="w-12 h-12 text-primary-500 transform -rotate-12"></i>
+                </div>
+                <h2 class="text-3xl font-black text-slate-800 dark:text-slate-100 mb-4 tracking-tight">Trung tâm Phân tích</h2>
+                <p class="text-slate-500 dark:text-slate-400 font-medium leading-relaxed italic opacity-80">
+                    Dữ liệu thị trường thời gian thực, biểu đồ kỹ thuật nâng cao và tin tức kinh tế vĩ mô sẽ được hiển thị tại đây.
+                </p>
+                <div class="mt-10 flex gap-2 justify-center">
+                    <div class="w-2 h-2 rounded-full bg-primary-500/20"></div>
+                    <div class="w-2 h-2 rounded-full bg-primary-500/40"></div>
+                    <div class="w-2 h-2 rounded-full bg-primary-500/20"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Resizer Logic
+        const resizer = document.getElementById('resizer');
+        const leftColumn = document.getElementById('left-column');
+        const mainContainer = document.getElementById('main-container');
+
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            resizer.classList.add('resizing');
+            document.body.style.cursor = 'col-resize';
+            // Disable text selection and pointer events in iframe/content during resize
+            document.body.classList.add('select-none');
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+
+            const containerWidth = mainContainer.offsetWidth;
+            let newLeftWidth = (e.clientX / containerWidth) * 100;
+
+            // Constraints
+            if (newLeftWidth < 20) newLeftWidth = 20;
+            if (newLeftWidth > 80) newLeftWidth = 80;
+
+            leftColumn.style.width = `${newLeftWidth}%`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            isResizing = false;
+            resizer.classList.remove('resizing');
+            document.body.style.cursor = 'default';
+            document.body.classList.remove('select-none');
+        });
+
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIconDark = document.getElementById('theme-icon-dark');
+        const themeIconLight = document.getElementById('theme-icon-light');
+        const html = document.documentElement;
+
+        // Theme Management
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                html.classList.add('dark');
+                themeIconDark.classList.remove('hidden');
+                themeIconLight.classList.add('hidden');
+            } else {
+                html.classList.remove('dark');
+                themeIconDark.classList.add('hidden');
+                themeIconLight.classList.remove('hidden');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // Check for saved theme or system preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            setTheme(savedTheme);
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            setTheme('dark');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            setTheme(html.classList.contains('dark') ? 'light' : 'dark');
+        });
+
+        // Chat Management
+        const submitBtn = document.getElementById('submit-btn');
+        const generalBtn = document.getElementById('general-btn');
+        const userTaskInput = document.getElementById('user-task');
+        const messagesContainer = document.getElementById('messages');
+        const loadingIndicator = document.getElementById('loading');
+        const chatContainer = document.getElementById('chat-container');
+
+        async function analyzeTask(isGeneral = false) {
+            let task = null;
+
+            // Clear old conversation
+            messagesContainer.innerHTML = '';
+
+            if (!isGeneral) {
+                task = userTaskInput.value.trim();
+                if (!task) return;
+                addMessage('user', task);
+                userTaskInput.value = '';
+            } else {
+                addMessage('user', '✨ Phân tích tổng quan thị trường');
+            }
+
+            // Show loading
+            submitBtn.disabled = true;
+            generalBtn.disabled = true;
+            loadingIndicator.classList.remove('hidden');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Prepare bot message bubble for streaming
+            const botMessageId = 'bot-msg-' + Date.now();
+            const messageDiv = addInitialBotMessage(botMessageId);
+            const contentDiv = messageDiv.querySelector('.markdown-content');
+            let fullContent = '';
+
+            try {
+                const response = await fetch('/stock-analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ task: task })
+                });
+
+                if (!response.ok) throw new Error('Network response was not ok');
+
+                // Hide loading indicator as soon as stream starts
+                loadingIndicator.classList.add('hidden');
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                        fullContent += chunk;
+
+                        // Process thinking sections and render markdown
+                        contentDiv.innerHTML = processContent(fullContent);
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }
+                } catch (error) {
+                console.error('Error:', error);
+                if (contentDiv) {
+                    contentDiv.innerHTML = '❌ Đã xảy ra lỗi khi kết nối với máy chủ: ' + error.message;
+                }
+            } finally {
+                submitBtn.disabled = false;
+                generalBtn.disabled = false;
+                loadingIndicator.classList.add('hidden');
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }
+
+        function addInitialBotMessage(id) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex gap-4 group';
+            messageDiv.id = id;
+
+            messageDiv.innerHTML = `
+                <div class="w-10 h-10 rounded-2xl bg-primary-600 shadow-lg shadow-primary-500/20 flex items-center justify-center flex-shrink-0 mt-1 ring-4 ring-primary-500/10">
+                    <i data-lucide="bot" class="w-6 h-6 text-white"></i>
+                </div>
+                <div class="flex-1 bubble-bot p-5 rounded-3xl rounded-tl-none overflow-x-auto">
+                    <div class="markdown-content text-[15px] prose dark:prose-invert max-w-none">
+                        <div class="skeleton-bars">
+                            <div class="skeleton skeleton-bar w-3/4"></div>
+                            <div class="skeleton skeleton-bar w-full"></div>
+                            <div class="skeleton skeleton-bar w-5/6"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            messagesContainer.appendChild(messageDiv);
+            lucide.createIcons({ root: messageDiv });
+            return messageDiv;
+        }
+
+        function addMessage(sender, content) {
+            if (sender === 'bot') {
+                const id = 'bot-msg-' + Date.now();
+                const div = addInitialBotMessage(id);
+                div.querySelector('.markdown-content').innerHTML = processContent(content);
+                return;
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex gap-4 justify-end group user-bubble-container';
+
+            messageDiv.innerHTML = `
+                <div class="flex-1 bubble-user p-5 rounded-3xl rounded-tr-none max-w-[85%]">
+                    <div class="markdown-content user-markdown text-[15px] font-medium leading-relaxed">
+                        ${marked.parse(content)}
+                    </div>
+                </div>
+                <div class="w-10 h-10 rounded-2xl bg-white dark:bg-slate-800 shadow-xl flex items-center justify-center flex-shrink-0 mt-1 border border-slate-100 dark:border-white/10">
+                    <i data-lucide="user" class="w-6 h-6 text-primary-500"></i>
+                </div>
+            `;
+
+            messagesContainer.appendChild(messageDiv);
+            lucide.createIcons({ root: messageDiv });
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function processContent(text) {
+            // Handle unclosed thought tags during streaming
+            let processedText = text;
+            if (processedText.includes('<thought>') && !processedText.includes('</thought>')) {
+                processedText += '</thought>';
+            }
+
+            // Replace thought tags with collapsible details
+            processedText = processedText.replace(/<thought>([\s\S]*?)<\/thought>/g, (match, content) => {
+                return `
+<details class="thinking-section">
+    <summary class="thinking-header">Xem quá trình suy luận</summary>
+    <div class="thinking-content">
+        ${marked.parse(content.trim())}
+    </div>
+</details>`;
+            });
+
+            return marked.parse(processedText);
+        }
+
+        submitBtn.addEventListener('click', () => analyzeTask(false));
+        generalBtn.addEventListener('click', () => analyzeTask(true));
+        userTaskInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                analyzeTask(false);
+            }
+        });
+    </script>
+</body>
+</html>
