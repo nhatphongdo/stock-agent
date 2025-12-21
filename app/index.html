@@ -46,35 +46,39 @@
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         body {
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: #f8fafc;
         }
         .dark body { background-color: #020617; }
 
         .bubble-bot {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 4px 15px rgba(31, 38, 135, 0.05);
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+            border-radius: 20px;
         }
         .dark .bubble-bot {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+            background: rgba(15, 23, 42, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.3);
         }
 
         .bubble-user {
-            background: linear-gradient(135deg, #5c64eb 0%, #8b5cf6 100%);
+            background: linear-gradient(135deg, rgba(92, 100, 235, 0.8) 0%, rgba(139, 92, 246, 0.8) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             color: white;
-            box-shadow: 0 8px 25px -5px rgba(99, 102, 241, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 25px -5px rgba(99, 102, 241, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
         }
         .dark .bubble-user {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            box-shadow: 0 8px 30px -5px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.8) 0%, rgba(124, 58, 237, 0.8) 100%);
+            box-shadow: 0 8px 30px -5px rgba(0, 0, 0, 0.2);
         }
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
@@ -278,6 +282,212 @@
             color: #94a3b8;
         }
 
+        /* User Avatar & Menu */
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-500, #6366f1);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+            border: 2px solid white;
+        }
+        .dark .user-avatar {
+            border-color: #1e293b;
+        }
+        .user-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
+        }
+        .user-menu {
+            position: absolute;
+            top: 70px;
+            right: 2rem;
+            width: 240px;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 0.75rem;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .dark .user-menu {
+            background: rgba(15, 23, 42, 0.2);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+        .user-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .menu-item {
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #1e293b;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .dark .menu-item { color: #cbd5e1; }
+        .menu-item:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
+        }
+        .menu-divider {
+            height: 1px;
+            background: rgba(0, 0, 0, 0.05);
+            margin: 0.5rem 0;
+        }
+        .dark .menu-divider { background: rgba(255, 255, 255, 0.05); }
+        .user-switch-item {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 800;
+        }
+
+        /* Modal Styling */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .settings-modal {
+            width: 500px;
+            max-width: 90vw;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 36px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+            padding: 2.5rem;
+            transform: scale(0.9);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .dark .settings-modal {
+            background: rgba(15, 23, 42, 0.25);
+            border-color: rgba(255, 255, 255, 0.18);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
+        }
+        .modal-overlay.show .settings-modal {
+            transform: scale(1);
+        }
+
+        /* Blacklist Tag Styling */
+        .blacklist-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+        .blacklist-tag {
+            padding: 0.5rem 0.75rem;
+            background: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            transition: all 0.2s ease;
+        }
+        .blacklist-tag:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+        .remove-tag {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            background: rgba(99, 102, 241, 0.2);
+            transition: all 0.2s ease;
+        }
+        .remove-tag:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* Portfolio Modal Styling */
+        .portfolio-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .portfolio-table th, .portfolio-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 2px solid rgba(0,0,0,0.1);
+        }
+        .dark .portfolio-table th, .dark .portfolio-table td {
+            border-bottom: 2px solid rgba(255,255,255,0.15);
+        }
+        .portfolio-table th {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: #0f172a;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+        }
+        .dark .portfolio-table th {
+            color: #f8fafc;
+        }
+        .portfolio-table tr:hover {
+            background: rgba(0,0,0,0.02);
+        }
+        .dark .portfolio-table tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        /* Hide number input spin buttons */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+            padding-right: 2.5rem !important; /* Make sure there's space for the % symbol */
+        }
+
         /* Skeleton Loading */
         .skeleton {
             background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
@@ -313,11 +523,18 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 h-screen overflow-hidden flex flex-col">
+<body class="bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-slate-100 transition-colors duration-300 h-screen overflow-hidden flex flex-col relative">
+
+    <!-- Background Blobs -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-primary-500/10 dark:bg-primary-500/5 rounded-full blur-[120px] animate-pulse"></div>
+        <div class="absolute top-[20%] -right-[5%] w-[35%] h-[35%] bg-accent-violet/10 dark:bg-accent-violet/5 rounded-full blur-[120px] animate-pulse" style="animation-delay: 2s;"></div>
+        <div class="absolute -bottom-[10%] left-[20%] w-[50%] h-[50%] bg-accent-cyan/10 dark:bg-accent-cyan/5 rounded-full blur-[120px] animate-pulse" style="animation-delay: 4s;"></div>
+    </div>
 
     <!-- Header -->
-    <header class="border-b border-slate-200/60 dark:border-white/5 bg-white/70 dark:bg-slate-950/70 backdrop-blur-xl px-8 py-4 flex items-center justify-between z-[60] sticky top-0">
-        <div class="flex items-center gap-3">
+    <header class="border-b border-white/40 dark:border-white/5 bg-white/40 dark:bg-slate-950/40 backdrop-blur-2xl px-8 py-4 flex items-center justify-between z-[60] sticky top-0">
+        <div class="flex items-center gap-3 relative">
             <div class="bg-premium-gradient p-2 rounded-xl shadow-lg shadow-primary-500/30 ring-2 ring-white/20">
                 <i data-lucide="trending-up" class="w-6 h-6 text-white"></i>
             </div>
@@ -326,28 +543,161 @@
                 <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400 dark:text-slate-500 leading-none mt-1">AI-Powered Intelligence</p>
             </div>
         </div>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-4 relative">
             <button id="theme-toggle" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-200 dark:border-slate-800">
                 <i data-lucide="moon" id="theme-icon-dark" class="w-5 h-5 hidden"></i>
                 <i data-lucide="sun" id="theme-icon-light" class="w-5 h-5"></i>
             </button>
-            <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 overflow-hidden flex items-center justify-center">
-                <i data-lucide="user" class="w-6 h-6 text-slate-500"></i>
+            <div id="user-avatar-btn" class="user-avatar">
+                ??
+            </div>
+
+            <!-- User Menu Popup -->
+            <div id="user-menu" class="user-menu">
+                <div class="p-3 mb-2 flex items-center gap-3">
+                    <div id="menu-avatar" class="w-10 h-10 rounded-full bg-primary-500 text-white flex items-center justify-center font-bold">??</div>
+                    <div>
+                        <div id="menu-user-name" class="font-bold text-slate-900 dark:text-white leading-tight">User Name</div>
+                        <div id="menu-user-email" class="text-xs text-slate-600 dark:text-slate-400 font-medium">email@example.com</div>
+                    </div>
+                </div>
+                <div class="menu-divider"></div>
+                <div class="menu-item" onclick="openSettings()">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                    <span>Thiết lập</span>
+                </div>
+                <div class="menu-item" onclick="openPortfolio()">
+                    <i data-lucide="layout-list" class="w-4 h-4"></i>
+                    <span>Danh mục cổ phiếu</span>
+                </div>
+                <div class="menu-divider"></div>
+                <div class="user-switch-item">Đổi người dùng</div>
+                <div id="user-list-container">
+                    <!-- Dynamic user list -->
+                </div>
             </div>
         </div>
     </header>
 
+    <!-- Settings Modal -->
+    <div id="settings-overlay" class="modal-overlay">
+        <div class="settings-modal">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-2xl font-black bg-clip-text text-transparent bg-premium-gradient tracking-tight">Thiết lập cá nhân</h2>
+                    <p class="text-xs text-slate-600 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">Cấu hình tham số phân tích</p>
+                </div>
+                <button onclick="closeSettings()" class="w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                <!-- Blacklist -->
+                <div>
+                    <label class="block text-[11px] font-black text-primary-600 dark:text-primary-400 mb-3 uppercase tracking-[0.2em] px-1">Danh sách đen (Blacklist)</label>
+                    <div class="relative">
+                        <input
+                            type="text"
+                            id="blacklist-input"
+                            class="w-full p-4 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all text-sm"
+                            placeholder="Nhập tên ngành hoặc cổ phiếu rồi ấn Enter"
+                        >
+                        <i data-lucide="plus" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                    </div>
+                    <div id="blacklist-tags-container" class="blacklist-tags">
+                        <!-- Tags will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Dividend Rate -->
+                <div>
+                    <label class="block text-[11px] font-black text-primary-600 dark:text-primary-400 mb-3 uppercase tracking-[0.2em] px-1">Tỷ lệ cổ tức tối thiểu (%)</label>
+                    <div class="relative">
+                        <input
+                            type="number"
+                            id="dividend-rate-input"
+                            step="0.1"
+                            class="w-full p-4 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all text-sm font-bold"
+                            placeholder="Ví dụ: 6.0"
+                        >
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-10">
+                <button onclick="closeSettings()" class="flex-1 py-4 px-6 rounded-2xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">Hủy</button>
+                <button onclick="saveSettings()" id="save-settings-btn" class="flex-1 py-4 px-6 rounded-2xl font-bold bg-premium-gradient text-white shadow-lg shadow-primary-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Portfolio Modal -->
+    <div id="portfolio-overlay" class="modal-overlay">
+        <div class="settings-modal" style="max-width: 600px;">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-2xl font-black bg-clip-text text-transparent bg-premium-gradient tracking-tight">Danh mục cổ phiếu</h2>
+                    <p class="text-[11px] text-slate-700 dark:text-slate-300 font-bold uppercase tracking-[0.15em] mt-1.5 opacity-90">Quản lý mã cổ phiếu đang nắm giữ</p>
+                </div>
+                <button onclick="closePortfolio()" class="w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Add Stock Form -->
+            <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 mb-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Mã cổ phiếu</label>
+                        <input type="text" id="new-stock-symbol" placeholder="VD: VNM" class="w-full bg-white dark:bg-[#020617] border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Giá vốn (VND)</label>
+                        <input type="number" id="new-stock-price" placeholder="VD: 70000" class="w-full bg-white dark:bg-[#020617] border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 outline-none transition-all">
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <button onclick="addPortfolioStock()" id="add-stock-btn" class="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-bold py-2.5 rounded-xl transition-all shadow-lg shadow-primary-500/25 flex items-center justify-center gap-2">
+                        <i data-lucide="plus" id="add-stock-icon" class="w-4 h-4"></i>
+                        <span id="add-stock-text">Thêm vào danh mục</span>
+                    </button>
+                    <button onclick="cancelEditStock()" id="cancel-edit-btn" class="hidden px-4 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold py-2.5 rounded-xl transition-all">
+                        Hủy
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stocks Table -->
+            <div class="max-h-[300px] overflow-y-auto">
+                <table class="portfolio-table">
+                    <thead>
+                        <tr>
+                            <th class="font-bold">Mã CK</th>
+                            <th class="font-bold">Giá vốn</th>
+                            <th class="w-10 font-bold"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="portfolio-list">
+                        <!-- Dynamic stocks -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Content -->
-    <main class="flex-1 flex overflow-hidden relative" id="main-container">
+    <main class="flex-1 flex overflow-hidden relative z-10" id="main-container">
         <!-- Left Column (initially 50%) -->
-        <div id="left-column" class="w-[50%] min-w-[300px] max-w-[70vw] flex flex-col border-r border-slate-200 dark:border-slate-800 overflow-hidden">
+        <aside id="left-column" class="flex flex-col border-r border-white/20 dark:border-white/5 bg-white/20 dark:bg-slate-950/20 backdrop-blur-xl relative" style="width: 50%;">
             <!-- Top Segment (Input Area) -->
-            <div class="p-8 border-b border-slate-200/60 dark:border-white/5 bg-white/50 dark:bg-slate-900/30 backdrop-blur-sm">
+            <div class="p-8 border-b border-white/20 dark:border-white/10 bg-white/30 dark:bg-slate-950/30 backdrop-blur-2xl">
                 <label for="user-task" class="block text-[11px] font-black text-primary-600 dark:text-primary-400 mb-3 uppercase tracking-[0.2em] px-1">Yêu cầu phân tích</label>
                 <div class="relative group mb-5">
                     <textarea
                         id="user-task"
-                        class="w-full h-36 p-5 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all resize-none custom-scrollbar text-sm font-medium placeholder-slate-400 dark:placeholder-slate-600 shadow-inner"
+                        class="w-full h-36 p-5 rounded-2xl border border-slate-300 dark:border-white/10 bg-white/40 dark:bg-slate-950/40 backdrop-blur-md focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all resize-none custom-scrollbar text-sm font-medium placeholder-slate-400 dark:placeholder-slate-600 shadow-inner"
                         placeholder="Ví dụ: Phân tích cổ phiếu VNM và đưa ra gợi ý chiến lược ngắn hạn..."
                     ></textarea>
                     <button
@@ -360,24 +710,30 @@
                 </div>
                 <button
                     id="general-btn"
-                    class="w-full flex items-center justify-center gap-3 py-3.5 px-6 rounded-2xl font-bold transition-all border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
+                    class="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-2xl font-black transition-all border border-primary-500/30 dark:border-primary-400/20 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl hover:bg-white/60 dark:hover:bg-slate-800/60 text-primary-700 dark:text-white shadow-lg shadow-primary-500/10 dark:shadow-primary-500/5 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden group/btn"
                 >
-                    <div class="absolute inset-0 bg-premium-gradient opacity-0 group-hover:opacity-[0.03] transition-opacity"></div>
-                    <i data-lucide="sparkles" class="w-5 h-5 text-accent-cyan"></i>
-                    <span class="tracking-tight">Phân tích tổng quan thị trường</span>
+                    <!-- Background shimmer & gradient overlay -->
+                    <div class="absolute inset-0 bg-premium-gradient opacity-[0.1] dark:opacity-[0.2] group-hover:opacity-[0.3] transition-opacity"></div>
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+
+                    <i data-lucide="sparkles" class="w-5 h-5 text-accent-cyan animate-pulse group-hover/btn:scale-110 transition-transform"></i>
+                    <span class="tracking-tight relative z-10">Phân tích tổng quan thị trường</span>
+
+                    <!-- Accent line -->
+                    <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-primary-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </button>
             </div>
 
             <!-- Bottom Segment (Conversation Display) -->
-            <div class="flex-1 overflow-y-auto p-8 custom-scrollbar bg-slate-50/30 dark:bg-slate-900/10" id="chat-container">
+            <div id="chat-container" class="flex-1 overflow-y-auto p-8 custom-scrollbar bg-transparent">
                 <div id="messages" class="space-y-8">
                     <!-- Default Welcome Message -->
                     <div class="flex gap-4 group">
                         <div class="w-10 h-10 rounded-2xl bg-primary-600 shadow-lg shadow-primary-500/20 flex items-center justify-center flex-shrink-0 mt-1 ring-4 ring-primary-500/10">
                             <i data-lucide="bot" class="w-6 h-6 text-white"></i>
                         </div>
-                        <div class="flex-1 bubble-bot p-5 rounded-3xl rounded-tl-none markdown-content">
-                            <p class="text-[15px] font-medium leading-relaxed">Xin chào! Tôi là <b>Stock Trading Assistant</b>. Hãy nhập yêu cầu phân tích để tôi có thể hỗ trợ bạn tìm kiếm cơ hội đầu tư tốt nhất.</p>
+                        <div class="flex-1 bubble-bot p-5 rounded-3xl rounded-tl-none markdown-content border border-white/20 dark:border-white/5">
+                            <p class="text-[15px] font-medium leading-relaxed" id="welcome-text">Xin chào! Tôi là <b>Stock Trading Assistant</b>. Hãy nhập yêu cầu phân tích để tôi có thể hỗ trợ bạn tìm kiếm cơ hội đầu tư tốt nhất.</p>
                         </div>
                     </div>
                 </div>
@@ -393,13 +749,13 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </aside>
 
         <!-- Vertical Resizer -->
         <div id="resizer" class="h-full"></div>
 
         <!-- Right Column (initially 50%) -->
-        <div id="right-column" class="flex-1 bg-white dark:bg-[#020617] p-12 flex flex-col items-center justify-center relative overflow-hidden">
+        <div id="right-column" class="flex-1 bg-white/10 dark:bg-slate-950/20 backdrop-blur-sm p-12 flex flex-col items-center justify-center relative overflow-hidden">
             <!-- Background Decoration -->
             <div class="absolute inset-0 opacity-[0.05] pointer-events-none dark:opacity-[0.02]">
                 <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -537,12 +893,32 @@
             const messageDiv = addInitialBotMessage(botMessageId);
             const contentDiv = messageDiv.querySelector('.markdown-content');
             let fullContent = '';
+            chatContainer.scrollTop = chatContainer.scrollHeight;
 
             try {
+                // Fetch user's current stocks from portfolio to pass to agent
+                let userStocks = [];
+                if (currentUser) {
+                    try {
+                        const stocksRes = await fetch(`/users/${currentUser.id}/stocks`);
+                        if (stocksRes.ok) {
+                            const stocksData = await stocksRes.json();
+                            userStocks = stocksData.map(s => `${s.stock_name} (${s.avg_price})`);
+                        }
+                    } catch (e) {
+                        console.warn('Could not fetch portfolio for analysis:', e);
+                    }
+                }
+
                 const response = await fetch('/stock-analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ task: task })
+                    body: JSON.stringify({
+                        task: task,
+                        stocks: userStocks,
+                        blacklist: currentUser ? currentUser.black_list : null,
+                        dividend_rate: currentUser ? currentUser.dividend_rate : null,
+                    })
                 });
 
                 if (!response.ok) throw new Error('Network response was not ok');
@@ -646,9 +1022,335 @@
     </div>
 </details>`;
             });
+            // Ensure space after punctuation (., !, ?) if not followed by a space, number, or other punctuation
+            processedText = processedText.replace(/([.!?])([^\s0-9.!?\)])/g, '$1 $2');
 
             return marked.parse(processedText);
         }
+
+        // --- User management logic ---
+        let users = [];
+        let currentUser = null;
+
+        const userAvatarBtn = document.getElementById('user-avatar-btn');
+        const userMenu = document.getElementById('user-menu');
+        const userListContainer = document.getElementById('user-list-container');
+        const menuAvatar = document.getElementById('menu-avatar');
+        const menuUserName = document.getElementById('menu-user-name');
+        const menuUserEmail = document.getElementById('menu-user-email');
+
+        const settingsOverlay = document.getElementById('settings-overlay');
+        const blacklistInput = document.getElementById('blacklist-input');
+        const blacklistTagsContainer = document.getElementById('blacklist-tags-container');
+        const dividendRateInput = document.getElementById('dividend-rate-input');
+        const saveSettingsBtn = document.getElementById('save-settings-btn');
+
+        let tempBlacklist = [];
+
+        function getInitials(name) {
+            if (!name) return '??';
+            const parts = name.split(' ');
+            if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        }
+
+        async function fetchUsers() {
+            try {
+                const response = await fetch('/users');
+                users = await response.json();
+
+                if (users.length > 0) {
+                    // Load saved user or first user
+                    const savedUserId = localStorage.getItem('lastUserId');
+                    const user = users.find(u => u.id == savedUserId) || users[0];
+                    selectUser(user);
+                }
+                renderUserList();
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        }
+
+        function selectUser(user) {
+            currentUser = user;
+            localStorage.setItem('lastUserId', user.id);
+
+            const initials = getInitials(user.full_name);
+            userAvatarBtn.innerText = initials;
+            menuAvatar.innerText = initials;
+            menuUserName.innerText = user.full_name;
+            menuUserEmail.innerText = user.email;
+
+            // Update welcome message
+            const welcomeText = document.getElementById('welcome-text');
+            if (welcomeText) {
+                welcomeText.innerHTML = `Xin chào <b>${user.full_name}</b>! Tôi là <b>Stock Trading Assistant</b>. Hãy nhập yêu cầu phân tích để tôi có thể hỗ trợ bạn tìm kiếm cơ hội đầu tư tốt nhất.`;
+            }
+
+            // Hide menu
+            userMenu.classList.remove('show');
+        }
+
+        function openSettings() {
+            if (!currentUser) return;
+
+            userMenu.classList.remove('show');
+            settingsOverlay.classList.add('show');
+
+            tempBlacklist = [...currentUser.black_list];
+            dividendRateInput.value = currentUser.dividend_rate;
+            renderBlacklistTags();
+        }
+
+        function closeSettings() {
+            settingsOverlay.classList.remove('show');
+        }
+
+        function renderBlacklistTags() {
+            blacklistTagsContainer.innerHTML = '';
+            tempBlacklist.forEach((item, index) => {
+                const tag = document.createElement('div');
+                tag.className = 'blacklist-tag';
+                tag.innerHTML = `
+                    <span>${item}</span>
+                    <span class="remove-tag" onclick="removeBlacklistItem(${index})">
+                        <i data-lucide="x" class="w-3 h-3"></i>
+                    </span>
+                `;
+                blacklistTagsContainer.appendChild(tag);
+            });
+            lucide.createIcons({ root: blacklistTagsContainer });
+        }
+
+        function addBlacklistItem(text) {
+            const val = text.trim();
+            if (val && !tempBlacklist.includes(val)) {
+                tempBlacklist.push(val);
+                renderBlacklistTags();
+            }
+            blacklistInput.value = '';
+        }
+
+        function removeBlacklistItem(index) {
+            tempBlacklist.splice(index, 1);
+            renderBlacklistTags();
+        }
+
+        async function saveSettings() {
+            if (!currentUser) return;
+
+            const originalText = saveSettingsBtn.innerText;
+            saveSettingsBtn.innerText = 'Đang lưu...';
+            saveSettingsBtn.disabled = true;
+
+            try {
+                const response = await fetch(`/users/${currentUser.id}/settings`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        black_list: tempBlacklist,
+                        dividend_rate: parseFloat(dividendRateInput.value) || 0
+                    })
+                });
+
+                if (response.ok) {
+                    const updatedUser = await response.json();
+
+                    // Update current user and sync with users array
+                    currentUser.black_list = updatedUser.black_list;
+                    currentUser.dividend_rate = updatedUser.dividend_rate;
+
+                    const userIdx = users.findIndex(u => u.id === currentUser.id);
+                    if (userIdx !== -1) users[userIdx] = {...currentUser};
+
+                    closeSettings();
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error('Save failed:', response.status, errorData);
+                    alert(`Lỗi khi lưu thiết lập: ${response.status} ${errorData.detail || ''}`);
+                }
+            } catch (error) {
+                console.error('Network or unexpected error:', error);
+                alert('Lỗi kết nối máy chủ hoặc lỗi bất ngờ. Vui lòng kiểm tra console.');
+            } finally {
+                saveSettingsBtn.innerText = originalText;
+                saveSettingsBtn.disabled = false;
+            }
+        }
+
+        // --- Portfolio Management ---
+        const portfolioOverlay = document.getElementById('portfolio-overlay');
+        const portfolioList = document.getElementById('portfolio-list');
+        const newStockSymbol = document.getElementById('new-stock-symbol');
+        const newStockPrice = document.getElementById('new-stock-price');
+        const addStockBtn = document.getElementById('add-stock-btn');
+        const addStockIcon = document.getElementById('add-stock-icon');
+        const addStockText = document.getElementById('add-stock-text');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+
+        let editingStockId = null;
+
+        function openPortfolio() {
+            if (!currentUser) return;
+            userMenu.classList.remove('show');
+            portfolioOverlay.classList.add('show');
+            fetchPortfolioStocks();
+        }
+
+        function closePortfolio() {
+            portfolioOverlay.classList.remove('show');
+        }
+
+        async function fetchPortfolioStocks() {
+            if (!currentUser) return;
+            try {
+                const response = await fetch(`/users/${currentUser.id}/stocks`);
+                const stocks = await response.json();
+                renderPortfolioTable(stocks);
+            } catch (error) {
+                console.error('Error fetching portfolio:', error);
+            }
+        }
+
+        function renderPortfolioTable(stocks) {
+            portfolioList.innerHTML = '';
+            if (stocks.length === 0) {
+                portfolioList.innerHTML = '<tr><td colspan="3" class="text-center text-slate-400 py-10 text-sm">Chưa có cổ phiếu nào trong danh mục</td></tr>';
+                return;
+            }
+
+            stocks.forEach(stock => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="font-bold text-primary-600">${stock.stock_name}</td>
+                    <td class="text-sm font-medium">${stock.avg_price.toLocaleString()} VND</td>
+                    <td>
+                        <div class="flex items-center gap-1">
+                            <button onclick="editPortfolioStock(${stock.id}, '${stock.stock_name}', ${stock.avg_price})" class="p-2 text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors" title="Sửa">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="removePortfolioStock(${stock.id})" class="p-2 text-slate-600 dark:text-slate-300 hover:text-red-500 transition-colors" title="Xóa">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                portfolioList.appendChild(tr);
+            });
+            lucide.createIcons({ root: portfolioList });
+        }
+
+        function editPortfolioStock(id, symbol, price) {
+            editingStockId = id;
+            newStockSymbol.value = symbol;
+            newStockPrice.value = price;
+
+            // UI feedback
+            addStockText.innerText = 'Cập nhật';
+            addStockIcon.setAttribute('data-lucide', 'check');
+            cancelEditBtn.classList.remove('hidden');
+            lucide.createIcons({ root: addStockBtn });
+            newStockSymbol.focus();
+        }
+
+        function cancelEditStock() {
+            editingStockId = null;
+            newStockSymbol.value = '';
+            newStockPrice.value = '';
+            addStockText.innerText = 'Thêm vào danh mục';
+            addStockIcon.setAttribute('data-lucide', 'plus');
+            cancelEditBtn.classList.add('hidden');
+            lucide.createIcons({ root: addStockBtn });
+        }
+
+        async function addPortfolioStock() {
+            const sym = newStockSymbol.value.trim().toUpperCase();
+            const prc = parseFloat(newStockPrice.value);
+
+            if (!sym || isNaN(prc)) {
+                alert('Vui lòng nhập đầy đủ thông tin');
+                return;
+            }
+
+            try {
+                const url = editingStockId ? `/stocks/${editingStockId}` : `/users/${currentUser.id}/stocks`;
+                const method = editingStockId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ stock_name: sym, avg_price: prc })
+                });
+
+                if (response.ok) {
+                    cancelEditStock();
+                    fetchPortfolioStocks();
+                } else {
+                    alert(editingStockId ? 'Lỗi khi cập nhật cổ phiếu' : 'Lỗi khi thêm cổ phiếu');
+                }
+            } catch (error) {
+                console.error('Error adding/updating stock:', error);
+            }
+        }
+
+        async function removePortfolioStock(stockId) {
+            if (!confirm('Bạn có chắc muốn xóa mã này khỏi danh mục?')) return;
+
+            try {
+                const response = await fetch(`/stocks/${stockId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    fetchPortfolioStocks();
+                } else {
+                    alert('Lỗi khi xóa cổ phiếu');
+                }
+            } catch (error) {
+                console.error('Error removing stock:', error);
+            }
+        }
+
+        function renderUserList() {
+            userListContainer.innerHTML = '';
+            users.forEach(user => {
+                const item = document.createElement('div');
+                item.className = 'menu-item';
+                item.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center text-xs font-bold">
+                        ${getInitials(user.full_name)}
+                    </div>
+                    <span>${user.full_name}</span>
+                `;
+                item.onclick = () => selectUser(user);
+                userListContainer.appendChild(item);
+            });
+        }
+
+        userAvatarBtn.onclick = (e) => {
+            e.stopPropagation();
+            userMenu.classList.toggle('show');
+        };
+
+        window.onclick = () => {
+            userMenu.classList.remove('show');
+        };
+
+        userMenu.onclick = (e) => e.stopPropagation();
+
+        blacklistInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addBlacklistItem(blacklistInput.value);
+            }
+        });
+
+        // Initialize Lucide for the menu
+        lucide.createIcons({ root: userMenu });
+        lucide.createIcons({ root: settingsOverlay });
+
+        // Fetch users on load
+        fetchUsers();
 
         submitBtn.addEventListener('click', () => analyzeTask(false));
         generalBtn.addEventListener('click', () => analyzeTask(true));
