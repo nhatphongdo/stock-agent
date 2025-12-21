@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <!-- Soft Body Gradient -->
+    <linearGradient id="body-gradient" x1="100" y1="400" x2="400" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7c3aed" /> <!-- Violet 600 -->
+      <stop offset="50%" stop-color="#8b5cf6" /> <!-- Violet 500 -->
+      <stop offset="100%" stop-color="#60a5fa" /> <!-- Blue 400 -->
+    </linearGradient>
+
+    <!-- Soft Glass Highlight -->
+    <linearGradient id="gloss-gradient" x1="150" y1="150" x2="350" y2="350" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="white" stop-opacity="0.45" />
+      <stop offset="40%" stop-color="white" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="white" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Chart UP Gradient (Green/Emerald) -->
+    <linearGradient id="chart-up" x1="200" y1="400" x2="500" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+
+    <!-- Chart DOWN Gradient (Red/Rose) -->
+    <linearGradient id="chart-down" x1="100" y1="200" x2="300" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f43f5e" />
+      <stop offset="100%" stop-color="#fb7185" />
+    </linearGradient>
+
+    <!-- Arrow Gradient (for Antenna) -->
+    <linearGradient id="antenna-gradient" x1="200" y1="400" x2="500" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#22d3ee" />
+    </linearGradient>
+
+    <!-- Soft Drop Shadow -->
+    <filter id="soft-shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="16" result="blur" />
+      <feOffset in="blur" dx="0" dy="12" result="offsetBlur" />
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.25" />
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Transform: Shift -100, -50 and Scale 1.25 (Restored from Soft Version) -->
+  <g transform="translate(-100, -50) scale(1.25)">
+
+      <!-- Robot Head (Restored Soft Rect rx=75) -->
+      <g filter="url(#soft-shadow)">
+        <rect x="116" y="196" width="220" height="180" rx="75" fill="url(#body-gradient)" />
+        <!-- Curved Glass Reflection -->
+        <path d="M130 250 Q 180 180 260 180 L 260 180 Q 310 180 336 230 L 336 290 Q 336 340 290 340 L 170 340 Q 120 340 130 250 Z" fill="url(#gloss-gradient)" opacity="0.8" />
+      </g>
+
+      <!-- Eyes (Soft Glowing Circles) -->
+      <g>
+        <circle cx="186" cy="286" r="24" fill="#1e1b4b" />
+        <circle cx="186" cy="286" r="12" fill="#38bdf8">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="3s" repeatCount="indefinite" />
+        </circle>
+
+        <circle cx="266" cy="286" r="24" fill="#1e1b4b" />
+        <circle cx="266" cy="286" r="12" fill="#38bdf8">
+             <animate attributeName="opacity" values="0.7;1;0.7" dur="3s" repeatCount="indefinite" />
+        </circle>
+      </g>
+
+      <!-- Antenna (Rounded Cap) -->
+      <line x1="226" y1="196" x2="226" y2="120" stroke="url(#body-gradient)" stroke-width="24" stroke-linecap="round" />
+      <circle cx="226" cy="100" r="20" fill="url(#antenna-gradient)" filter="url(#soft-shadow)" />
+
+      <!-- Dual Chart Lines (Adapted to Old Coordinates, No Arrows) -->
+      <g filter="url(#soft-shadow)" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Downtrend (Red - Background) -->
+          <!-- Shifted relative to old arrow ref (236, 416) -->
+          <path d="M236 400 L 296 440 L 356 380 L 456 420" stroke="url(#chart-down)" stroke-width="32" opacity="0.9" />
+
+          <!-- Uptrend (Green - Foreground - Matches old arrow trajectory) -->
+          <path d="M236 380 L 336 280 L 396 340 L 496 140" stroke="url(#chart-up)" stroke-width="40" />
+      </g>
+
+  </g>
+</svg>

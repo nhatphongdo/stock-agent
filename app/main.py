@@ -8,6 +8,7 @@ from typing import List, Optional
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.llm.gemini_client import GeminiClient
 from app.agents.trading_agent import TradingAgent
@@ -53,6 +54,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static files
+app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
 
 class AnalyzeRequest(BaseModel):
     task: Optional[str] = "Phân tích thị trường tổng quan"
