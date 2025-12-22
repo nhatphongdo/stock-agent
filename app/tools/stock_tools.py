@@ -47,26 +47,71 @@ def get_company_info(symbol: str) -> Dict[str, Any]:
 def get_all_symbols() -> dict:
     """
     Retrieves all valid stock symbols from Vietnamese exchanges.
-    Uses vnstock Listing class to get the complete list.
-    Returns a dictionary mapping symbol to company name.
+    Uses vnstock Listing class to get the complete list with exchange info.
+    Returns a dictionary mapping symbol to {name, exchange}.
     """
     try:
         from vnstock import Listing
         listing = Listing()
-        # Get all symbols from the listing
-        df = listing.all_symbols()
-        if not df.empty:
-            # Return dictionary mapping symbol to company name
-            if 'symbol' in df.columns and 'organ_name' in df.columns:
-                return dict(zip(df['symbol'], df['organ_name']))
-            elif 'symbol' in df.columns:
-                return {s: "N/A" for s in df['symbol'].tolist()}
-            else:
-                return {}
+        # Get all symbols with exchange info
+        df = listing.symbols_by_exchange()
+        if not df.empty and 'symbol' in df.columns:
+            result = {}
+            for _, row in df.iterrows():
+                symbol = row.get('symbol', '')
+                if symbol:
+                    result[symbol] = {
+                        'name': row.get('organ_name', 'N/A'),
+                        'exchange': row.get('exchange', 'HOSE')  # Default to HOSE
+                    }
+            return result
         return {}
     except Exception as e:
         print(f"Error fetching symbols: {e}")
         return {}
+
+def get_stock_ohlcv(symbol: str, start_date: str, end_date: str, interval: str = '1D') -> dict:
+    """
+    Fetches OHLCV (Open, High, Low, Close, Volume) data for a stock symbol.
+    Uses vnstock VCI source for reliability.
+
+    Args:
+        symbol: Stock ticker symbol (e.g., 'VNM')
+        start_date: Start date in YYYY-MM-DD format
+        end_date: End date in YYYY-MM-DD format
+        interval: Data interval ('1D' for daily, '1H' for hourly)
+
+    Returns:
+        Dict with 'data' array containing OHLCV records, or 'error' if failed
+    """
+    try:
+        from vnstock import Vnstock
+        stock = Vnstock().stock(symbol, 'VCI')
+        df = stock.quote.history(start=start_date, end=end_date, interval=interval)
+
+        if df.empty:
+            return {"error": f"No data found for {symbol}"}
+
+        # Convert to list of dicts for JSON serialization
+        records = []
+        for _, row in df.iterrows():
+            # Add +07:00 timezone suffix for Vietnam time
+            time_str = row['time'].isoformat() if hasattr(row['time'], 'isoformat') else str(row['time'])
+            if '+' not in time_str and 'Z' not in time_str:
+                time_str += '+07:00'
+            records.append({
+                "time": time_str,
+                "open": float(row['open']),
+                "high": float(row['high']),
+                "low": float(row['low']),
+                "close": float(row['close']),
+                "volume": int(row['volume'])
+            })
+
+        return {"symbol": symbol, "interval": interval, "data": records}
+    except Exception as e:
+        print(f"Error fetching OHLCV for {symbol}: {e}")
+        return {"error": str(e)}
 
 # Tool mapping for the agent
 STOCK_TOOLS = [

@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from app.llm.gemini_client import GeminiClient
 from app.agents.trading_agent import TradingAgent
 from app.db.database import get_all_users, update_user_settings, get_user_stocks, add_user_stock, remove_user_stock, update_user_stock
-from app.tools.stock_tools import get_all_symbols
+from app.tools.stock_tools import get_all_symbols, get_stock_ohlcv
 
 # Load environment variables early
 load_dotenv()
@@ -121,6 +121,22 @@ async def get_symbols():
         _symbols_cache_timestamp = time.time()
         logger.info(f"Cached {len(_symbols_cache)} stock symbols (TTL: {SYMBOLS_CACHE_TTL}s)")
     return {"symbols": _symbols_cache}
+
+@app.get("/chart/{symbol}")
+async def get_chart_data(symbol: str, start: str, end: str, interval: str = "1D"):
+    """
+    Returns OHLCV data for a stock symbol to render charts.
+
+    Args:
+        symbol: Stock ticker symbol (e.g., 'VNM')
+        start: Start date in YYYY-MM-DD format
+        end: End date in YYYY-MM-DD format
+        interval: Data interval ('1D' for daily, '1H' for hourly)
+    """
+    result = get_stock_ohlcv(symbol.upper(), start, end, interval)
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    return result
 
 @app.get("/trade-agent", response_class=HTMLResponse)
 async def get_ui():
