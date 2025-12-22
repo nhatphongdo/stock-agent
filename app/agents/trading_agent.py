@@ -37,8 +37,8 @@ Các thông tin cá nhân hiện tại:
   - Hãy sử dụng giá vốn này để tính toán tỷ lệ lãi/lỗ dựa trên giá thị trường hiện tại khi đưa ra khuyến nghị bán.
 
 Nhiệm vụ của bạn:
-- Trả lời theo yêu cầu nếu có
-- Nếu không có yêu cầu cụ thể, hãy:
+- Trả lời theo yêu cầu cụ thể hợp lệ của người dùng và ngưng.
+- Nếu không có yêu cầu cụ thể hợp lệ, hãy:
   - Đưa ra phân tích tổng quan về thị trường hiện tại.
   - Đưa ra các khuyến nghị về đầu tư dựa trên thông tin thị trường và thông tin cá nhân
   - Đưa ra các gợi ý về các mã cổ phiếu nên mua sử dụng phân tích kỹ thuật:

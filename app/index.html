@@ -805,9 +805,22 @@
                 <div class="relative group mb-5">
                     <textarea
                         id="user-task"
-                        class="w-full h-36 p-5 rounded-2xl border border-slate-300 dark:border-white/10 bg-white/40 dark:bg-slate-950/40 backdrop-blur-md focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all resize-none custom-scrollbar text-sm font-medium placeholder-slate-400 dark:placeholder-slate-600 shadow-inner"
+                        class="w-full h-36 p-5 pr-28 rounded-2xl border border-slate-300 dark:border-white/10 bg-white/40 dark:bg-slate-950/40 backdrop-blur-md focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all resize-none custom-scrollbar text-sm font-medium placeholder-slate-400 dark:placeholder-slate-600 shadow-inner"
                         placeholder="Ví dụ: Phân tích cổ phiếu VNM và đưa ra gợi ý chiến lược ngắn hạn..."
                     ></textarea>
+                    <!-- Clear Conversation Button -->
+                    <button
+                        type="button"
+                        onclick="clearConversation()"
+                        class="absolute bottom-4 right-16 mr-1 p-3 rounded-xl transition-all transform active:scale-90 z-10
+                               bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-slate-200 dark:border-white/10
+                               hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300 dark:hover:border-red-500/30
+                               text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400"
+                        title="Xóa cuộc hội thoại"
+                    >
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
+                    <!-- Send Button -->
                     <button
                         id="submit-btn"
                         class="absolute bottom-4 right-4 bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-400 text-white p-3 rounded-xl shadow-xl shadow-primary-500/20 transition-all transform active:scale-90 disabled:opacity-50 disabled:cursor-not-allowed z-10"
@@ -1120,6 +1133,47 @@
         const loadingIndicator = document.getElementById('loading');
         const chatContainer = document.getElementById('chat-container');
 
+        // --- Conversation Persistence (sessionStorage) ---
+        const CONVERSATION_KEY = 'trade_agent_conversation';
+
+        function saveConversation() {
+            sessionStorage.setItem(CONVERSATION_KEY, messagesContainer.innerHTML);
+        }
+
+        function loadConversation() {
+            const saved = sessionStorage.getItem(CONVERSATION_KEY);
+            if (saved) {
+                messagesContainer.innerHTML = saved;
+                lucide.createIcons({ root: messagesContainer });
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }
+
+        function clearConversation() {
+            // Build greeting with user name if available
+            const userName = currentUser && currentUser.full_name ? currentUser.full_name : '';
+            const greeting = userName
+                ? `Xin chào <b>${userName}</b>! Tôi là <b>Stock Trading Assistant</b>. Hãy nhập yêu cầu phân tích để tôi có thể hỗ trợ bạn tìm kiếm cơ hội đầu tư tốt nhất.`
+                : `Xin chào! Tôi là <b>Stock Trading Assistant</b>. Hãy nhập yêu cầu phân tích để tôi có thể hỗ trợ bạn tìm kiếm cơ hội đầu tư tốt nhất.`;
+
+            const greetingHTML = `
+                <div class="flex gap-4 group">
+                    <div class="w-10 h-10 rounded-2xl bg-primary-600 shadow-lg shadow-primary-500/20 flex items-center justify-center flex-shrink-0 mt-1 ring-4 ring-primary-500/10">
+                        <i data-lucide="bot" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div class="flex-1 bubble-bot p-5 rounded-3xl rounded-tl-none markdown-content border border-white/20 dark:border-white/5">
+                        <p class="text-[15px] font-medium leading-relaxed" id="welcome-text">${greeting}</p>
+                    </div>
+                </div>
+            `;
+            messagesContainer.innerHTML = greetingHTML;
+            lucide.createIcons({ root: messagesContainer });
+            sessionStorage.removeItem(CONVERSATION_KEY);
+        }
+
+        // Load conversation on page load
+        loadConversation();
+
         // --- Stock Ticker Click Handler ---
         let selectedStock = null;
 
@@ -1200,12 +1254,8 @@
             lucide.createIcons({ root: analysisTab });
         }
 
-
         async function analyzeTask(isGeneral = false) {
             let task = null;
-
-            // Clear old conversation
-            messagesContainer.innerHTML = '';
 
             if (!isGeneral) {
                 task = userTaskInput.value.trim();
@@ -1284,6 +1334,8 @@
                 generalBtn.disabled = false;
                 loadingIndicator.classList.add('hidden');
                 chatContainer.scrollTop = chatContainer.scrollHeight;
+                // Save conversation to sessionStorage
+                saveConversation();
             }
         }
 
@@ -1357,7 +1409,10 @@
 </details>`;
             });
             // Ensure space after punctuation (., !, ?) if not followed by a space, number, or other punctuation
-            processedText = processedText.replace(/([.!?])([^\s0-9.!?\)])/g, '$1 $2');
+            // Skip file extensions (dot followed by lowercase letter like .pdf, .xlsx)
+            // Add space when dot followed by uppercase letter (new sentence)
+            processedText = processedText.replace(/([.])([A-Z])/g, '$1 $2');
+            processedText = processedText.replace(/([!?])([A-Za-z])/g, '$1 $2');
 
             // Parse markdown first
             let html = marked.parse(processedText);
