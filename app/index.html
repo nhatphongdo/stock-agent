@@ -587,6 +587,48 @@
         #resizer:hover, #resizer.resizing {
             background-color: #6366f1;
         }
+
+        /* Stock Ticker Chips */
+        .stock-ticker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.125rem 0.5rem;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15));
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 0.5rem;
+            font-weight: 700;
+            font-size: 0.875em;
+            color: #7c3aed;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+        .stock-ticker:hover {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(59, 130, 246, 0.25));
+            border-color: rgba(139, 92, 246, 0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+        }
+        .stock-ticker.selected {
+            background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+        }
+        .dark .stock-ticker {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2));
+            border-color: rgba(139, 92, 246, 0.4);
+            color: #a78bfa;
+        }
+        .dark .stock-ticker:hover {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(59, 130, 246, 0.35));
+            border-color: rgba(139, 92, 246, 0.6);
+        }
+        .dark .stock-ticker.selected {
+            background: linear-gradient(135deg, #7c3aed, #2563eb);
+            color: white;
+        }
     </style>
 </head>
 <body class="bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-slate-100 transition-colors duration-300 h-screen overflow-hidden flex flex-col relative">
@@ -865,6 +907,18 @@
                 </div>
             </div>
 
+            <!-- Stock Header (shown when a stock is selected) -->
+            <div id="stock-header" class="hidden absolute top-16 left-0 right-0 z-20 px-4 pt-2">
+                <div class="flex items-center gap-3 p-3 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/30 dark:border-white/10">
+                    <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-blue-500 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-lg">
+                        <span id="stock-header-symbol">---</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 id="stock-header-name" class="font-bold text-slate-800 dark:text-slate-100 text-sm truncate">Chọn mã cổ phiếu</h3>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-bold">Đang xem chi tiết</p>
+                </div>
+            </div>
+
             <!-- Tab Content Area -->
             <div id="tab-content-container" class="flex-1 w-full pt-20 px-4 pb-4 overflow-hidden z-10">
                 <!-- Data Placeholder / Welcome (Hidden by default since Chart is active) -->
@@ -1040,6 +1094,24 @@
             setTheme(html.classList.contains('dark') ? 'light' : 'dark');
         });
 
+        // --- Valid Stock Symbols (fetched from backend) ---
+        let symbolsMap = {}; // symbol -> company name
+
+        async function fetchValidSymbols() {
+            try {
+                const response = await fetch('/symbols');
+                if (response.ok) {
+                    const data = await response.json();
+                    symbolsMap = data.symbols || {};
+                }
+            } catch (error) {
+                console.error('Failed to fetch stock symbols:', error);
+            }
+        }
+
+        // Fetch symbols on page load
+        fetchValidSymbols();
+
         // Chat Management
         const submitBtn = document.getElementById('submit-btn');
         const generalBtn = document.getElementById('general-btn');
@@ -1047,6 +1119,87 @@
         const messagesContainer = document.getElementById('messages');
         const loadingIndicator = document.getElementById('loading');
         const chatContainer = document.getElementById('chat-container');
+
+        // --- Stock Ticker Click Handler ---
+        let selectedStock = null;
+
+        // Event delegation for stock ticker clicks
+        chatContainer.addEventListener('click', (e) => {
+            const ticker = e.target.closest('.stock-ticker');
+            if (ticker) {
+                const symbol = ticker.dataset.symbol;
+                selectStock(symbol);
+            }
+        });
+
+        function selectStock(symbol) {
+            // Update selected state
+            selectedStock = symbol;
+            const companyName = symbolsMap[symbol] || symbol;
+
+            // Remove selected class from all tickers
+            document.querySelectorAll('.stock-ticker.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+
+            // Add selected class to all instances of the clicked ticker
+            document.querySelectorAll(`.stock-ticker[data-symbol="${symbol}"]`).forEach(el => {
+                el.classList.add('selected');
+            });
+
+            // Show and update Stock Header
+            const stockHeader = document.getElementById('stock-header');
+            stockHeader.classList.remove('hidden');
+            document.getElementById('stock-header-symbol').textContent = symbol;
+            document.getElementById('stock-header-name').textContent = companyName;
+            lucide.createIcons({ root: stockHeader });
+
+            // Adjust content container padding
+            document.getElementById('tab-content-container').classList.remove('pt-20');
+            document.getElementById('tab-content-container').classList.add('pt-36');
+
+            // Update Chart Tab
+            const chartTab = document.getElementById('tab-content-chart');
+            chartTab.innerHTML = `
+                <div class="flex-1 bg-white/20 dark:bg-slate-900/20 rounded-3xl border border-white/40 dark:border-white/10 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center border-dashed">
+                    <div class="w-16 h-16 bg-primary-100/50 dark:bg-primary-900/20 rounded-2xl flex items-center justify-center mb-4 text-primary-500">
+                        <i data-lucide="line-chart" class="w-8 h-8"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-slate-700 dark:text-slate-300">Biểu đồ kỹ thuật</h4>
+                    <p class="text-sm text-slate-500 dark:text-slate-500 mt-2">Đang tải biểu đồ cho ${symbol}...</p>
+                </div>
+            `;
+            lucide.createIcons({ root: chartTab });
+
+            // Update News Tab
+            const newsTab = document.getElementById('tab-content-news');
+            newsTab.innerHTML = `
+                <div class="space-y-4">
+                    <div class="p-5 bg-white/30 dark:bg-slate-950/40 rounded-3xl border border-white/40 dark:border-white/5 backdrop-blur-md">
+                        <div class="text-[10px] font-black text-primary-600 dark:text-primary-400 uppercase tracking-widest mb-2 px-1">Tin tức ${symbol} • Đang tải...</div>
+                        <h4 class="font-bold text-slate-800 dark:text-slate-200 leading-snug">Đang tổng hợp tin tức liên quan đến ${companyName}...</h4>
+                    </div>
+                </div>
+            `;
+
+            // Update Analysis Tab
+            const analysisTab = document.getElementById('tab-content-analysis');
+            analysisTab.innerHTML = `
+                <div class="p-6 bg-white/40 dark:bg-slate-900/40 rounded-[2rem] border border-white/50 dark:border-white/10 backdrop-blur-2xl">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 bg-accent-cyan/20 rounded-xl flex items-center justify-center text-accent-cyan">
+                            <i data-lucide="search" class="w-5 h-5"></i>
+                        </div>
+                        <h4 class="font-black text-slate-800 dark:text-white uppercase tracking-tighter">Phân tích chuyên sâu</h4>
+                    </div>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
+                        Phân tích đa chiều về ${companyName} (${symbol}) bao gồm định giá, dự báo xu hướng và đánh giá rủi ro.
+                    </p>
+                </div>
+            `;
+            lucide.createIcons({ root: analysisTab });
+        }
+
 
         async function analyzeTask(isGeneral = false) {
             let task = null;
@@ -1206,7 +1359,20 @@
             // Ensure space after punctuation (., !, ?) if not followed by a space, number, or other punctuation
             processedText = processedText.replace(/([.!?])([^\s0-9.!?\)])/g, '$1 $2');
 
-            return marked.parse(processedText);
+            // Parse markdown first
+            let html = marked.parse(processedText);
+
+            // Wrap stock tickers in clickable spans
+            // Only highlight if the ticker exists in our valid symbols list
+            html = html.replace(/\b([A-Z]{3,4})\b/g, (match, ticker) => {
+                // Check against the valid symbols list fetched from backend
+                if (ticker in symbolsMap) {
+                    return `<span class="stock-ticker" data-symbol="${ticker}">${ticker}</span>`;
+                }
+                return match;
+            });
+
+            return html;
         }
 
         // --- User management logic ---

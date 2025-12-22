@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from app.llm.gemini_client import GeminiClient
 from app.agents.trading_agent import TradingAgent
 from app.db.database import get_all_users, update_user_settings, get_user_stocks, add_user_stock, remove_user_stock, update_user_stock
+from app.tools.stock_tools import get_all_symbols
 
 # Load environment variables early
 load_dotenv()
@@ -92,6 +93,34 @@ class StockCreateRequest(BaseModel):
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Stock Trading Agent API", "status": "online"}
+
+# Cache for stock symbols (symbol -> company name) with TTL
+_symbols_cache: dict = {}
+_symbols_cache_timestamp: float = 0
+SYMBOLS_CACHE_TTL: int = 3600  # 1 hour in seconds
+
+def is_symbols_cache_valid() -> bool:
+    """Check if the symbols cache is still valid based on TTL."""
+    import time
+    if not _symbols_cache:
+        return False
+    return (time.time() - _symbols_cache_timestamp) < SYMBOLS_CACHE_TTL
+
+@app.get("/symbols")
+async def get_symbols():
+    """
+    Returns a dictionary mapping stock symbols to company names.
+    Results are cached in memory with TTL for performance.
+    """
+    import time
+    global _symbols_cache, _symbols_cache_timestamp
+
+    if not is_symbols_cache_valid():
+        logger.info("Fetching stock symbols from vnstock...")
+        _symbols_cache = get_all_symbols()
+        _symbols_cache_timestamp = time.time()
+        logger.info(f"Cached {len(_symbols_cache)} stock symbols (TTL: {SYMBOLS_CACHE_TTL}s)")
+    return {"symbols": _symbols_cache}
 
 @app.get("/trade-agent", response_class=HTMLResponse)
 async def get_ui():

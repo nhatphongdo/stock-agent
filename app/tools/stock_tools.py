@@ -44,6 +44,30 @@ def get_company_info(symbol: str) -> Dict[str, Any]:
     except Exception as e:
         return {"error": str(e)}
 
+def get_all_symbols() -> dict:
+    """
+    Retrieves all valid stock symbols from Vietnamese exchanges.
+    Uses vnstock Listing class to get the complete list.
+    Returns a dictionary mapping symbol to company name.
+    """
+    try:
+        from vnstock import Listing
+        listing = Listing()
+        # Get all symbols from the listing
+        df = listing.all_symbols()
+        if not df.empty:
+            # Return dictionary mapping symbol to company name
+            if 'symbol' in df.columns and 'organ_name' in df.columns:
+                return dict(zip(df['symbol'], df['organ_name']))
+            elif 'symbol' in df.columns:
+                return {s: "N/A" for s in df['symbol'].tolist()}
+            else:
+                return {}
+        return {}
+    except Exception as e:
+        print(f"Error fetching symbols: {e}")
+        return {}
+
 # Tool mapping for the agent
 STOCK_TOOLS = [
     get_stock_price,
