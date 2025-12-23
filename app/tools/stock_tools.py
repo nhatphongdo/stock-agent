@@ -113,6 +113,54 @@ def get_stock_ohlcv(symbol: str, start_date: str, end_date: str, interval: str =
         print(f"Error fetching OHLCV for {symbol}: {e}")
         return {"error": str(e)}
 
+def get_stock_news(symbol: str) -> dict:
+    """
+    Retrieves latest news for a specific stock symbol.
+    Uses vnstock VCI source.
+    Returns a list of news items (title, link, publishedDate, source).
+    """
+    try:
+        from vnstock import Vnstock
+        stock = Vnstock().stock(symbol=symbol, source='VCI')
+        news_df = stock.company.news()
+
+        if news_df.empty:
+            return {"symbol": symbol, "news": []}
+
+        news_items = []
+        for _, row in news_df.iterrows():
+            # Convert timestamp to date string (public_date is usually in ms)
+            date_str = ""
+            try:
+                pub_date = row.get('public_date')
+                if pub_date:
+                    date_str = pd.to_datetime(pub_date, unit='ms').strftime('%Y-%m-%d')
+            except Exception:
+                pass # Keep empty if parsing fails
+
+            # Extract source from link if possible
+            link = row.get('news_source_link', '')
+            source = "N/A"
+            if link:
+                try:
+                    from urllib.parse import urlparse
+                    domain = urlparse(link).netloc
+                    source = domain.replace('www.', '')
+                except:
+                    pass
+
+            news_items.append({
+                "title": row.get('news_title', ''),
+                "link": link,
+                "date": date_str,
+                "source": source
+            })
+
+        return {"symbol": symbol, "news": news_items[:20]} # Limit to latest 20
+    except Exception as e:
+        print(f"Error fetching news for {symbol}: {e}")
+        return {"error": str(e)}
+
 # Tool mapping for the agent
 STOCK_TOOLS = [
     get_stock_price,

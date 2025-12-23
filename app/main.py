@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.llm.gemini_client import GeminiClient
 from app.agents.trading_agent import TradingAgent
+from app.agents.news_agent import NewsAgent
 from app.db.database import get_all_users, update_user_settings, get_user_stocks, add_user_stock, remove_user_stock, update_user_stock
 from app.tools.stock_tools import get_all_symbols, get_stock_ohlcv
 
@@ -32,7 +33,8 @@ async def lifespan(app: FastAPI):
         # Initialize Client and Agent once
         client = GeminiClient()
         app.state.agent = TradingAgent("StockTraderAssistant", client)
-        logger.info("🚀 Stock Trading Agent initialized and ready")
+        app.state.news_agent = NewsAgent("StockNewsAssistant", client)
+        logger.info("🚀 Stock Trading Agent and News Agent initialized and ready")
     except Exception as e:
         logger.error(f"❌ Failed to initialize agent: {e}", exc_info=True)
         raise e
@@ -93,6 +95,26 @@ class StockCreateRequest(BaseModel):
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Stock Trading Agent API", "status": "online"}
+
+class NewsRequest(BaseModel):
+    symbol: str
+    company_name: Optional[str] = ""
+
+from fastapi.responses import StreamingResponse
+
+@app.post("/news-analysis")
+async def analyze_news(request: NewsRequest):
+    """
+    Analyzes news for a given stock symbol using NewsAgent (Streaming).
+    """
+    if not hasattr(app.state, "news_agent"):
+         raise HTTPException(status_code=503, detail="News Agent not initialized")
+
+    # Use StreamingResponse
+    return StreamingResponse(
+        app.state.news_agent.run(request.symbol, request.company_name),
+        media_type="application/x-ndjson"
+    )
 
 # Cache for stock symbols (symbol -> company name) with TTL
 _symbols_cache: dict = {}

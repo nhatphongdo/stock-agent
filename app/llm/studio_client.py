@@ -32,4 +32,4 @@ class GoogleAIStudioClient:
                 if chunk.text:
                     yield chunk.text
         except Exception as e:
-            yield f"❌ Error calling Google AI Studio SDK (Modern): {str(e)}"
+            yield f"❌ Error calling Google AI Studio SDK: {str(e)}"
