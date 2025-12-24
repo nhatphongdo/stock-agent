@@ -12,16 +12,8 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Marked.js for Markdown -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <!-- Chart.js for Stock Charts -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Chart.js Date Adapter -->
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-  <!-- Chart.js Financial Plugin (Candlestick) -->
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial"></script>
-  <!-- Hammer.js for touch gestures -->
-  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
-  <!-- Chart.js Zoom Plugin -->
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+  <!-- Lightweight Charts (TradingView) for Stock Charts - v4 for stable API -->
+  <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
   <script>
     tailwind.config = {
       darkMode: "class",
@@ -243,34 +235,91 @@
       color: #a5b4fc;
     }
 
-    /* Table Styling */
-    .markdown-content table {
+    /* Table Container for Horizontal Scroll */
+    .markdown-content .table-outer-container {
+      display: block;
       width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
       margin: 2rem 0;
-      border: 1px solid #e2e8f0;
       border-radius: 16px;
+      border: 2px solid #e2e8f0;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      background: #ffffff;
       overflow: hidden;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-      font-variant-numeric: tabular-nums;
+      /* Clips the child's scrollbar */
     }
 
-    .dark .markdown-content table {
-      border-color: #1e293b;
-      background: rgba(15, 23, 42, 0.4);
+    .markdown-content .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      cursor: grab;
+      position: relative;
+    }
+
+    .markdown-content .table-wrapper:active {
+      cursor: grabbing;
+    }
+
+    .markdown-content .table-wrapper.is-dragging {
+      cursor: grabbing;
+      user-select: none;
+    }
+
+    .dark .markdown-content .table-outer-container {
+      border-color: #334155;
+      background: rgba(15, 23, 42, 0.6);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .markdown-content .table-wrapper::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .markdown-content .table-wrapper::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .markdown-content .table-wrapper::-webkit-scrollbar-thumb {
+      background: #e2e8f0;
+      border-radius: 6px;
+    }
+
+    .dark .markdown-content .table-wrapper::-webkit-scrollbar-thumb {
+      background: #334155;
+    }
+
+    /* Table Styling */
+    .markdown-content table {
+      width: auto;
+      min-width: 100%;
+      table-layout: auto;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin: 0;
+      margin-bottom: 4px !important;
+      font-variant-numeric: tabular-nums;
     }
 
     .markdown-content th {
       background: #f8fafc;
       font-weight: 700;
       text-align: left;
-      padding: 16px 20px;
-      border-bottom: 1px solid #e2e8f0;
+      padding: 14px 16px;
+      border-bottom: 2px solid #e2e8f0;
       color: #475569;
       text-transform: uppercase;
-      font-size: 0.8rem;
-      letter-spacing: 0.1em;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+
+    .markdown-content th:first-child {
+      border-top-left-radius: 15px;
+    }
+
+    .markdown-content th:last-child {
+      border-top-right-radius: 15px;
     }
 
     .dark .markdown-content th {
@@ -280,12 +329,24 @@
     }
 
     .markdown-content td {
-      padding: 16px 20px;
+      padding: 12px 16px;
       border-bottom: 1px solid #f1f5f9;
       color: #1e293b;
-      font-size: 0.925rem;
+      font-size: 0.875rem;
       font-weight: 500;
       line-height: 1.5;
+      white-space: nowrap;
+    }
+
+    /* Allow wrapping for merged cells (notes) */
+    .markdown-content td[colspan] {
+      white-space: normal !important;
+      font-style: italic;
+      color: #64748b;
+    }
+
+    .dark .markdown-content td[colspan] {
+      color: #94a3b8;
     }
 
     .dark .markdown-content td {
@@ -297,20 +358,29 @@
       border-bottom: none;
     }
 
-    .markdown-content tr:nth-child(even) {
-      background-color: rgba(248, 250, 252, 0.5);
+    .markdown-content tr:last-child td:first-child {
+      border-bottom-left-radius: 15px;
     }
 
-    .dark .markdown-content tr:nth-child(even) {
-      background-color: rgba(15, 23, 42, 0.2);
+    .markdown-content tr:last-child td:last-child {
+      border-bottom-right-radius: 15px;
     }
 
-    .markdown-content tr:hover {
+    .markdown-content tbody tr:nth-child(even) {
       background-color: #f1f5f9;
     }
 
-    .dark .markdown-content tr:hover {
-      background-color: #1e293b;
+    .dark .markdown-content tbody tr:nth-child(even) {
+      background-color: rgba(30, 41, 59, 0.5);
+    }
+
+    .markdown-content tbody tr:hover {
+      background-color: rgba(99, 102, 241, 0.08);
+      /* Indigo-500 with low alpha */
+    }
+
+    .dark .markdown-content tbody tr:hover {
+      background-color: rgba(99, 102, 241, 0.1);
     }
 
     /* Code Styling */
@@ -969,13 +1039,13 @@
           </div>
         </div>
 
-        <!-- Dividend Rate -->
+        <!-- Return Rate -->
         <div>
           <label
             class="block text-[11px] font-black text-primary-600 dark:text-primary-400 mb-3 uppercase tracking-[0.2em] px-1">Tỷ
-            lệ cổ tức tối thiểu (%)</label>
+            suất lợi nhuận tối thiểu (%)</label>
           <div class="relative">
-            <input type="number" id="dividend-rate-input" step="0.1"
+            <input type="number" id="return-rate-input" step="0.1"
               class="w-full p-4 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all text-sm font-bold"
               placeholder="Ví dụ: 6.0" />
             <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">%</span>
@@ -1334,7 +1404,9 @@
   </main>
 
   <script>
+    let currentTabId = 'chart';
     function switchTab(tabId) {
+      currentTabId = tabId;
       // Hide all contents
       document.getElementById("tab-empty-state").classList.add("hidden");
       document.getElementById("tab-content-chart").classList.add("hidden");
@@ -1355,6 +1427,12 @@
 
       // Animate indicator
       updateTabIndicator(activeBtn);
+
+      // Trigger news analysis if switching to news tab and it hasn't been loaded for current stock
+      if (tabId === 'news' && selectedStock && selectedStock !== lastFetchedNewsSymbol) {
+        fetchNewsAnalysis(selectedStock, selectedStockCompanyName);
+        lastFetchedNewsSymbol = selectedStock;
+      }
     }
 
     function updateTabIndicator(btn) {
@@ -1529,6 +1607,10 @@
 
     themeToggle.addEventListener("click", () => {
       setTheme(html.classList.contains("dark") ? "light" : "dark");
+      // Re-render charts with new theme if a stock is selected
+      if (currentChartSymbol) {
+        initAdvancedChart(currentChartSymbol);
+      }
     });
 
     // --- Valid Stock Symbols (fetched from backend) ---
@@ -1615,6 +1697,40 @@
 
     // --- Stock Ticker Click Handler ---
     let selectedStock = null;
+    let selectedStockCompanyName = null;
+    let lastFetchedNewsSymbol = null;
+
+    // --- Table Drag-to-Scroll ---
+    let isDraggingTable = false;
+    let startXTable;
+    let scrollLeftTable;
+    let activeTableWrapper = null;
+
+    messagesContainer.addEventListener('mousedown', (e) => {
+      const wrapper = e.target.closest('.table-wrapper');
+      if (!wrapper) return;
+
+      isDraggingTable = true;
+      wrapper.classList.add('is-dragging');
+      activeTableWrapper = wrapper;
+      startXTable = e.pageX - wrapper.offsetLeft;
+      scrollLeftTable = wrapper.scrollLeft;
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (!activeTableWrapper) return;
+      isDraggingTable = false;
+      activeTableWrapper.classList.remove('is-dragging');
+      activeTableWrapper = null;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDraggingTable || !activeTableWrapper) return;
+      e.preventDefault();
+      const x = e.pageX - activeTableWrapper.offsetLeft;
+      const walk = (x - startXTable) * 2; // Scroll speed factor
+      activeTableWrapper.scrollLeft = scrollLeftTable - walk;
+    });
 
     // Event delegation for stock ticker clicks
     chatContainer.addEventListener("click", (e) => {
@@ -1625,9 +1741,12 @@
       }
     });
 
-    // Global chart instances for cleanup
-    let candlestickChartInstance = null;
-    let volumeChartInstance = null;
+    // Global chart instances for cleanup (Lightweight Charts)
+    let priceChart = null;
+    let volumeChart = null;
+    let candleSeries = null;
+    let volumeSeries = null;
+    let indicatorSeries = []; // Array to hold indicator line series
     let currentChartSymbol = null;
 
     // Calculate Moving Average
@@ -1737,108 +1856,6 @@
       });
     }
 
-    // Crosshair state shared between charts
-    let crosshairX = null;
-    let crosshairData = null;
-
-    // Custom crosshair plugin
-    const crosshairPlugin = {
-      id: "crosshair",
-      afterDraw: (chart) => {
-        if (crosshairX === null || !crosshairData) return;
-
-        const ctx = chart.ctx;
-        const chartArea = chart.chartArea;
-        const x = crosshairX;
-
-        if (x < chartArea.left || x > chartArea.right) return;
-
-        // Draw vertical line
-        ctx.save();
-        ctx.strokeStyle =
-          chart.options.plugins.crosshair?.lineColor ||
-          "rgba(148, 163, 184, 0.8)";
-        ctx.lineWidth = 1;
-        ctx.setLineDash([3, 3]);
-        ctx.beginPath();
-        ctx.moveTo(x, chartArea.top);
-        ctx.lineTo(x, chartArea.bottom);
-        ctx.stroke();
-        ctx.restore();
-
-        // Draw tooltip
-        const isCandleChart = chart.config.type === "candlestick";
-        const isDark = document.documentElement.classList.contains("dark");
-        const bgColor = isDark
-          ? "rgba(30, 41, 59, 0.95)"
-          : "rgba(255, 255, 255, 0.95)";
-        const textColor = isDark ? "#e2e8f0" : "#1e293b";
-
-        let tooltipText = [];
-        if (crosshairData.time) {
-          tooltipText.push(
-            new Date(crosshairData.time).toLocaleString("vi-VN", {
-              weekday: "short",
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-          );
-        }
-        if (isCandleChart && crosshairData.ohlc) {
-          tooltipText.push(`O: ${(crosshairData.ohlc.o / 1000).toFixed(1)}k`);
-          tooltipText.push(`H: ${(crosshairData.ohlc.h / 1000).toFixed(1)}k`);
-          tooltipText.push(`L: ${(crosshairData.ohlc.l / 1000).toFixed(1)}k`);
-          tooltipText.push(`C: ${(crosshairData.ohlc.c / 1000).toFixed(1)}k`);
-        } else if (!isCandleChart && crosshairData.volume !== undefined) {
-          tooltipText.push(
-            `Vol: ${(crosshairData.volume / 1000).toFixed(0)}K`,
-          );
-        }
-
-        if (tooltipText.length === 0) return;
-
-        ctx.save();
-        ctx.font = "13px sans-serif";
-        const padding = 8;
-        const lineHeight = 18;
-        const maxWidth = Math.max(
-          ...tooltipText.map((t) => ctx.measureText(t).width),
-        );
-        const boxWidth = maxWidth + padding * 2;
-        const boxHeight = tooltipText.length * lineHeight + padding * 2;
-
-        let boxX = x + 10;
-        if (boxX + boxWidth > chartArea.right) boxX = x - boxWidth - 10;
-        const boxY = chartArea.top + 5;
-
-        // Background
-        ctx.fillStyle = bgColor;
-        ctx.shadowColor = "rgba(0,0,0,0.15)";
-        ctx.shadowBlur = 4;
-        ctx.beginPath();
-        ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 4);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        // Text
-        ctx.fillStyle = textColor;
-        tooltipText.forEach((text, i) => {
-          ctx.fillText(
-            text,
-            boxX + padding,
-            boxY + padding + lineHeight * (i + 0.8),
-          );
-        });
-        ctx.restore();
-      },
-    };
-
-    // Register crosshair plugin
-    Chart.register(crosshairPlugin);
-
     // Initialize Advanced Chart
     function initAdvancedChart(symbol) {
       currentChartSymbol = symbol;
@@ -1893,8 +1910,17 @@
       if (!candleCanvas || !volumeCanvas) return;
 
       // Destroy previous instances
-      if (candlestickChartInstance) candlestickChartInstance.destroy();
-      if (volumeChartInstance) volumeChartInstance.destroy();
+      if (priceChart) {
+        priceChart.remove();
+        priceChart = null;
+      }
+      if (volumeChart) {
+        volumeChart.remove();
+        volumeChart = null;
+      }
+      candleSeries = null;
+      volumeSeries = null;
+      indicatorSeries = [];
 
       // Calculate date range from timeframe
       const end = new Date();
@@ -1927,9 +1953,9 @@
             `;
       candleCanvas.parentElement.innerHTML =
         skeletonHTML +
-        `<canvas id="candlestick-chart" class="hidden"></canvas>`;
+        `<div id="candlestick-chart" class="hidden" style="width:100%;height:100%"></div>`;
       volumeCanvas.parentElement.innerHTML =
-        skeletonHTML + `<canvas id="volume-chart" class="hidden"></canvas>`;
+        skeletonHTML + `<div id="volume-chart" class="hidden" style="width:100%;height:100%"></div>`;
 
       let data;
       try {
@@ -1984,492 +2010,445 @@
         return; // Exit early, don't try to render chart
       }
 
-      // Remove skeleton, show canvas
+      // Remove skeleton, show chart containers (Lightweight Charts uses div)
       const candleParent =
         document.getElementById("candlestick-chart")?.parentElement;
       const volumeParent =
         document.getElementById("volume-chart")?.parentElement;
       if (candleParent)
-        candleParent.innerHTML = '<canvas id="candlestick-chart"></canvas>';
+        candleParent.innerHTML = '<div id="candlestick-chart" style="width:100%;height:100%"></div>';
       if (volumeParent)
-        volumeParent.innerHTML = '<canvas id="volume-chart"></canvas>';
+        volumeParent.innerHTML = '<div id="volume-chart" style="width:100%;height:100%"></div>';
 
       const isDark = document.documentElement.classList.contains("dark");
-      const textColor = isDark
-        ? CONFIG.COLORS.TEXT_DARK
-        : CONFIG.COLORS.TEXT_LIGHT;
-      const gridColor = isDark
-        ? CONFIG.COLORS.GRID_DARK
-        : CONFIG.COLORS.GRID_LIGHT;
 
-      // Helper: calculate expected points for a given time range
-      const intervalMins = CONFIG.INTERVAL_MINUTES[apiInterval] || 60;
-      const calcExpectedPointsInRange = (minTime, maxTime) => {
-        const rangeMs = maxTime - minTime;
-        const rangeMins = rangeMs / (1000 * 60);
-        return Math.max(1, Math.floor(rangeMins / intervalMins));
-      };
-
-      const calcCandleBarThickness = (
-        visibleCount,
-        chartOrCanvas = candleCanvas,
-      ) => {
-        const canvasEl = chartOrCanvas?.canvas || chartOrCanvas;
-        const width =
-          canvasEl?.getBoundingClientRect?.()?.width ||
-          canvasEl?.clientWidth ||
-          600;
-        const slotWidth = width / Math.max(visibleCount, 1);
-        return Math.max(
-          CONFIG.CHART.CANDLE_MIN_WIDTH,
-          Math.min(
-            CONFIG.CHART.CANDLE_MAX_WIDTH,
-            Math.floor(slotWidth * CONFIG.CHART.SPACING_RATIO),
-          ),
-        );
-      };
-
-      // Prepare datasets for candlestick
-      const candleData = data.map((d) => ({
-        x: d.x,
-        o: d.o,
-        h: d.h,
-        l: d.l,
-        c: d.c,
-      }));
-      // Calculate expected points from actual data time range
-      const dataMinTime = data.length > 0 ? data[0].x.getTime() : Date.now();
-      const dataMaxTime =
-        data.length > 0 ? data[data.length - 1].x.getTime() : Date.now();
-      const expectedDataPoints = calcExpectedPointsInRange(
-        dataMinTime,
-        dataMaxTime,
-      );
-      const dynamicBarThickness = calcCandleBarThickness(
-        expectedDataPoints,
-        candleCanvas,
-      );
-      const datasets = [
-        {
-          label: symbol,
-          data: candleData,
-          type: "candlestick",
-          color: {
-            up: CONFIG.COLORS.UP,
-            down: CONFIG.COLORS.DOWN,
-            unchanged: CONFIG.COLORS.UNCHANGED,
-          },
-          borderColor: {
-            up: CONFIG.COLORS.UP,
-            down: CONFIG.COLORS.DOWN,
-            unchanged: CONFIG.COLORS.UNCHANGED,
-          },
-          barThickness: dynamicBarThickness,
+      // Full theme presets for Lightweight Charts
+      const darkTheme = {
+        layout: {
+          background: { type: 'solid', color: '#0f172a' },
+          textColor: '#94a3b8',
         },
-      ];
+        grid: {
+          vertLines: { color: 'rgba(148, 163, 184, 0.1)' },
+          horzLines: { color: 'rgba(148, 163, 184, 0.1)' },
+        },
+        rightPriceScale: {
+          borderColor: 'rgba(148, 163, 184, 0.2)',
+        },
+        timeScale: {
+          borderColor: 'rgba(148, 163, 184, 0.2)',
+        },
+        crosshair: {
+          mode: LightweightCharts.CrosshairMode.Normal,
+          vertLine: {
+            color: 'rgba(148, 163, 184, 0.5)',
+            width: 1,
+            style: LightweightCharts.LineStyle.Dashed,
+            labelBackgroundColor: '#334155',
+          },
+          horzLine: {
+            color: 'rgba(148, 163, 184, 0.5)',
+            width: 1,
+            style: LightweightCharts.LineStyle.Dashed,
+            labelBackgroundColor: '#334155',
+          },
+        },
+      };
 
-      // Add indicators if enabled
+      const lightTheme = {
+        layout: {
+          background: { type: 'solid', color: '#ffffff' },
+          textColor: '#334155',
+        },
+        grid: {
+          vertLines: { color: 'rgba(100, 116, 139, 0.1)' },
+          horzLines: { color: 'rgba(100, 116, 139, 0.1)' },
+        },
+        rightPriceScale: {
+          borderColor: 'rgba(100, 116, 139, 0.2)',
+        },
+        timeScale: {
+          borderColor: 'rgba(100, 116, 139, 0.2)',
+        },
+        crosshair: {
+          mode: LightweightCharts.CrosshairMode.Normal,
+          vertLine: {
+            color: 'rgba(100, 116, 139, 0.5)',
+            width: 1,
+            style: LightweightCharts.LineStyle.Dashed,
+            labelBackgroundColor: '#f1f5f9',
+          },
+          horzLine: {
+            color: 'rgba(100, 116, 139, 0.5)',
+            width: 1,
+            style: LightweightCharts.LineStyle.Dashed,
+            labelBackgroundColor: '#f1f5f9',
+          },
+        },
+      };
+
+      const theme = isDark ? darkTheme : lightTheme;
+
+      // Get chart containers
+      const priceContainer = document.getElementById("candlestick-chart");
+      const volumeContainer = document.getElementById("volume-chart");
+      if (!priceContainer || !volumeContainer) return;
+
+      // Create Price Chart with theme
+      priceChart = LightweightCharts.createChart(priceContainer, {
+        autoSize: true,
+        ...theme,
+        timeScale: {
+          ...theme.timeScale,
+          timeVisible: apiInterval.includes("m") || apiInterval === "1H",
+          secondsVisible: false,
+        },
+      });
+
+      // Create Volume Chart with theme
+      volumeChart = LightweightCharts.createChart(volumeContainer, {
+        autoSize: true,
+        ...theme,
+        timeScale: {
+          ...theme.timeScale,
+          timeVisible: false,
+        },
+      });
+
+      // Convert data to Lightweight Charts format (Unix timestamp in seconds)
+      const chartData = data.map(d => ({
+        time: Math.floor(d.x.getTime() / 1000),
+        open: d.o,
+        high: d.h,
+        low: d.l,
+        close: d.c,
+      }));
+
+      const volumeData = data.map(d => ({
+        time: Math.floor(d.x.getTime() / 1000),
+        value: d.v,
+        color: d.c >= d.o ? "rgba(16, 185, 129, 0.6)" : "rgba(239, 68, 68, 0.6)",
+      }));
+
+      // Add Candlestick Series
+      candleSeries = priceChart.addCandlestickSeries({
+        upColor: CONFIG.COLORS.UP,
+        downColor: CONFIG.COLORS.DOWN,
+        borderUpColor: CONFIG.COLORS.UP,
+        borderDownColor: CONFIG.COLORS.DOWN,
+        wickUpColor: CONFIG.COLORS.UP,
+        wickDownColor: CONFIG.COLORS.DOWN,
+      });
+      candleSeries.setData(chartData);
+
+      // Add Volume Series (Histogram)
+      volumeSeries = volumeChart.addHistogramSeries({
+        priceFormat: { type: 'volume' },
+        priceScaleId: 'right',
+      });
+      volumeSeries.setData(volumeData);
+
+      // Add Indicators
       const showMA = document.getElementById("indicator-ma")?.checked;
       const showEMA = document.getElementById("indicator-ema")?.checked;
       const showBB = document.getElementById("indicator-bb")?.checked;
+      const showRSI = document.getElementById("indicator-rsi")?.checked;
+      const showMACD = document.getElementById("indicator-macd")?.checked;
+      const showVolSMA = document.getElementById("indicator-vol-sma")?.checked;
 
       if (showMA) {
-        const ma = calculateMA(data, 20);
-        datasets.push({
-          label: "MA20",
-          type: "line",
-          data: ma.map((v, i) => ({ x: data[i].x, y: v })),
-          borderColor: "#3b82f6",
-          borderWidth: 1.5,
-          pointRadius: 0,
-          fill: false,
+        const maData = calculateMA(data, 20)
+          .map((v, i) => ({ time: Math.floor(data[i].x.getTime() / 1000), value: v }))
+          .filter(d => d.value !== null);
+        const maSeries = priceChart.addLineSeries({
+          color: '#3b82f6',
+          lineWidth: 1,
+          priceLineVisible: false,
+          lastValueVisible: false,
         });
+        maSeries.setData(maData);
+        indicatorSeries.push(maSeries);
       }
+
       if (showEMA) {
-        const ema = calculateEMA(data, 9);
-        datasets.push({
-          label: "EMA9",
-          type: "line",
-          data: ema.map((v, i) => ({ x: data[i].x, y: v })),
-          borderColor: "#f97316",
-          borderWidth: 1.5,
-          pointRadius: 0,
-          fill: false,
+        const emaData = calculateEMA(data, 9)
+          .map((v, i) => ({ time: Math.floor(data[i].x.getTime() / 1000), value: v }))
+          .filter(d => d.value !== null);
+        const emaSeries = priceChart.addLineSeries({
+          color: '#f97316',
+          lineWidth: 1,
+          priceLineVisible: false,
+          lastValueVisible: false,
         });
+        emaSeries.setData(emaData);
+        indicatorSeries.push(emaSeries);
       }
+
       if (showBB) {
         const bb = calculateBB(data, 20, 2);
-        datasets.push({
-          label: "BB Upper",
-          type: "line",
-          data: bb.map((v, i) => ({ x: data[i].x, y: v.upper })),
-          borderColor: "#a855f7",
-          borderWidth: 1,
-          borderDash: [3, 3],
-          pointRadius: 0,
-          fill: false,
+        const upperData = bb.map((v, i) => ({ time: Math.floor(data[i].x.getTime() / 1000), value: v.upper })).filter(d => d.value !== null);
+        const lowerData = bb.map((v, i) => ({ time: Math.floor(data[i].x.getTime() / 1000), value: v.lower })).filter(d => d.value !== null);
+
+        const upperSeries = priceChart.addLineSeries({
+          color: '#a855f7',
+          lineWidth: 1,
+          lineStyle: LightweightCharts.LineStyle.Dashed,
+          priceLineVisible: false,
+          lastValueVisible: false,
         });
-        datasets.push({
-          label: "BB Lower",
-          type: "line",
-          data: bb.map((v, i) => ({ x: data[i].x, y: v.lower })),
-          borderColor: "#a855f7",
-          borderWidth: 1,
-          borderDash: [3, 3],
-          pointRadius: 0,
-          fill: "-1",
-          backgroundColor: "rgba(168, 85, 247, 0.1)",
+        upperSeries.setData(upperData);
+        indicatorSeries.push(upperSeries);
+
+        const lowerSeries = priceChart.addLineSeries({
+          color: '#a855f7',
+          lineWidth: 1,
+          lineStyle: LightweightCharts.LineStyle.Dashed,
+          priceLineVisible: false,
+          lastValueVisible: false,
         });
+        lowerSeries.setData(lowerData);
+        indicatorSeries.push(lowerSeries);
       }
 
-      // Add RSI indicator (overlay - normalized to price scale for simplicity)
-      const showRSI = document.getElementById("indicator-rsi")?.checked;
       if (showRSI) {
         const rsi = calculateRSI(data, 14);
-        // Scale RSI to price range for overlay visualization
-        const prices = data.map((d) => d.c);
+        const prices = data.map(d => d.c);
         const minPrice = Math.min(...prices);
         const maxPrice = Math.max(...prices);
-        const scaledRsi = rsi.map((v) =>
-          v === null ? null : minPrice + (v / 100) * (maxPrice - minPrice),
-        );
-        datasets.push({
-          label: "RSI14",
-          type: "line",
-          data: scaledRsi.map((v, i) => ({ x: data[i].x, y: v })),
-          borderColor: CONFIG.COLORS.RSI,
-          borderWidth: 1.5,
-          pointRadius: 0,
-          fill: false,
-          borderDash: [2, 2],
+        const rsiData = rsi
+          .map((v, i) => ({
+            time: Math.floor(data[i].x.getTime() / 1000),
+            value: v === null ? null : minPrice + (v / 100) * (maxPrice - minPrice)
+          }))
+          .filter(d => d.value !== null);
+        const rsiSeries = priceChart.addLineSeries({
+          color: CONFIG.COLORS.RSI,
+          lineWidth: 1,
+          lineStyle: LightweightCharts.LineStyle.Dotted,
+          priceLineVisible: false,
+          lastValueVisible: false,
         });
+        rsiSeries.setData(rsiData);
+        indicatorSeries.push(rsiSeries);
       }
 
-      // Add MACD indicator (overlay - normalized to price scale)
-      const showMACD = document.getElementById("indicator-macd")?.checked;
       if (showMACD) {
         const macd = calculateMACD(data, 12, 26, 9);
-        // Scale MACD to price range for overlay
-        const prices = data.map((d) => d.c);
+        const prices = data.map(d => d.c);
         const minPrice = Math.min(...prices);
         const maxPrice = Math.max(...prices);
         const priceRange = maxPrice - minPrice;
-        const macdValues = macd.macdLine.filter((v) => v !== null);
+        const macdValues = macd.macdLine.filter(v => v !== null);
         const macdMax = Math.max(...macdValues.map(Math.abs)) || 1;
+        const scaleMACD = v => v === null ? null : (maxPrice + minPrice) / 2 + (v / macdMax) * (priceRange / 4);
 
-        const scaleMACD = (v) =>
-          v === null
-            ? null
-            : (maxPrice + minPrice) / 2 + (v / macdMax) * (priceRange / 4);
+        const macdData = macd.macdLine
+          .map((v, i) => ({ time: Math.floor(data[i].x.getTime() / 1000), value: scaleMACD(v) }))
+          .filter(d => d.value !== null);
+        const signalData = macd.signalLine
+          .map((v, i) => ({ time: Math.floor(data[i].x.getTime() / 1000), value: scaleMACD(v) }))
+          .filter(d => d.value !== null);
 
-        datasets.push({
-          label: "MACD",
-          type: "line",
-          data: macd.macdLine.map((v, i) => ({
-            x: data[i].x,
-            y: scaleMACD(v),
-          })),
-          borderColor: CONFIG.COLORS.MACD_LINE,
-          borderWidth: 1.5,
-          pointRadius: 0,
-          fill: false,
+        const macdSeries = priceChart.addLineSeries({
+          color: CONFIG.COLORS.MACD_LINE,
+          lineWidth: 1,
+          priceLineVisible: false,
+          lastValueVisible: false,
         });
-        datasets.push({
-          label: "Signal",
-          type: "line",
-          data: macd.signalLine.map((v, i) => ({
-            x: data[i].x,
-            y: scaleMACD(v),
-          })),
-          borderColor: CONFIG.COLORS.MACD_SIGNAL,
-          borderWidth: 1,
-          pointRadius: 0,
-          fill: false,
-          borderDash: [3, 3],
+        macdSeries.setData(macdData);
+        indicatorSeries.push(macdSeries);
+
+        const signalSeries = priceChart.addLineSeries({
+          color: CONFIG.COLORS.MACD_SIGNAL,
+          lineWidth: 1,
+          lineStyle: LightweightCharts.LineStyle.Dashed,
+          priceLineVisible: false,
+          lastValueVisible: false,
         });
+        signalSeries.setData(signalData);
+        indicatorSeries.push(signalSeries);
       }
 
-      // Candlestick Chart - re-query canvas after innerHTML replacement
-      const newCandleCanvas = document.getElementById("candlestick-chart");
-      const newVolumeCanvas = document.getElementById("volume-chart");
-      if (!newCandleCanvas || !newVolumeCanvas) return;
+      if (showVolSMA) {
+        const volSmaData = calculateVolumeSMA(data, 20)
+          .map((v, i) => ({ time: Math.floor(data[i].x.getTime() / 1000), value: v }))
+          .filter(d => d.value !== null);
+        const volSmaSeries = volumeChart.addLineSeries({
+          color: CONFIG.COLORS.VOLUME_SMA,
+          lineWidth: 1,
+          priceLineVisible: false,
+          lastValueVisible: false,
+        });
+        volSmaSeries.setData(volSmaData);
+        indicatorSeries.push(volSmaSeries);
+      }
 
-      candlestickChartInstance = new Chart(newCandleCanvas.getContext("2d"), {
-        type: "candlestick",
-        data: { datasets },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            zoom: {
-              limits: {
-                x: {
-                  min: "original",
-                  max: "original",
-                  minRange: 5 * 24 * 60 * 60 * 1000,
-                }, // Min 5 days range
-              },
-              pan: {
-                enabled: true,
-                mode: "x",
-                modifierKey: null,
-                onPanComplete: ({ chart }) => {
-                  if (volumeChartInstance) {
-                    volumeChartInstance.zoomScale(
-                      "x",
-                      { min: chart.scales.x.min, max: chart.scales.x.max },
-                      "none",
-                    );
-                  }
-                  // Update bar thickness based on visible time range
-                  const visibleCount = calcExpectedPointsInRange(
-                    chart.scales.x.min,
-                    chart.scales.x.max,
-                  );
-                  chart.data.datasets[0].barThickness =
-                    calcCandleBarThickness(visibleCount, chart);
-                  chart.update("none");
-                },
-              },
-              zoom: {
-                wheel: { enabled: true, speed: 0.1 },
-                pinch: { enabled: true },
-                drag: { enabled: false },
-                mode: "x",
-                onZoomComplete: ({ chart }) => {
-                  if (volumeChartInstance) {
-                    volumeChartInstance.zoomScale(
-                      "x",
-                      { min: chart.scales.x.min, max: chart.scales.x.max },
-                      "none",
-                    );
-                  }
-                  // Update bar thickness based on visible time range
-                  const visibleCount = calcExpectedPointsInRange(
-                    chart.scales.x.min,
-                    chart.scales.x.max,
-                  );
-                  chart.data.datasets[0].barThickness =
-                    calcCandleBarThickness(visibleCount, chart);
-                  chart.update("none");
-                },
-              },
-            },
-          },
-          scales: {
-            x: {
-              type: "time",
-              time: {
-                unit: apiInterval.includes("m")
-                  ? "minute"
-                  : apiInterval === "1H"
-                    ? "hour"
-                    : "day",
-                displayFormats: {
-                  minute: "HH:mm",
-                  hour: "dd/MM HH:mm",
-                  day: "dd/MM",
-                },
-              },
-              grid: { color: gridColor, offset: false },
-              offset: false,
-              ticks: {
-                color: textColor,
-                maxTicksLimit: 12,
-                source: "auto",
-                autoSkip: true,
-                autoSkipPadding: 15,
-              },
-            },
-            y: {
-              grid: { color: gridColor },
-              ticks: {
-                color: textColor,
-                callback: (v) => `${(v / 1000).toFixed(0)}k`,
-              },
-              afterFit: (axis) => {
-                axis.width = 55;
-              },
-            },
-          },
-        },
-      });
-
-      // Recalculate bar thickness after chart is rendered (canvas now has correct size)
-      requestAnimationFrame(() => {
-        const recalcThickness = calcCandleBarThickness(
-          expectedDataPoints,
-          candlestickChartInstance,
-        );
-        candlestickChartInstance.data.datasets[0].barThickness =
-          recalcThickness;
-        candlestickChartInstance.update("none");
-      });
-
-      // Volume Chart
-      const volumeData = data.map((d) => ({
-        x: d.x,
-        y: d.v,
-        backgroundColor:
-          d.c >= d.o ? "rgba(16, 185, 129, 0.6)" : "rgba(239, 68, 68, 0.6)",
-      }));
-      volumeChartInstance = new Chart(newVolumeCanvas.getContext("2d"), {
-        type: "bar",
-        data: {
-          datasets: [
-            {
-              label: "Volume",
-              data: volumeData,
-              backgroundColor: volumeData.map((d) => d.backgroundColor),
-              borderWidth: 0,
-              barPercentage: 0.6,
-              categoryPercentage: 0.8,
-            },
-            // Volume SMA line overlay
-            ...(document.getElementById("indicator-vol-sma")?.checked
-              ? [
-                {
-                  label: "Vol SMA20",
-                  type: "line",
-                  data: calculateVolumeSMA(data, 20).map((v, i) => ({
-                    x: data[i].x,
-                    y: v,
-                  })),
-                  borderColor: CONFIG.COLORS.VOLUME_SMA,
-                  borderWidth: 1.5,
-                  pointRadius: 0,
-                  fill: false,
-                },
-              ]
-              : []),
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            zoom: {
-              limits: {
-                x: {
-                  min: "original",
-                  max: "original",
-                  minRange: 5 * 24 * 60 * 60 * 1000,
-                },
-              },
-              pan: {
-                enabled: true,
-                mode: "x",
-                onPanComplete: ({ chart }) => {
-                  if (candlestickChartInstance) {
-                    candlestickChartInstance.zoomScale(
-                      "x",
-                      { min: chart.scales.x.min, max: chart.scales.x.max },
-                      "none",
-                    );
-                  }
-                },
-              },
-              zoom: {
-                wheel: { enabled: true, speed: 0.1 },
-                pinch: { enabled: true },
-                mode: "x",
-                onZoomComplete: ({ chart }) => {
-                  if (candlestickChartInstance) {
-                    candlestickChartInstance.zoomScale(
-                      "x",
-                      { min: chart.scales.x.min, max: chart.scales.x.max },
-                      "none",
-                    );
-                  }
-                },
-              },
-            },
-          },
-          scales: {
-            x: {
-              type: "time",
-              time: {
-                unit: apiInterval.includes("m")
-                  ? "minute"
-                  : apiInterval === "1H"
-                    ? "hour"
-                    : "day",
-              },
-              grid: { color: gridColor, offset: false },
-              ticks: { display: false },
-              offset: false,
-            },
-            y: {
-              grid: { color: gridColor },
-              ticks: {
-                color: textColor,
-                callback: (v) => `${(v / 1000).toFixed(0)}K`,
-              },
-              afterFit: (axis) => {
-                axis.width = 55;
-              },
-            },
-          },
-        },
-      });
-
-      // Add crosshair mouse event handlers
-      const handleCrosshair = (e, chart, chartData) => {
-        const rect = chart.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const chartArea = chart.chartArea;
-
-        if (x < chartArea.left || x > chartArea.right) {
-          crosshairX = null;
-          crosshairData = null;
-        } else {
-          crosshairX = x;
-          // Find nearest data point
-          const xScale = chart.scales.x;
-          const xValue = xScale.getValueForPixel(x);
-          let nearest = null;
-          let minDist = Infinity;
-          chartData.forEach((d) => {
-            const dist = Math.abs(d.x.getTime() - xValue);
-            if (dist < minDist) {
-              minDist = dist;
-              nearest = d;
-            }
-          });
-          if (nearest) {
-            crosshairData = {
-              time: nearest.x,
-              ohlc: {
-                o: nearest.o,
-                h: nearest.h,
-                l: nearest.l,
-                c: nearest.c,
-              },
-              volume: nearest.v,
-            };
-          }
+      // Synchronize time scales between price and volume charts
+      priceChart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+        if (range !== null) {
+          volumeChart.timeScale().setVisibleLogicalRange(range);
         }
-        candlestickChartInstance?.update("none");
-        volumeChartInstance?.update("none");
+      });
+      volumeChart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+        if (range !== null) {
+          priceChart.timeScale().setVisibleLogicalRange(range);
+        }
+      });
+
+      // Create tooltip elements for both charts (follows crosshair)
+      const createTooltip = (container) => {
+        const tooltip = document.createElement('div');
+        tooltip.style.cssText = `
+          position: absolute;
+          z-index: 100;
+          font-size: 12px;
+          font-family: sans-serif;
+          line-height: 1.5;
+          padding: 10px 14px;
+          border-radius: 8px;
+          pointer-events: none;
+          display: none;
+          white-space: nowrap;
+          ${isDark ?
+            'background: rgba(30, 41, 59, 0.95); color: #e2e8f0; border: 1px solid rgba(148, 163, 184, 0.2);' :
+            'background: rgba(255, 255, 255, 0.95); color: #1e293b; border: 1px solid rgba(100, 116, 139, 0.2);'
+          }
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        `;
+        container.style.position = 'relative';
+        container.appendChild(tooltip);
+        return tooltip;
       };
 
-      const handleMouseLeave = () => {
-        crosshairX = null;
-        crosshairData = null;
-        candlestickChartInstance?.update("none");
-        volumeChartInstance?.update("none");
+      const priceTooltip = createTooltip(priceContainer);
+      const volumeTooltip = createTooltip(volumeContainer);
+
+      // Helper function to format full datetime
+      const formatFullDateTime = (timestamp) => {
+        const date = new Date(timestamp * 1000);
+        return date.toLocaleString('vi-VN', {
+          weekday: 'long',
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
       };
 
-      newCandleCanvas.addEventListener("mousemove", (e) =>
-        handleCrosshair(e, candlestickChartInstance, data),
-      );
-      newCandleCanvas.addEventListener("mouseleave", handleMouseLeave);
-      newVolumeCanvas.addEventListener("mousemove", (e) =>
-        handleCrosshair(e, volumeChartInstance, data),
-      );
-      newVolumeCanvas.addEventListener("mouseleave", handleMouseLeave);
+      // Helper function to format price with thousands separator
+      const formatPrice = (price) => {
+        return price.toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+      };
+
+      // Helper function to format volume with thousands separator
+      const formatVolume = (vol) => {
+        return vol.toLocaleString('vi-VN');
+      };
+
+      // Update tooltip position to follow crosshair
+      const updateTooltipPosition = (tooltip, container, param) => {
+        if (!param.point) return;
+
+        const containerRect = container.getBoundingClientRect();
+        const tooltipWidth = tooltip.offsetWidth || 200;
+        const tooltipHeight = tooltip.offsetHeight || 100;
+
+        let left = param.point.x + 15;
+        let top = param.point.y + 15;
+
+        // Keep tooltip within container bounds
+        if (left + tooltipWidth > containerRect.width) {
+          left = param.point.x - tooltipWidth - 15;
+        }
+        if (top + tooltipHeight > containerRect.height) {
+          top = param.point.y - tooltipHeight - 15;
+        }
+        if (left < 0) left = 10;
+        if (top < 0) top = 10;
+
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+      };
+
+      // Crosshair sync with moving tooltips
+      priceChart.subscribeCrosshairMove(param => {
+        if (param.time && param.point) {
+          // Sync crosshair with volume chart
+          volumeChart.setCrosshairPosition(volumeSeries.dataByIndex(param.logical), param.time, volumeSeries);
+
+          // Update price tooltip with OHLC
+          const candlePrice = param.seriesData.get(candleSeries);
+          if (candlePrice) {
+            const changePercent = ((candlePrice.close - candlePrice.open) / candlePrice.open * 100).toFixed(2);
+            const changeColor = candlePrice.close >= candlePrice.open ? '#10b981' : '#ef4444';
+            const changeSign = candlePrice.close >= candlePrice.open ? '+' : '';
+            priceTooltip.innerHTML = `
+              <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatFullDateTime(param.time)}</div>
+              <div><span style="opacity: 0.6;">Open:</span> <strong>${formatPrice(candlePrice.open)}</strong></div>
+              <div><span style="opacity: 0.6;">High:</span> <strong>${formatPrice(candlePrice.high)}</strong></div>
+              <div><span style="opacity: 0.6;">Low:</span> <strong>${formatPrice(candlePrice.low)}</strong></div>
+              <div><span style="opacity: 0.6;">Close:</span> <strong>${formatPrice(candlePrice.close)}</strong> <span style="color: ${changeColor};">(${changeSign}${changePercent}%)</span></div>
+            `;
+            priceTooltip.style.display = 'block';
+            updateTooltipPosition(priceTooltip, priceContainer, param);
+          }
+
+          // Update volume tooltip
+          const volData = param.seriesData.get(volumeSeries);
+          if (volData) {
+            volumeTooltip.innerHTML = `
+              <div><span style="opacity: 0.6;">Volume:</span> <strong>${formatVolume(volData.value)}</strong></div>
+            `;
+            volumeTooltip.style.display = 'block';
+            updateTooltipPosition(volumeTooltip, volumeContainer, param);
+          }
+        } else {
+          priceTooltip.style.display = 'none';
+          volumeTooltip.style.display = 'none';
+        }
+      });
+
+      volumeChart.subscribeCrosshairMove(param => {
+        if (param.time && param.point) {
+          // Sync crosshair with price chart
+          priceChart.setCrosshairPosition(candleSeries.dataByIndex(param.logical), param.time, candleSeries);
+
+          // Update volume tooltip
+          const volData = param.seriesData.get(volumeSeries);
+          if (volData) {
+            volumeTooltip.innerHTML = `
+              <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatFullDateTime(param.time)}</div>
+              <div><span style="opacity: 0.6;">Volume:</span> <strong>${formatVolume(volData.value)}</strong></div>
+            `;
+            volumeTooltip.style.display = 'block';
+            updateTooltipPosition(volumeTooltip, volumeContainer, param);
+          }
+
+          // Update price tooltip from synced data
+          const candlePrice = candleSeries.dataByIndex(param.logical);
+          if (candlePrice) {
+            const changePercent = ((candlePrice.close - candlePrice.open) / candlePrice.open * 100).toFixed(2);
+            const changeColor = candlePrice.close >= candlePrice.open ? '#10b981' : '#ef4444';
+            const changeSign = candlePrice.close >= candlePrice.open ? '+' : '';
+            priceTooltip.innerHTML = `
+              <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatFullDateTime(param.time)}</div>
+              <div><span style="opacity: 0.6;">Open:</span> <strong>${formatPrice(candlePrice.open)}</strong></div>
+              <div><span style="opacity: 0.6;">High:</span> <strong>${formatPrice(candlePrice.high)}</strong></div>
+              <div><span style="opacity: 0.6;">Low:</span> <strong>${formatPrice(candlePrice.low)}</strong></div>
+              <div><span style="opacity: 0.6;">Close:</span> <strong>${formatPrice(candlePrice.close)}</strong> <span style="color: ${changeColor};">(${changeSign}${changePercent}%)</span></div>
+            `;
+            priceTooltip.style.display = 'block';
+          }
+        } else {
+          priceTooltip.style.display = 'none';
+          volumeTooltip.style.display = 'none';
+        }
+      });
+
+      // Fit content to show all data
+      priceChart.timeScale().fitContent();
+      volumeChart.timeScale().fitContent();
     }
 
     function selectStock(symbol) {
@@ -2477,6 +2456,9 @@
       selectedStock = symbol;
       const stockInfo = getStockInfo(symbol);
       const companyName = stockInfo.name;
+      selectedStockCompanyName = companyName;
+      lastFetchedNewsSymbol = null;
+
       const exchange = stockInfo.exchange;
 
       // Remove selected class from all tickers
@@ -2580,12 +2562,12 @@
 
                     <!-- Candlestick Chart (70%) -->
                     <div class="flex-[7] bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-white/40 dark:border-white/10 backdrop-blur-sm p-3 min-h-0">
-                        <canvas id="candlestick-chart"></canvas>
+                        <div id="candlestick-chart" style="width:100%;height:100%"></div>
                     </div>
 
                     <!-- Volume Chart (30%) -->
                     <div class="flex-[3] bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-white/40 dark:border-white/10 backdrop-blur-sm p-3 min-h-0">
-                        <canvas id="volume-chart"></canvas>
+                        <div id="volume-chart" style="width:100%;height:100%"></div>
                     </div>
                 </div>
             `;
@@ -2593,8 +2575,11 @@
       // Initialize chart with controls
       initAdvancedChart(symbol);
 
-      // Fetch and display News Analysis in the News Tab
-      fetchNewsAnalysis(symbol, companyName);
+      // Trigger news analysis if currently on news tab
+      if (currentTabId === 'news') {
+        fetchNewsAnalysis(symbol, companyName);
+        lastFetchedNewsSymbol = symbol;
+      }
 
       // Update Analysis Tab
       const analysisTab = document.getElementById("tab-content-analysis");
@@ -2663,7 +2648,7 @@
             task: task,
             stocks: userStocks,
             blacklist: currentUser ? currentUser.black_list : null,
-            dividend_rate: currentUser ? currentUser.dividend_rate : null,
+            return_rate: currentUser ? currentUser.return_rate : null,
           }),
         });
 
@@ -2675,16 +2660,79 @@
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
 
+        // Track reasoning and final content separately
+        let reasoningContent = "";
+        let finalContent = "";
+        let buffer = "";
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
-          const chunk = decoder.decode(value, { stream: true });
-          fullContent += chunk;
+          buffer += decoder.decode(value, { stream: true });
 
-          // Process thinking sections and render markdown
-          contentDiv.innerHTML = processContent(fullContent);
-          chatContainer.scrollTop = chatContainer.scrollHeight;
+          // Process complete JSON lines
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ""; // Keep incomplete line in buffer
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+
+            try {
+              const parsed = JSON.parse(line);
+
+              if (parsed.type === "reasoning") {
+                reasoningContent += parsed.chunk || "";
+              } else if (parsed.type === "final") {
+                finalContent += parsed.chunk || "";
+              } else if (parsed.type === "error") {
+                finalContent += `\n\n❌ Error: ${parsed.message}`;
+              }
+
+              // Update UI with both sections
+              let displayHtml = "";
+
+              // Determine if still processing (no final content yet)
+              const isStillProcessing = !finalContent.trim();
+
+              // Reasoning section (collapsible, default collapsed)
+              if (reasoningContent.trim()) {
+                displayHtml += `
+                  <details class="reasoning-section mb-4 p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                    <summary class="cursor-pointer font-semibold text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                      ${isStillProcessing
+                    ? '<span class="inline-block w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></span>'
+                    : '<i data-lucide="brain" class="w-4 h-4"></i>'
+                  }
+                      <span>Quá trình suy luận</span>
+                      ${isStillProcessing
+                    ? '<span class="text-xs text-primary-500 animate-pulse">đang xử lý...</span>'
+                    : '<span class="text-xs opacity-60">(click để mở rộng)</span>'
+                  }
+                    </summary>
+                    <div class="mt-3 text-sm text-slate-600 dark:text-slate-400 reasoning-content">
+                      ${processContent(reasoningContent)}
+                    </div>
+                  </details>
+                `;
+              }
+
+              // Final section (always visible)
+              if (finalContent.trim()) {
+                displayHtml += processContent(finalContent);
+              }
+
+              contentDiv.innerHTML = displayHtml;
+              lucide.createIcons({ root: contentDiv });
+              chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            } catch (e) {
+              // Fallback for non-JSON responses (backward compatibility)
+              fullContent += line;
+              contentDiv.innerHTML = processContent(fullContent);
+              chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+          }
         }
       } catch (error) {
         console.error("Error:", error);
@@ -2798,6 +2846,39 @@
         return match;
       });
 
+      // Wrap tables in scrollable container
+      html = html.replace(/<table>/g, '<div class="table-outer-container"><div class="table-wrapper"><table>');
+      html = html.replace(/<\/table>/g, '</table></div></div>');
+
+      // Post-process: merge cells in rows with only one cell having content
+      // This handles note rows at the end of tables
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html;
+      tempDiv.querySelectorAll('table tr').forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length > 1) {
+          // Count cells with actual content (not empty)
+          const nonEmptyCells = Array.from(cells).filter(td => td.textContent.trim() !== '');
+          // If only one cell has content, merge all cells into that one
+          if (nonEmptyCells.length === 1) {
+            const contentCell = nonEmptyCells[0];
+            const content = contentCell.innerHTML;
+            const colCount = cells.length;
+            // Remove all cells
+            cells.forEach(cell => cell.remove());
+            // Create new merged cell
+            const newCell = document.createElement('td');
+            newCell.setAttribute('colspan', colCount);
+            newCell.innerHTML = content;
+            newCell.style.whiteSpace = 'normal';
+            newCell.style.fontStyle = 'italic';
+            newCell.style.color = '#64748b';
+            row.appendChild(newCell);
+          }
+        }
+      });
+      html = tempDiv.innerHTML;
+
       return html;
     }
 
@@ -2817,7 +2898,7 @@
     const blacklistTagsContainer = document.getElementById(
       "blacklist-tags-container",
     );
-    const dividendRateInput = document.getElementById("dividend-rate-input");
+    const returnRateInput = document.getElementById("return-rate-input");
     const saveSettingsBtn = document.getElementById("save-settings-btn");
 
     let tempBlacklist = [];
@@ -2873,7 +2954,7 @@
       settingsOverlay.classList.add("show");
 
       tempBlacklist = [...currentUser.black_list];
-      dividendRateInput.value = currentUser.dividend_rate;
+      returnRateInput.value = currentUser.return_rate;
       renderBlacklistTags();
     }
 
@@ -2924,7 +3005,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             black_list: tempBlacklist,
-            dividend_rate: parseFloat(dividendRateInput.value) || 0,
+            return_rate: parseFloat(returnRateInput.value) || 0,
           }),
         });
 
@@ -2933,7 +3014,7 @@
 
           // Update current user and sync with users array
           currentUser.black_list = updatedUser.black_list;
-          currentUser.dividend_rate = updatedUser.dividend_rate;
+          currentUser.return_rate = updatedUser.return_rate;
 
           const userIdx = users.findIndex((u) => u.id === currentUser.id);
           if (userIdx !== -1) users[userIdx] = { ...currentUser };
@@ -3238,7 +3319,7 @@
                 // Update Text
                 accumulatedText += evt.chunk;
                 if (analysisContentEl) {
-                  analysisContentEl.innerHTML = marked.parse(accumulatedText);
+                  analysisContentEl.innerHTML = processContent(accumulatedText);
                 }
               }
               else if (evt.type === "data") {

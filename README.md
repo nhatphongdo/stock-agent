@@ -7,7 +7,7 @@ A professional AI-powered stock analysis system built with FastAPI and Google's 
 - **AI Streaming Content**: Real-time response generation using Gemini with a smooth typing effect.
 - **Vietnam Market Support**: Integrated with `vnstock` for real-time data on all VN tickers.
 - **Advanced Markdown Tables**: High-contrast tables with semantic color coding for "BUY", "WATCH", and "CAUTION" signals.
-- **Dual Client Support**: Seamlessly switch between **Gemini CLI** and **Google AI Studio SDK**.
+- **Google AI Integration**: Powered by Google's Gemini API for advanced AI analysis.
 
 ## 🚀 API & Web Interface
 
@@ -35,9 +35,8 @@ curl -X POST http://localhost:8000/stock-analyze \
 
 3. **Configure Environment Variables**:
    Set up your `.env` file:
-   - `GEMINI_CLIENT_TYPE`: `studio` (SDK) or `cli`.
+   - `GEMINI_API_KEY`: Your Google AI API key.
    - `GEMINI_MODEL_NAME`: e.g., `gemini-2.5-pro`.
-   - `GEMINI_API_KEY`: Required for `studio` mode.
    - `LOG_LEVEL`: Set processing verbosity.
 
 4. **Launch Application**:
@@ -50,7 +49,7 @@ curl -X POST http://localhost:8000/stock-analyze \
 - `app/index.html`: Modern, single-page dashboard with vanilla JS and Tailwind CSS.
 - `app/agents/`: Core AI logic and prompt engineering for trading analysis.
 - `app/tools/`: Integration with financial data sources (vnstock, etc.).
-- `app/llm/`: Flexible LLM client bridge (CLI vs SDK).
+- `app/llm/`: Gemini client using Google AI API.
 
 ## 📈 Roadmap
 - [x] Modern Web Interface with Dark Mode

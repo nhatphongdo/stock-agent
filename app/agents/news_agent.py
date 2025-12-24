@@ -2,6 +2,10 @@ from datetime import datetime
 from app.llm.gemini_client import GeminiClient
 from app.tools.stock_tools import get_stock_news
 
+# Constants for parsing delimiters
+SENTIMENT_DELIMITER = "---SENTIMENT_LABEL---"
+SOURCES_DELIMITER = "---SOURCES---"
+
 class NewsAgent:
     def __init__(self, name: str, client: GeminiClient):
         self.name = name
@@ -50,17 +54,17 @@ Nhiệm vụ của bạn là phân tích tình hình hiện tại của mã cổ
 **Lưu ý quan trọng:**
 - **KHÔNG** liệt kê lại danh sách nguồn tin trong phần nội dung chính.
 - **BẮT BUỘC**: Ở cuối cùng của câu trả lời, hãy cung cấp 2 thông tin sau trong các block riêng biệt:
-  1. `---SENTIMENT_LABEL---` [Nhãn ngắn gọn: Tích cực/Tiêu cực/Trung lập/Tiềm năng/Rủi ro/...]
-  2. `---SOURCES---` [JSON danh sách nguồn]
+  1. `{SENTIMENT_DELIMITER}` [Nhãn ngắn gọn: Tích cực/Tiêu cực/Trung lập/Tiềm năng/Rủi ro/...]
+  2. `{SOURCES_DELIMITER}` [JSON danh sách nguồn]
 
 Cấu trúc trả về mong muốn:
 
 [Nội dung phân tích Markdown bình thường...]
 
----SENTIMENT_LABEL---
+{SENTIMENT_DELIMITER}
 Tiềm năng
 
----SOURCES---
+{SOURCES_DELIMITER}
 [
   {{ "title": "Tiêu đề bài báo", "link": "https://example.com/bai-viet", "date": "YYYY-MM-DD", "source": "TenNguon" }},
   ...
@@ -77,8 +81,8 @@ Tiềm năng
             # 5. Stream Analysis Content
             async for chunk in self.client.generate_content(prompt):
                  # Detect Start of Sentiment Block
-                 if "---SENTIMENT_LABEL---" in chunk:
-                     parts = chunk.split("---SENTIMENT_LABEL---")
+                 if SENTIMENT_DELIMITER in chunk:
+                     parts = chunk.split(SENTIMENT_DELIMITER)
                      if parts[0].strip():
                         yield json.dumps({"type": "content", "chunk": parts[0]}) + "\n"
 
@@ -87,8 +91,8 @@ Tiềm năng
 
                      if len(parts) > 1:
                          remaining = parts[1]
-                         if "---SOURCES---" in remaining:
-                             label_part, source_part = remaining.split("---SOURCES---", 1)
+                         if SOURCES_DELIMITER in remaining:
+                             label_part, source_part = remaining.split(SOURCES_DELIMITER, 1)
                              collected_sentiment_text += label_part
                              is_parsing_sentiment = False
                              is_parsing_sources = True
@@ -98,8 +102,8 @@ Tiềm năng
                      continue
 
                  # Detect Start of Sources Block
-                 if "---SOURCES---" in chunk:
-                     parts = chunk.split("---SOURCES---")
+                 if SOURCES_DELIMITER in chunk:
+                     parts = chunk.split(SOURCES_DELIMITER)
 
                      if is_parsing_sentiment:
                          collected_sentiment_text += parts[0]
@@ -115,8 +119,8 @@ Tiềm năng
                  if is_parsing_sentiment:
                      collected_sentiment_text += chunk
                      # Watch for sources start if chunked awkwardly
-                     if "---SOURCES---" in collected_sentiment_text:
-                         label_part, source_part = collected_sentiment_text.split("---SOURCES---", 1)
+                     if SOURCES_DELIMITER in collected_sentiment_text:
+                         label_part, source_part = collected_sentiment_text.split(SOURCES_DELIMITER, 1)
                          collected_sentiment_text = label_part
                          is_parsing_sentiment = False
                          is_parsing_sources = True

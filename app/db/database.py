@@ -16,7 +16,7 @@ def init_db():
         email TEXT UNIQUE NOT NULL,
         full_name TEXT,
         black_list TEXT, -- JSON encoded list of strings
-        dividend_rate REAL DEFAULT 0.0
+        return_rate REAL DEFAULT 0.0
     )
     ''')
 
@@ -65,12 +65,12 @@ def get_all_users():
             "email": row["email"],
             "full_name": row["full_name"] or "",
             "black_list": black_list,
-            "dividend_rate": row["dividend_rate"] or 0.0
+            "return_rate": row["return_rate"] or 0.0
         })
     conn.close()
     return users
 
-def update_user_settings(user_id, black_list, dividend_rate):
+def update_user_settings(user_id, black_list, return_rate):
     """Update user settings and return the updated user object or None."""
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -83,8 +83,8 @@ def update_user_settings(user_id, black_list, dividend_rate):
 
     # Update
     cursor.execute(
-        "UPDATE users SET black_list = ?, dividend_rate = ? WHERE id = ?",
-        (json.dumps(black_list), dividend_rate, user_id)
+        "UPDATE users SET black_list = ?, return_rate = ? WHERE id = ?",
+        (json.dumps(black_list), return_rate, user_id)
     )
     conn.commit()
 
@@ -98,7 +98,7 @@ def update_user_settings(user_id, black_list, dividend_rate):
         "email": row["email"],
         "full_name": row["full_name"] or "",
         "black_list": black_list,
-        "dividend_rate": row["dividend_rate"] or 0.0
+        "return_rate": row["return_rate"] or 0.0
     }
 
 def get_user_stocks(user_id):

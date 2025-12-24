@@ -66,7 +66,7 @@ class AnalyzeRequest(BaseModel):
     date: Optional[str] = None
     stocks: Optional[List[str]] = None
     blacklist: Optional[List[str]] = None
-    dividend_rate: Optional[float] = None
+    return_rate: Optional[float] = None
 
 class AnalyzeResponse(BaseModel):
     agent_response: str
@@ -76,11 +76,11 @@ class UserResponse(BaseModel):
     email: str
     full_name: str
     black_list: List[str]
-    dividend_rate: float
+    return_rate: float
 
 class SettingsUpdateRequest(BaseModel):
     black_list: List[str]
-    dividend_rate: float
+    return_rate: float
 
 class StockResponse(BaseModel):
     id: int
@@ -190,7 +190,7 @@ async def analyze_stock(request: Request, body: AnalyzeRequest):
                     date=body.date,
                     stocks=body.stocks,
                     blacklist=body.blacklist if body.blacklist else None,
-                    divident_rate=body.dividend_rate,
+                    divident_rate=body.return_rate,
                 ):
                     if chunk:
                         yield chunk
@@ -218,10 +218,10 @@ async def get_users_endpoint():
 @app.put("/users/{user_id}/settings", response_model=UserResponse)
 async def update_user_settings_endpoint(user_id: int, body: SettingsUpdateRequest):
     """
-    Update a user's blacklist and dividend rate.
+    Update a user's blacklist and return rate.
     """
     try:
-        updated_user = update_user_settings(user_id, body.black_list, body.dividend_rate)
+        updated_user = update_user_settings(user_id, body.black_list, body.return_rate)
         if not updated_user:
             raise HTTPException(status_code=404, detail="User not found")
         return updated_user
