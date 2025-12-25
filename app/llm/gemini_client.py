@@ -1,5 +1,7 @@
 import os
 import json
+import subprocess
+import asyncio
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
@@ -10,24 +12,50 @@ load_dotenv()
 class GeminiClient:
     def __init__(self, model_name: str = None):
         """
-        Initializes the Gemini client using the Google Gen AI SDK.
+        Initializes the Gemini client.
+        Supports 'api' (SDK) and 'cli' (subprocess) providers.
         """
+        self.provider = os.getenv("GEMINI_PROVIDER", "api").lower()
+
         if model_name is None:
             model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-2.5-flash")
-
-        api_key = os.getenv("GEMINI_API_KEY")
-        if not api_key:
-            print("⚠️  Warning: GEMINI_API_KEY not found in environment variables.")
-
-        self.client = genai.Client(api_key=api_key)
         self.model_name = model_name
-        print(f"✅ Initialized GeminiClient (Model: {model_name})")
+
+        if self.provider == "api":
+            api_key = os.getenv("GEMINI_API_KEY")
+            if not api_key:
+                print("⚠️ Warning: GEMINI_API_KEY not found in environment variables.")
+            self.client = genai.Client(api_key=api_key)
+            print(f"✅ Initialized GeminiClient (SDK Mode, Model: {model_name})")
+        else:
+            print(f"✅ Initialized GeminiClient (CLI Mode, Model: {model_name})")
 
     async def generate_content(self, prompt: str):
         """
-        Generates content using the google-genai SDK with streaming.
-        Simple generation without tools.
+        Generates content using the chosen provider.
         """
+        if self.provider == "api":
+            async for chunk in self._generate_api(prompt):
+                yield chunk
+        else:
+            async for chunk in self._generate_cli(prompt):
+                yield chunk
+
+    async def generate_with_tools(self, prompt: str, tools: list, on_tool_call: callable = None):
+        """
+        Generates content with tools.
+        SDK mode handles tool loop manually.
+        CLI mode delegates everything to the gemini command.
+        """
+        if self.provider == "api":
+            async for chunk in self._generate_with_tools_api(prompt, tools, on_tool_call):
+                yield chunk
+        else:
+            # In CLI mode, the gemini CLI handles tools via registered MCP servers
+            async for chunk in self._generate_cli(prompt):
+                yield chunk
+
+    async def _generate_api(self, prompt: str):
         try:
             response_stream = self.client.models.generate_content_stream(
                 model=self.model_name,
@@ -39,24 +67,9 @@ class GeminiClient:
         except Exception as e:
             yield f"❌ Error calling Google AI SDK: {str(e)}"
 
-    async def generate_with_tools(self, prompt: str, tools: list, on_tool_call: callable = None):
-        """
-        Generates content with function calling support.
-        Implements the agentic loop: generate -> call tools -> continue until done.
-
-        Args:
-            prompt: The user prompt
-            tools: List of Python functions to use as tools
-            on_tool_call: Optional callback(tool_name, args, result) for streaming tool progress
-
-        Yields:
-            Text chunks from the model's final response
-        """
+    async def _generate_with_tools_api(self, prompt: str, tools: list, on_tool_call: callable = None):
         try:
-            # Build conversation history
             contents = [types.Content(role="user", parts=[types.Part.from_text(text=prompt)])]
-
-            # Configure tools
             config = types.GenerateContentConfig(
                 tools=tools,
                 automatic_function_calling=types.AutomaticFunctionCallingConfig(
@@ -94,13 +107,8 @@ class GeminiClient:
                     break
 
                 # Add model's response (with function calls) to conversation history
-                # We need to construct a Content object that has both text and function_calls parts
-                model_parts = []
-                for t in text_accumulated:
-                    model_parts.append(types.Part.from_text(text=t))
-                for fc in function_calls:
-                    model_parts.append(types.Part(function_call=fc))
-
+                model_parts = [types.Part.from_text(text=t) for t in text_accumulated]
+                model_parts.extend([types.Part(function_call=fc) for fc in function_calls])
                 contents.append(types.Content(role="model", parts=model_parts))
 
                 # Execute function calls
@@ -136,6 +144,53 @@ class GeminiClient:
 
             if iteration >= max_iterations:
                 yield "\n\n⚠️ Đã đạt giới hạn số lần gọi công cụ."
-
         except Exception as e:
             yield f"❌ Error in generate_with_tools: {str(e)}"
+
+    async def _generate_cli(self, prompt: str):
+        """
+        Executes the gemini CLI via subprocess and streams its output.
+        Restricted to gemini_sandbox directory.
+        """
+        try:
+            # gemini CLI command
+            # --sandbox: enables sandbox mode (if supported by CLI)
+            # --yolo: auto-approve tools
+            # --output-format text: standard text output
+            cmd = ["gemini", "--sandbox", "--yolo", "--output-format", "text", "--prompt", prompt]
+            if self.model_name:
+                cmd.extend(["--model", self.model_name])
+
+            # Path to sandbox directory
+            sandbox_path = "app/llm/gemini_sandbox"
+
+            # Run in a separate thread to avoid blocking asyncio
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                cwd=sandbox_path,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+
+            async def read_stream(stream):
+                while True:
+                    # Read in chunks to avoid blocking on newlines or breaking on blank lines
+                    chunk = await stream.read(1024)
+                    if not chunk:
+                        break
+                    yield chunk.decode('utf-8')
+
+            async for line in read_stream(process.stdout):
+                yield line
+
+            # Wait for completion
+            await process.wait()
+
+            if process.returncode != 0:
+                stderr = await process.stderr.read()
+                err_msg = stderr.decode('utf-8')
+                if err_msg:
+                    yield f"\n❌ CLI Error: {err_msg}"
+
+        except Exception as e:
+            yield f"❌ Exception calling Gemini CLI: {str(e)}"

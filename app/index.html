@@ -1200,17 +1200,6 @@
             </div>
           </div>
         </div>
-        <!-- Loading Indicator -->
-        <div id="loading" class="hidden mt-6">
-          <div class="flex gap-4 animate-pulse">
-            <div class="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800"></div>
-            <div class="flex-1 space-y-3">
-              <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded-full w-3/4"></div>
-              <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-1/2"></div>
-              <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded-full w-5/6"></div>
-            </div>
-          </div>
-        </div>
       </div>
     </aside>
 
@@ -1649,7 +1638,6 @@
     const generalBtn = document.getElementById("general-btn");
     const userTaskInput = document.getElementById("user-task");
     const messagesContainer = document.getElementById("messages");
-    const loadingIndicator = document.getElementById("loading");
     const chatContainer = document.getElementById("chat-container");
 
     // --- Conversation Persistence (sessionStorage) ---
@@ -2614,7 +2602,6 @@
       // Show loading
       submitBtn.disabled = true;
       generalBtn.disabled = true;
-      loadingIndicator.classList.remove("hidden");
       chatContainer.scrollTop = chatContainer.scrollHeight;
 
       // Prepare bot message bubble for streaming
@@ -2653,9 +2640,6 @@
         });
 
         if (!response.ok) throw new Error("Network response was not ok");
-
-        // Hide loading indicator as soon as stream starts
-        loadingIndicator.classList.add("hidden");
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -2743,7 +2727,6 @@
       } finally {
         submitBtn.disabled = false;
         generalBtn.disabled = false;
-        loadingIndicator.classList.add("hidden");
         chatContainer.scrollTop = chatContainer.scrollHeight;
         // Save conversation to sessionStorage
         saveConversation();
