@@ -147,17 +147,21 @@ class GeminiClient:
         except Exception as e:
             yield f"❌ Error in generate_with_tools: {str(e)}"
 
-    async def _generate_cli(self, prompt: str):
+    async def _generate_cli(self, prompt: str, on_tool_call: callable = None):
         """
         Executes the gemini CLI via subprocess and streams its output.
         Restricted to gemini_sandbox directory.
         """
         try:
+            # Prepend guidance for CLI to use tools
+            full_prompt = (
+                "SYSTEM: You are an AI Stock Assistant with access to real-time market tools via MCP. "
+                "Always favor using tools to verify data before answering. "
+                "If tools are available, call them to get real-time stock information.\n\n"
+            ) + prompt
+
             # gemini CLI command
-            # --sandbox: enables sandbox mode (if supported by CLI)
-            # --yolo: auto-approve tools
-            # --output-format text: standard text output
-            cmd = ["gemini", "--sandbox", "--yolo", "--output-format", "text", "--prompt", prompt]
+            cmd = ["gemini", "--sandbox", "--yolo", "--output-format", "text", full_prompt]
             if self.model_name:
                 cmd.extend(["--model", self.model_name])
 
@@ -172,16 +176,43 @@ class GeminiClient:
                 stderr=subprocess.PIPE
             )
 
-            async def read_stream(stream):
+            async def read_stdout(stream):
                 while True:
-                    # Read in chunks to avoid blocking on newlines or breaking on blank lines
-                    chunk = await stream.read(1024)
-                    if not chunk:
+                    line = await stream.readline()
+                    if not line:
                         break
-                    yield chunk.decode('utf-8')
+                    yield line.decode('utf-8')
 
-            async for line in read_stream(process.stdout):
-                yield line
+            async def read_stderr(stream, cb):
+                while True:
+                    line = await stream.readline()
+                    if not line:
+                        break
+                    decoded = line.decode('utf-8')
+                    # Common patterns for tool calls in Gemini CLI:
+                    # "→ Calling <tool_name>(...)"
+                    # "Using tool: <tool_name>"
+                    if "Calling" in decoded or "Using tool" in decoded:
+                        # Extract tool name if possible
+                        import re
+                        match = re.search(r'(?:Calling|Using tool:)\s+([a-zA-Z0-9_]+)', decoded)
+                        if match and cb:
+                            tool_name = match.group(1)
+                            # Pass to callback (args/result unknown in real-time CLI stream easily)
+                            cb(tool_name, {}, None)
+
+            # Start stderr reader in background to capture tool calls
+            stderr_reader_task = asyncio.create_task(read_stderr(process.stderr, on_tool_call))
+
+            async for chunk in read_stdout(process.stdout):
+                yield chunk
+
+            # Cleanup stderr reader after stdout is done
+            stderr_reader_task.cancel()
+            try:
+                await stderr_reader_task
+            except asyncio.CancelledError:
+                pass
 
             # Wait for completion
             await process.wait()

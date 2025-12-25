@@ -4,23 +4,17 @@ A professional AI-powered stock analysis system built with FastAPI and Google's 
 
 ## 🌟 Features
 - **Modern Premium Interface**: Responsive web UI with glassmorphism, dark mode (default), and resizable analysis panels.
-- **AI Streaming Content**: Real-time response generation using Gemini with a smooth typing effect.
+- **Dual LLM Providers**: Supports both **Google Gen AI SDK** and **Gemini CLI** (via MCP).
+- **AI Streaming Content**: Real-time response generation with internal reasoning visibility.
+- **Advanced Technical Charts**: Interactive price and volume charts using Lightweight Charts with real-time technical indicator tooltips (MA, EMA, BB, RSI, MACD).
 - **Vietnam Market Support**: Integrated with `vnstock` for real-time data on all VN tickers.
-- **Advanced Markdown Tables**: High-contrast tables with semantic color coding for "BUY", "WATCH", and "CAUTION" signals.
-- **Google AI Integration**: Powered by Google's Gemini API for advanced AI analysis.
+- **Model Context Protocol (MCP)**: Custom MCP server to expose Python tools to the Gemini CLI.
 
 ## 🚀 API & Web Interface
 
 - **Web UI**: Access the interactive dashboard at `http://localhost:8000/trade-agent`
 - **Streaming endpoint**: `POST /stock-analyze`
-    - Body: `{"task": "nội dung yêu cầu", "date": "YYYY-MM-DD", "stocks": ["SSI", "VND"]}`
-
-### Example CLI Query
-```bash
-curl -X POST http://localhost:8000/stock-analyze \
-     -H "Content-Type: application/json" \
-     -d '{"task": "Phân tích nhóm ngành ngân hàng"}'
-```
+    - Body: `{"task": "nội dung yêu cầu", "stocks": ["SSI", "VND"]}`
 
 ## 🛠 Setup
 
@@ -35,24 +29,34 @@ curl -X POST http://localhost:8000/stock-analyze \
 
 3. **Configure Environment Variables**:
    Set up your `.env` file:
-   - `GEMINI_API_KEY`: Your Google AI API key.
-   - `GEMINI_MODEL_NAME`: e.g., `gemini-2.5-pro`.
-   - `LOG_LEVEL`: Set processing verbosity.
+   - `GEMINI_PROVIDER`: `api` (SDK) or `cli` (Gemini CLI).
+   - `GEMINI_API_KEY`: Your Google AI API key (required for `api` mode).
+   - `GEMINI_MODEL_NAME`: e.g., `gemini-2.5-flash`.
 
-4. **Launch Application**:
+4. **Gemini CLI Setup (Optional for `cli` mode)**:
+   ```bash
+   npm install -g @google/gemini-cli
+   # Register the MCP server
+   gemini mcp add stock-agent-tools "python3 /path/to/project/app/llm/mcp_server.py"
+   ```
+
+5. **Launch Application**:
    ```bash
    python -m app.main
    ```
 
 ## 📂 Project Structure
 - `app/main.py`: FastAPI application server and static file hosting.
-- `app/index.html`: Modern, single-page dashboard with vanilla JS and Tailwind CSS.
-- `app/agents/`: Core AI logic and prompt engineering for trading analysis.
-- `app/tools/`: Integration with financial data sources (vnstock, etc.).
-- `app/llm/`: Gemini client using Google AI API.
+- `app/index.html`: Modern dashboard with vanilla JS and Tailwind CSS.
+- `app/agents/`: Core AI agents (Trading, News) and logic.
+- `app/tools/`: Financial data tools (Vietcap, Stock tools).
+- `app/llm/`:
+    - `gemini_client.py`: Multi-provider client (SDK/CLI).
+    - `mcp_server.py`: Standard MCP server for CLI tool-calling.
+    - `gemini_sandbox/`: Isolated working directory for the CLI.
 
 ## 📈 Roadmap
 - [x] Modern Web Interface with Dark Mode
-- [x] Real-time Streaming Responses
-- [ ] Multi-chart technical analysis integration
-- [ ] User portfolio tracking and automated alerts
+- [x] Real-time Streaming Responses (SDK/CLI)
+- [x] Advanced Technical Analysis Charts
+- [x] MCP Integration for local tool-calling

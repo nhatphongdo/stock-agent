@@ -1,7 +1,11 @@
 import sys
 import json
 import traceback
+import os
 from typing import Any, Dict, List
+
+# Add project root to sys.path so we can import 'app'
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from app.tools.vietcap_tools import VIETCAP_TOOLS
 

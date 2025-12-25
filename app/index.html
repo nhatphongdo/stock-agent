@@ -1735,6 +1735,7 @@
     let candleSeries = null;
     let volumeSeries = null;
     let indicatorSeries = []; // Array to hold indicator line series
+    let indicatorValues = {}; // Store raw indicator values mapping time -> {key: value}
     let currentChartSymbol = null;
 
     // Calculate Moving Average
@@ -1909,6 +1910,7 @@
       candleSeries = null;
       volumeSeries = null;
       indicatorSeries = [];
+      indicatorValues = {};
 
       // Calculate date range from timeframe
       const end = new Date();
@@ -2156,6 +2158,11 @@
         });
         maSeries.setData(maData);
         indicatorSeries.push(maSeries);
+        // Store for tooltip
+        maData.forEach(d => {
+          if (!indicatorValues[d.time]) indicatorValues[d.time] = {};
+          indicatorValues[d.time].ma = d.value;
+        });
       }
 
       if (showEMA) {
@@ -2170,6 +2177,11 @@
         });
         emaSeries.setData(emaData);
         indicatorSeries.push(emaSeries);
+        // Store for tooltip
+        emaData.forEach(d => {
+          if (!indicatorValues[d.time]) indicatorValues[d.time] = {};
+          indicatorValues[d.time].ema = d.value;
+        });
       }
 
       if (showBB) {
@@ -2196,6 +2208,16 @@
         });
         lowerSeries.setData(lowerData);
         indicatorSeries.push(lowerSeries);
+        // Store for tooltip
+        bb.forEach((v, i) => {
+          if (v.upper !== null) {
+            const time = Math.floor(data[i].x.getTime() / 1000);
+            if (!indicatorValues[time]) indicatorValues[time] = {};
+            indicatorValues[time].bbUpper = v.upper;
+            indicatorValues[time].bbMiddle = v.middle;
+            indicatorValues[time].bbLower = v.lower;
+          }
+        });
       }
 
       if (showRSI) {
@@ -2218,6 +2240,14 @@
         });
         rsiSeries.setData(rsiData);
         indicatorSeries.push(rsiSeries);
+        // Store raw RSI values for tooltip
+        rsi.forEach((v, i) => {
+          if (v !== null) {
+            const time = Math.floor(data[i].x.getTime() / 1000);
+            if (!indicatorValues[time]) indicatorValues[time] = {};
+            indicatorValues[time].rsi = v;
+          }
+        });
       }
 
       if (showMACD) {
@@ -2255,6 +2285,16 @@
         });
         signalSeries.setData(signalData);
         indicatorSeries.push(signalSeries);
+        // Store raw MACD values for tooltip
+        macd.macdLine.forEach((v, i) => {
+          if (v !== null || macd.signalLine[i] !== null || macd.histogram[i] !== null) {
+            const time = Math.floor(data[i].x.getTime() / 1000);
+            if (!indicatorValues[time]) indicatorValues[time] = {};
+            indicatorValues[time].macdLine = v;
+            indicatorValues[time].macdSignal = macd.signalLine[i];
+            indicatorValues[time].macdHist = macd.histogram[i];
+          }
+        });
       }
 
       if (showVolSMA) {
@@ -2269,6 +2309,11 @@
         });
         volSmaSeries.setData(volSmaData);
         indicatorSeries.push(volSmaSeries);
+        // Store for tooltip
+        volSmaData.forEach(d => {
+          if (!indicatorValues[d.time]) indicatorValues[d.time] = {};
+          indicatorValues[d.time].volSma = d.value;
+        });
       }
 
       // Synchronize time scales between price and volume charts
@@ -2334,6 +2379,47 @@
         return vol.toLocaleString('vi-VN');
       };
 
+      // Helper for indicator values in tooltip
+      const renderTooltipIndicators = (time, isVolumeChart = false) => {
+        const values = indicatorValues[time];
+        if (!values) return '';
+        let html = '<div style="margin-top: 6px; border-top: 1px solid rgba(148, 163, 184, 0.2); padding-top: 4px;">';
+        let count = 0;
+
+        if (!isVolumeChart) {
+          if (values.ma !== undefined) {
+            html += `<div><span style="color: #3b82f6; opacity: 0.8;">MA(20):</span> <strong>${formatPrice(values.ma)}</strong></div>`;
+            count++;
+          }
+          if (values.ema !== undefined) {
+            html += `<div><span style="color: #f97316; opacity: 0.8;">EMA(9):</span> <strong>${formatPrice(values.ema)}</strong></div>`;
+            count++;
+          }
+          if (values.bbUpper !== undefined) {
+            html += `<div><span style="color: #a855f7; opacity: 0.8;">BB Upper:</span> <strong>${formatPrice(values.bbUpper)}</strong></div>`;
+            html += `<div><span style="color: #a855f7; opacity: 0.8;">BB Lower:</span> <strong>${formatPrice(values.bbLower)}</strong></div>`;
+            count++;
+          }
+          if (values.rsi !== undefined) {
+            html += `<div><span style="color: ${CONFIG.COLORS.RSI}; opacity: 0.8;">RSI(14):</span> <strong>${values.rsi.toFixed(2)}</strong></div>`;
+            count++;
+          }
+          if (values.macdLine !== undefined) {
+            html += `<div><span style="color: ${CONFIG.COLORS.MACD_LINE}; opacity: 0.8;">MACD:</span> <strong>${values.macdLine.toFixed(2)}</strong></div>`;
+            html += `<div><span style="color: ${CONFIG.COLORS.MACD_SIGNAL}; opacity: 0.8;">Signal:</span> <strong>${values.macdSignal.toFixed(2)}</strong></div>`;
+            count++;
+          }
+        } else {
+          if (values.volSma !== undefined) {
+            html += `<div><span style="color: ${CONFIG.COLORS.VOLUME_SMA}; opacity: 0.8;">Vol SMA(20):</span> <strong>${formatVolume(values.volSma)}</strong></div>`;
+            count++;
+          }
+        }
+
+        html += '</div>';
+        return count > 0 ? html : '';
+      };
+
       // Update tooltip position to follow crosshair
       const updateTooltipPosition = (tooltip, container, param) => {
         if (!param.point) return;
@@ -2377,6 +2463,7 @@
               <div><span style="opacity: 0.6;">High:</span> <strong>${formatPrice(candlePrice.high)}</strong></div>
               <div><span style="opacity: 0.6;">Low:</span> <strong>${formatPrice(candlePrice.low)}</strong></div>
               <div><span style="opacity: 0.6;">Close:</span> <strong>${formatPrice(candlePrice.close)}</strong> <span style="color: ${changeColor};">(${changeSign}${changePercent}%)</span></div>
+              ${renderTooltipIndicators(param.time)}
             `;
             priceTooltip.style.display = 'block';
             updateTooltipPosition(priceTooltip, priceContainer, param);
@@ -2386,7 +2473,9 @@
           const volData = param.seriesData.get(volumeSeries);
           if (volData) {
             volumeTooltip.innerHTML = `
+              <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatFullDateTime(param.time)}</div>
               <div><span style="opacity: 0.6;">Volume:</span> <strong>${formatVolume(volData.value)}</strong></div>
+              ${renderTooltipIndicators(param.time, true)}
             `;
             volumeTooltip.style.display = 'block';
             updateTooltipPosition(volumeTooltip, volumeContainer, param);
@@ -2408,6 +2497,7 @@
             volumeTooltip.innerHTML = `
               <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatFullDateTime(param.time)}</div>
               <div><span style="opacity: 0.6;">Volume:</span> <strong>${formatVolume(volData.value)}</strong></div>
+              ${renderTooltipIndicators(param.time, true)}
             `;
             volumeTooltip.style.display = 'block';
             updateTooltipPosition(volumeTooltip, volumeContainer, param);
@@ -2425,6 +2515,7 @@
               <div><span style="opacity: 0.6;">High:</span> <strong>${formatPrice(candlePrice.high)}</strong></div>
               <div><span style="opacity: 0.6;">Low:</span> <strong>${formatPrice(candlePrice.low)}</strong></div>
               <div><span style="opacity: 0.6;">Close:</span> <strong>${formatPrice(candlePrice.close)}</strong> <span style="color: ${changeColor};">(${changeSign}${changePercent}%)</span></div>
+              ${renderTooltipIndicators(param.time)}
             `;
             priceTooltip.style.display = 'block';
           }
@@ -2682,7 +2773,7 @@
               // Reasoning section (collapsible, default collapsed)
               if (reasoningContent.trim()) {
                 displayHtml += `
-                  <details class="reasoning-section mb-4 p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                  <details class="reasoning-section mb-4 p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700" ${isStillProcessing ? 'open' : ''}>
                     <summary class="cursor-pointer font-semibold text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2">
                       ${isStillProcessing
                     ? '<span class="inline-block w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></span>'
