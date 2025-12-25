@@ -178,11 +178,11 @@ def get_technical_indicators(ticker: str, timeframe: str = "ONE_DAY") -> dict:
 
             # Extract all oscillators as dict
             oscillators = {osc.get("name", "").lower(): {"value": osc.get("value"), "rating": osc.get("rating")}
-                          for osc in d.get("oscillators", []) if osc.get("name")}
+                          for osc in d.get("oscillators", []) if osc and osc.get("name")}
 
             # Extract all moving averages as dict
             moving_averages = {ma.get("name", "").lower(): {"value": ma.get("value"), "rating": ma.get("rating")}
-                              for ma in d.get("movingAverages", []) if ma.get("name")}
+                              for ma in d.get("movingAverages", []) if ma and ma.get("name")}
 
             return {
                 "ticker": ticker,

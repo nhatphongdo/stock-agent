@@ -23,20 +23,40 @@ from concurrent.futures import ThreadPoolExecutor
 REASONING_DELIMITER = "---REASONING---"
 FINAL_DELIMITER = "---FINAL---"
 
-def fetch_market_context(portfolio_stocks: list[str] = None):
+def fetch_market_context(portfolio_stocks: list[str] = None, whitelist: list[str] = None):
     """
     Pre-fetch essential market data to reduce model tool calls.
     Returns a structured context with top stocks, technicals, and news.
 
     Args:
         portfolio_stocks: List of stock tickers from user's portfolio to include in prefetch
+        whitelist: List of prioritized stock tickers (max 30, always included first)
+
+    Priority order for prefetch (total max 50):
+        1. Whitelist tickers (all included, max 30)
+        2. Portfolio tickers
+        3. Top tickers, coverage universe, news tickers
     """
+    MAX_PREFETCH = 50
+
     context = {
         "stocks_data": [],
         "trending_news": [],
     }
 
     try:
+        # Start with portfolio stocks (highest priority)
+        prioritized_tickers = []
+        if portfolio_stocks:
+            for stock in portfolio_stocks:
+                ticker = stock.split('(')[0].strip().upper()
+                if ticker:
+                    prioritized_tickers.append(ticker)
+
+        # Add whitelist tickers (second priority)
+        if whitelist:
+            prioritized_tickers.extend([t.upper() for t in whitelist])
+
         # 1. Get trending news FIRST to extract related tickers
         news = get_trending_news(language=1)
         if isinstance(news, list):
@@ -44,32 +64,21 @@ def fetch_market_context(portfolio_stocks: list[str] = None):
 
         # 2. Get top tickers (9 positive, 9 negative from All)
         top_result = get_top_tickers(top_pos=9, top_neg=9, group="all")
-        tickers = set()
-
-        # get_top_tickers returns a flat list with sentiment info
         if isinstance(top_result, list):
-            tickers.update([t["ticker"] for t in top_result if t.get("ticker")])
+            prioritized_tickers.extend([t["ticker"] for t in top_result if t.get("ticker")])
 
         # 3. Get coverage universe and filter BUY-rated stocks
         coverage = get_coverage_universe()
         if coverage and isinstance(coverage, list):
             buy_stocks = [s for s in coverage if s.get("rating") == "BUY"][:10]
-            tickers.update([s.get("ticker") for s in buy_stocks if s.get("ticker")])
+            prioritized_tickers.extend([s.get("ticker") for s in buy_stocks if s.get("ticker")])
 
         # 4. Add tickers from trending news
         if isinstance(news, list):
-            tickers.update([n.get("ticker") for n in news if n.get("ticker")])
+            prioritized_tickers.extend([n.get("ticker") for n in news if n.get("ticker")])
 
-        # 5. Add portfolio stocks if provided
-        if portfolio_stocks:
-            # Extract ticker symbols from portfolio format "TICKER(cost)" or just "TICKER"
-            for stock in portfolio_stocks:
-                ticker = stock.split('(')[0].strip().upper()
-                if ticker:
-                    tickers.add(ticker)
-
-        # Convert to list for processing
-        tickers = list(tickers)
+        # Ensure uniqueness (preserve priority order) and apply final limit
+        tickers = list(dict.fromkeys(prioritized_tickers))[:MAX_PREFETCH]
 
         # 6. Fetch details for each ticker (parallel execution)
         if tickers:
@@ -267,11 +276,11 @@ class TradingAgent:
         self.name = name
         self.client = client
 
-    async def run(self, task: str = None, date: str = None, stocks: list[str] = None, blacklist: list[str] = None, divident_rate: float = None):
+    async def run(self, task: str = None, date: str = None, stocks: list[str] = None, blacklist: list[str] = None, divident_rate: float = None, whitelist: list[str] = None):
         # Pre-fetch market context
         yield json.dumps({"type": "reasoning", "chunk": "🔄 Đang tải dữ liệu thị trường...\n\n"}) + "\n"
 
-        market_context = fetch_market_context(portfolio_stocks=stocks)
+        market_context = fetch_market_context(portfolio_stocks=stocks, whitelist=whitelist)
         context_text = format_context_for_prompt(market_context)
 
         tickers_list = [s['ticker'] for s in market_context.get('stocks_data', [])]
@@ -344,7 +353,7 @@ III. NGUYÊN TẮC TUYỆT ĐỐI
 4. Mọi dữ liệu **BẮT BUỘC** trích dẫn theo định dạng:
 
   <Nội dung>
-  (Nguồn: Vietcap API - Thời gian cập nhật DD/MM/YYYY HH:mm GMT+7)
+  (Nguồn: Source - Thời gian cập nhật DD/MM/YYYY HH:mm GMT+7)
 
 - Thiếu bất kỳ thành phần nào → dữ liệu không hợp lệ.
 
@@ -369,16 +378,20 @@ III. NGUYÊN TẮC TUYỆT ĐỐI
 IV. THÔNG TIN NGỮ CẢNH CÁ NHÂN
 ────────────────────────────────
 - Thời gian hệ thống: {date + " 00:00:00" if (date and len(date) == 10) else (date if date else datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}
-- Danh mục đang nắm giữ (Mã (Giá vốn)): {"Không có" if stocks is None else ', '.join(stocks)}
+- Danh mục cá nhân đang nắm giữ (Mã (Giá vốn)): {"Không có" if stocks is None else ', '.join(stocks)}
 - Loại trừ lĩnh vực: {', '.join(blacklist) if blacklist is not None else "Không có"}
+- Danh mục theo dõi (whitelist): {', '.join(whitelist) if whitelist is not None else "Không có"}
 - Tỷ suất lợi nhuận tối thiểu: {divident_rate or 6}%
 
 ────────────────────────────────
 V. NHIỆM VỤ
 ────────────────────────────────
 - Nếu người dùng có yêu cầu cụ thể hợp lệ → trả lời **DUY NHẤT** yêu cầu đó và **DỪNG**.
-- Nếu không có yêu cầu cụ thể hợp lệ, thực hiện lần lượt:
+  - **PHÂN TÍCH WHITELIST**: Nếu mã trong danh mục theo dõi (whitelist) liên quan đến yêu cầu của user thì phân tích và đưa ra khuyến nghị (mua/bán):
+    - Trình bày bảng gồm:
+      Mã | Tên công ty | Giá hiện tại | RSI | MACD Signal | Xu hướng | Hỗ trợ | Kháng cự | Khuyến nghị | Giá bán KN | Phân tích
 
+- Nếu không có yêu cầu cụ thể hợp lệ, thực hiện lần lượt:
 1. Phân tích tổng quan thị trường hiện tại.
 2. Đưa ra khuyến nghị đầu tư dựa trên:
    - Dữ liệu thị trường.
@@ -403,6 +416,9 @@ V. NHIỆM VỤ
 6. Khuyến nghị bán từ danh mục đang nắm giữ:
    - Trình bày bảng gồm:
      Mã | Tên công ty | Giá vốn | Giá hiện tại | Lãi/Lỗ % | RSI | MACD Signal | Xu hướng | Hỗ trợ | Kháng cự | Khuyến nghị | Giá bán KN | Phân tích
+7. Phân tích và đưa ra khuyến nghị (mua/bán) từ danh mục theo dõi (whitelist):
+   - Trình bày bảng gồm:
+     Mã | Tên công ty | Giá hiện tại | RSI | MACD Signal | Xu hướng | Hỗ trợ | Kháng cự | Khuyến nghị | Giá bán KN | Phân tích
 
 ────────────────────────────────
 VI. QUY ƯỚC OUTPUT (BẮT BUỘC)

@@ -664,20 +664,76 @@
 
     .blacklist-tag {
       padding: 0.5rem 0.75rem;
-      background: rgba(99, 102, 241, 0.1);
-      color: #6366f1;
+      background: rgba(99, 102, 241, 0.15);
+      color: #4f46e5;
       border-radius: 12px;
       font-size: 0.85rem;
       font-weight: 600;
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      border: 1px solid rgba(99, 102, 241, 0.2);
+      border: 1px solid rgba(99, 102, 241, 0.35);
       transition: all 0.2s ease;
     }
 
+    .dark .blacklist-tag {
+      background: rgba(99, 102, 241, 0.1);
+      color: #6366f1;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
     .blacklist-tag:hover {
+      background: rgba(99, 102, 241, 0.25);
+    }
+
+    .dark .blacklist-tag:hover {
       background: rgba(99, 102, 241, 0.2);
+    }
+
+    .whitelist-tag {
+      border-color: rgb(4, 120, 87) !important;
+      background: rgba(16, 185, 129, 0.2) !important;
+    }
+
+    .whitelist-tag span:first-child {
+      color: rgb(4, 120, 87);
+    }
+
+    .dark .whitelist-tag {
+      border-color: rgb(16, 185, 129) !important;
+      background: rgba(16, 185, 129, 0.1) !important;
+    }
+
+    .dark .whitelist-tag span:first-child {
+      color: rgb(16, 185, 129);
+    }
+
+    .whitelist-tag:hover {
+      background: rgba(16, 185, 129, 0.35) !important;
+    }
+
+    .dark .whitelist-tag:hover {
+      background: rgba(16, 185, 129, 0.2) !important;
+    }
+
+    .whitelist-remove {
+      background: rgba(16, 185, 129, 0.3) !important;
+    }
+
+    .whitelist-remove i,
+    .whitelist-remove svg {
+      color: rgb(4, 120, 87);
+      stroke: rgb(4, 120, 87);
+    }
+
+    .dark .whitelist-remove {
+      background: rgba(16, 185, 129, 0.2) !important;
+    }
+
+    .dark .whitelist-remove i,
+    .dark .whitelist-remove svg {
+      color: rgb(16, 185, 129);
+      stroke: rgb(16, 185, 129);
     }
 
     .remove-tag {
@@ -693,8 +749,14 @@
     }
 
     .remove-tag:hover {
-      background: #ef4444;
+      background: #ef4444 !important;
       color: white;
+    }
+
+    .remove-tag:hover i,
+    .remove-tag:hover svg {
+      color: white !important;
+      stroke: white !important;
     }
 
     /* Portfolio Modal Styling */
@@ -1030,11 +1092,33 @@
             sách đen (Blacklist)</label>
           <div class="relative">
             <input type="text" id="blacklist-input"
-              class="w-full p-4 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all text-sm"
+              class="w-full p-4 pr-12 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all text-sm"
               placeholder="Nhập tên ngành hoặc cổ phiếu rồi ấn Enter" />
             <i data-lucide="plus" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
           </div>
           <div id="blacklist-tags-container" class="blacklist-tags">
+            <!-- Tags will be rendered here -->
+          </div>
+        </div>
+
+        <!-- Whitelist (Priority prefetch) -->
+        <div>
+          <label
+            class="block text-[11px] font-black text-emerald-600 dark:text-emerald-400 mb-3 uppercase tracking-[0.2em] px-1">Danh
+            sách ưu tiên (Whitelist) <span
+              class="text-slate-600 dark:text-slate-400 font-normal lowercase tracking-normal">- max 30
+              mã</span></label>
+          <div class="relative">
+            <input type="text" id="whitelist-input"
+              class="w-full p-4 pr-12 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all text-sm"
+              placeholder="Nhập mã cổ phiếu để thêm vào whitelist" />
+            <i data-lucide="star" class="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-400 w-4 h-4"></i>
+          </div>
+          <div id="whitelist-suggestions"
+            class="hidden mt-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg max-h-48 overflow-y-auto">
+            <!-- Suggestions will be rendered here -->
+          </div>
+          <div id="whitelist-tags-container" class="blacklist-tags">
             <!-- Tags will be rendered here -->
           </div>
         </div>
@@ -1149,7 +1233,7 @@
             placeholder="Ví dụ: Phân tích cổ phiếu VNM và đưa ra gợi ý chiến lược ngắn hạn..."></textarea>
           <!-- Clear Conversation Button -->
           <button type="button" onclick="clearConversation()"
-            class="absolute bottom-4 right-16 mr-1 p-3 rounded-xl transition-all transform active:scale-90 z-10 bg-gradient-to-r from-slate-100/60 to-slate-200/60 dark:from-slate-600/90 dark:to-slate-700/90 backdrop-blur-xl backdrop-saturate-150 border border-white/40 dark:border-white/20 shadow-lg shadow-slate-300/50 dark:shadow-slate-900/50 ring-1 ring-inset ring-white/20 dark:ring-white/10 hover:from-red-100/80 hover:to-red-200/80 dark:hover:from-red-700/90 dark:hover:to-red-800/90 hover:border-red-300 dark:hover:border-red-400/40 hover:shadow-xl hover:shadow-red-200/50 dark:hover:shadow-red-500/30 hover:scale-105 text-slate-400 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-300"
+            class="absolute bottom-4 right-16 mr-1 p-3 rounded-xl transition-all transform active:scale-90 z-10 bg-gradient-to-r from-slate-100/60 to-slate-200/60 dark:from-slate-600/90 dark:to-slate-700/90 backdrop-blur-xl backdrop-saturate-150 border border-white/40 dark:border-white/20 shadow-lg shadow-slate-300/50 dark:shadow-slate-900/50 ring-1 ring-inset ring-white/20 dark:ring-white/10 hover:from-red-100/80 hover:to-red-200/80 dark:hover:from-red-700/90 dark:hover:to-red-800/90 hover:border-red-300 dark:hover:border-red-400/40 hover:shadow-xl hover:shadow-red-200/50 dark:hover:shadow-red-500/30 hover:scale-105 text-slate-600 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-300"
             title="Xóa cuộc hội thoại">
             <i data-lucide="trash-2" class="w-5 h-5"></i>
           </button>
@@ -1604,13 +1688,21 @@
 
     // --- Valid Stock Symbols (fetched from backend) ---
     let symbolsMap = {}; // symbol -> {name, exchange}
+    const VALID_EXCHANGES = ['HOSE', 'HNX', 'UPCOM', 'HSX', 'VN30', 'HNX30'];
 
     async function fetchValidSymbols() {
       try {
         const response = await fetch("/symbols");
         if (response.ok) {
           const data = await response.json();
-          symbolsMap = data.symbols || {};
+          // Filter to cache only valid stocks
+          symbolsMap = {};
+          for (const [symbol, info] of Object.entries(data.symbols || {})) {
+            const exchange = (info?.exchange || 'HOSE').toUpperCase();
+            if (VALID_EXCHANGES.includes(exchange)) {
+              symbolsMap[symbol] = info;
+            }
+          }
         }
       } catch (error) {
         console.error("Failed to fetch stock symbols:", error);
@@ -2726,6 +2818,7 @@
             task: task,
             stocks: userStocks,
             blacklist: currentUser ? currentUser.black_list : null,
+            whitelist: currentUser ? currentUser.white_list : null,
             return_rate: currentUser ? currentUser.return_rate : null,
           }),
         });
@@ -2975,7 +3068,13 @@
     const returnRateInput = document.getElementById("return-rate-input");
     const saveSettingsBtn = document.getElementById("save-settings-btn");
 
+    // Whitelist elements
+    const whitelistInput = document.getElementById("whitelist-input");
+    const whitelistTagsContainer = document.getElementById("whitelist-tags-container");
+    const whitelistSuggestions = document.getElementById("whitelist-suggestions");
+
     let tempBlacklist = [];
+    let tempWhitelist = [];
 
     function getInitials(name) {
       if (!name) return "??";
@@ -3028,8 +3127,10 @@
       settingsOverlay.classList.add("show");
 
       tempBlacklist = [...currentUser.black_list];
+      tempWhitelist = [...(currentUser.white_list || [])];
       returnRateInput.value = currentUser.return_rate;
       renderBlacklistTags();
+      renderWhitelistTags();
     }
 
     function closeSettings() {
@@ -3066,6 +3167,91 @@
       renderBlacklistTags();
     }
 
+    // --- Whitelist Functions ---
+    function renderWhitelistTags() {
+      whitelistTagsContainer.innerHTML = "";
+      tempWhitelist.forEach((item, index) => {
+        const tag = document.createElement("div");
+        tag.className = "blacklist-tag whitelist-tag";
+        tag.innerHTML = `
+          <span style="font-weight: 600;">${item}</span>
+          <span class="remove-tag whitelist-remove" onclick="removeWhitelistItem(${index})">
+            <i data-lucide="x" class="w-3 h-3"></i>
+          </span>
+        `;
+
+        whitelistTagsContainer.appendChild(tag);
+      });
+      lucide.createIcons({ root: whitelistTagsContainer });
+    }
+
+    function addWhitelistItem(ticker) {
+      const val = ticker.trim().toUpperCase();
+      if (val && !tempWhitelist.includes(val) && tempWhitelist.length < 30) {
+        // Validate against symbolsMap (filtered for valid stocks only)
+        if (Object.keys(symbolsMap).length === 0 || symbolsMap[val]) {
+          tempWhitelist.push(val);
+          renderWhitelistTags();
+        }
+      }
+      whitelistInput.value = "";
+      whitelistSuggestions.classList.add("hidden");
+    }
+
+    function removeWhitelistItem(index) {
+      tempWhitelist.splice(index, 1);
+      renderWhitelistTags();
+    }
+
+    function setupWhitelistAutocomplete() {
+      whitelistInput.addEventListener("input", () => {
+        const query = whitelistInput.value.trim().toUpperCase();
+        if (!query || query.length < 1) {
+          whitelistSuggestions.classList.add("hidden");
+          return;
+        }
+
+        // Use symbolsMap (filtered for valid stocks only)
+        const matches = Object.entries(symbolsMap)
+          .filter(([symbol, info]) => {
+            const name = typeof info === 'object' ? info.name : info;
+            return symbol.includes(query) || (name && name.toLowerCase().includes(query.toLowerCase()));
+          })
+          .slice(0, 10);
+
+        if (matches.length === 0) {
+          whitelistSuggestions.classList.add("hidden");
+          return;
+        }
+
+        whitelistSuggestions.innerHTML = matches.map(([symbol, info]) => {
+          const name = typeof info === 'object' ? info.name : info;
+          return `
+          <div class="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex justify-between items-center" onclick="addWhitelistItem('${symbol}')">
+            <span class="font-bold text-emerald-600 dark:text-emerald-400">${symbol}</span>
+            <span class="text-xs text-slate-500 truncate ml-2">${name || ""}</span>
+          </div>
+        `;
+        }).join("");
+        whitelistSuggestions.classList.remove("hidden");
+      });
+
+      whitelistInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const val = whitelistInput.value.trim().toUpperCase();
+          if (val) addWhitelistItem(val);
+        }
+      });
+
+      // Hide suggestions when clicking outside
+      document.addEventListener("click", (e) => {
+        if (!whitelistInput.contains(e.target) && !whitelistSuggestions.contains(e.target)) {
+          whitelistSuggestions.classList.add("hidden");
+        }
+      });
+    }
+
     async function saveSettings() {
       if (!currentUser) return;
 
@@ -3079,6 +3265,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             black_list: tempBlacklist,
+            white_list: tempWhitelist,
             return_rate: parseFloat(returnRateInput.value) || 0,
           }),
         });
@@ -3088,6 +3275,7 @@
 
           // Update current user and sync with users array
           currentUser.black_list = updatedUser.black_list;
+          currentUser.white_list = updatedUser.white_list;
           currentUser.return_rate = updatedUser.return_rate;
 
           const userIdx = users.findIndex((u) => u.id === currentUser.id);
@@ -3292,6 +3480,9 @@
 
     // Fetch users on load
     fetchUsers();
+
+    // Setup whitelist autocomplete
+    setupWhitelistAutocomplete();
 
     async function fetchNewsAnalysis(symbol, companyName) {
       const newsTab = document.getElementById("tab-content-news");

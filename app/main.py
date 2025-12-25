@@ -66,6 +66,7 @@ class AnalyzeRequest(BaseModel):
     date: Optional[str] = None
     stocks: Optional[List[str]] = None
     blacklist: Optional[List[str]] = None
+    whitelist: Optional[List[str]] = None
     return_rate: Optional[float] = None
 
 class AnalyzeResponse(BaseModel):
@@ -76,10 +77,12 @@ class UserResponse(BaseModel):
     email: str
     full_name: str
     black_list: List[str]
+    white_list: List[str]
     return_rate: float
 
 class SettingsUpdateRequest(BaseModel):
     black_list: List[str]
+    white_list: Optional[List[str]] = None
     return_rate: float
 
 class StockResponse(BaseModel):
@@ -190,6 +193,7 @@ async def analyze_stock(request: Request, body: AnalyzeRequest):
                     date=body.date,
                     stocks=body.stocks,
                     blacklist=body.blacklist if body.blacklist else None,
+                    whitelist=body.whitelist if body.whitelist else None,
                     divident_rate=body.return_rate,
                 ):
                     if chunk:
@@ -218,10 +222,16 @@ async def get_users_endpoint():
 @app.put("/users/{user_id}/settings", response_model=UserResponse)
 async def update_user_settings_endpoint(user_id: int, body: SettingsUpdateRequest):
     """
-    Update a user's blacklist and return rate.
+    Update a user's blacklist, whitelist, and return rate.
     """
     try:
-        updated_user = update_user_settings(user_id, body.black_list, body.return_rate)
+        # Validate and filter whitelist if provided
+        valid_whitelist = None
+        if body.white_list is not None:
+            valid_symbols = get_all_symbols()
+            valid_whitelist = [t.upper() for t in body.white_list if t.upper() in valid_symbols][:30]
+
+        updated_user = update_user_settings(user_id, body.black_list, body.return_rate, valid_whitelist)
         if not updated_user:
             raise HTTPException(status_code=404, detail="User not found")
         return updated_user
