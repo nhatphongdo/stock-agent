@@ -14,7 +14,7 @@ from app.llm.gemini_client import GeminiClient
 from app.agents.trading_agent import TradingAgent
 from app.agents.news_agent import NewsAgent
 from app.db.database import get_all_users, update_user_settings, get_user_stocks, add_user_stock, remove_user_stock, update_user_stock
-from app.tools.stock_tools import get_all_symbols, get_stock_ohlcv
+from app.tools.vietcap_tools import get_all_symbols, get_stock_ohlcv
 
 # Load environment variables early
 load_dotenv()
@@ -156,7 +156,7 @@ async def get_chart_data(symbol: str, start: str, end: str, interval: str = "1D"
         symbol: Stock ticker symbol (e.g., 'VNM')
         start: Start date in YYYY-MM-DD format
         end: End date in YYYY-MM-DD format
-        interval: Data interval ('1D' for daily, '1H' for hourly)
+        interval: Data interval ('1D' for daily, '1H' for hourly. Valid: 5m, 15m, 30m, 1H, 1D, 1W, 1M)
     """
     result = get_stock_ohlcv(symbol.upper(), start, end, interval)
     if "error" in result:

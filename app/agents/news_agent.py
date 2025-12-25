@@ -1,6 +1,6 @@
 from datetime import datetime
 from app.llm.gemini_client import GeminiClient
-from app.tools.stock_tools import get_stock_news
+from app.tools.vietcap_tools import get_company_news
 
 # Constants for parsing delimiters
 SENTIMENT_DELIMITER = "---SENTIMENT_LABEL---"
@@ -15,7 +15,7 @@ class NewsAgent:
         import json
 
         # 1. Fetch News Programmatically
-        news_data = get_stock_news(symbol)
+        news_data = get_company_news(symbol)
         tool_news_items = news_data.get("news", [])
 
         # 2. Immediately yield data chunk so UI updates with Tool News
@@ -50,6 +50,8 @@ Nhiệm vụ của bạn là phân tích tình hình hiện tại của mã cổ
 2. **Tổng hợp sự kiện**: Tóm tắt các sự kiện chính.
 3. **Đánh giá Sentiment**: Đánh giá tâm lý thị trường.
 4. **Nhận định**: Đưa ra nhận định ngắn gọn.
+5. **LUÔN** trả lời bằng tiếng Việt.
+6. **LUÔN** đính kèm nguồn đã dùng đi kèm với link cụ thể.
 
 **Lưu ý quan trọng:**
 - **KHÔNG** liệt kê lại danh sách nguồn tin trong phần nội dung chính.

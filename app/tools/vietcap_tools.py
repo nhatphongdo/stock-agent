@@ -6,6 +6,7 @@ import requests
 import time
 from typing import Optional
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
 
 # Common headers for Vietcap API
 VIETCAP_HEADERS = {
@@ -52,14 +53,15 @@ def get_company_info(ticker: str) -> dict:
         return {"error": str(e), "ticker": ticker}
 
 
-def get_ohlcv_data(ticker: str, count_back: int = 250, timeframe: str = "ONE_DAY") -> dict:
+def get_ohlcv_data(ticker: str, count_back: int = 250, timeframe: str = "ONE_DAY", to_time: Optional[int] = None) -> dict:
     """
     Get OHLCV (Open, High, Low, Close, Volume) price data for a stock.
 
     Args:
         ticker: Stock ticker symbol (e.g., 'VNM', 'SSI')
         count_back: Number of data points to retrieve (default 250)
-        timeframe: Time interval - ONE_DAY, ONE_WEEK, ONE_MONTH
+        timeframe: Time interval - ONE_MINUTE, ONE_HOUR, ONE_DAY
+        to_time: Optional timestamp to get data up to
 
     Returns:
         Historical price data as a list of dictionaries
@@ -70,7 +72,7 @@ def get_ohlcv_data(ticker: str, count_back: int = 250, timeframe: str = "ONE_DAY
             "symbols": [ticker],
             "timeFrame": timeframe,
             "countBack": count_back,
-            "to": int(time.time())
+            "to": to_time if to_time else int(time.time())
         }
         response = requests.post(url, json=payload, headers=VIETCAP_HEADERS, timeout=10)
         response.raise_for_status()
@@ -135,7 +137,7 @@ def get_ohlcv_by_day(ticker: str, days: int = 30) -> dict:
     Returns:
         Dict with dates (YYYY-MM-DD) as keys and OHLCV data as values
     """
-    result = get_ohlcv_data(ticker, count_back=days, timeframe="ONE_DAY")
+    result = get_ohlcv_data(ticker, count_back=days + (days // 7 + 1) * 2, timeframe="ONE_DAY") # Buffer days for weekends
     if "error" in result:
         return result
     if "candles" in result and len(result["candles"]) > 0:
@@ -433,9 +435,84 @@ def get_stock_news(ticker: str, from_date: Optional[str] = None, to_date: Option
                 results.append({
                     "title": n.get("newsTitle"),
                     "date": n.get("publicDate", "").split("T")[0],
+                    "link": "",
+                    "source": "Vietcap",
                 })
             return {"ticker": ticker, "news": results}
         return {"ticker": ticker, "news": []}
+    except Exception as e:
+        return {"error": str(e), "ticker": ticker}
+
+
+def get_company_news(ticker: str, lang: str = "vi") -> dict:
+    """
+    Get company news articles using GraphQL API.
+
+    Args:
+        ticker: Stock ticker symbol
+        lang: Language code ('vi' or 'en')
+
+    Returns:
+        Dictionary containing news articles
+    """
+    try:
+        url = "https://trading.vietcap.com.vn/data-mt/graphql"
+        query = """
+        query Query($ticker: String!, $lang: String!) {
+          News(ticker: $ticker, langCode: $lang) {
+            id
+            newsTitle
+            publicDate
+            newsShortContent
+            newsSourceLink
+          }
+        }
+        """
+        payload = {
+            "query": query,
+            "variables": {"ticker": ticker, "lang": lang}
+        }
+
+        response = requests.post(url, json=payload, headers=VIETCAP_HEADERS, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        def parse_date(d):
+            if not d:
+                return "N/A"
+            if isinstance(d, int):
+                # Handle timestamp (ms or s)
+                try:
+                    ts = d / 1000 if d > 1e11 else d
+                    return datetime.fromtimestamp(ts).strftime("%Y-%m-%d")
+                except:
+                    return str(d)
+            if isinstance(d, str):
+                return d.split("T")[0]
+            return str(d)
+
+        result = {"ticker": ticker, "news": []}
+
+        if data and "data" in data and "News" in data["data"]:
+            for n in data["data"]["News"]:
+                link = n.get("newsSourceLink")
+                source = "Vietcap"
+                if link:
+                    try:
+                        parsed_uri = urlparse(link)
+                        source = parsed_uri.netloc.replace("www.", "")
+                    except:
+                        pass
+
+                result["news"].append({
+                    "title": n.get("newsTitle"),
+                    "date": parse_date(n.get("publicDate")),
+                    "description": n.get("newsShortContent"),
+                    "link": link,
+                    "source": source,
+                })
+
+        return result
     except Exception as e:
         return {"error": str(e), "ticker": ticker}
 
@@ -518,7 +595,7 @@ def get_all_symbols() -> dict:
     Get all available stock symbols from Vietnamese exchanges.
 
     Returns:
-        List of all stock symbols with basic info (ticker, name, exchange, sector)
+        Dictionary mapping symbols to {name, exchange}
     """
     try:
         url = "https://trading.vietcap.com.vn/api/price/symbols/getAll"
@@ -527,15 +604,17 @@ def get_all_symbols() -> dict:
         data = response.json()
 
         if data:
-            results = []
+            results = {}
             for s in data:
-                results.append({
-                    "ticker": s.get("symbol"),
-                    "name": s.get("organShortName"),
-                    "exchange": s.get("board"),
-                })
+                symbol = s.get("symbol")
+                if symbol:
+                    results[symbol] = {
+                        "name": s.get("organName"),
+                        "exchange": s.get("board"),
+                        "type": s.get("type"),
+                    }
             return results
-        return []
+        return {}
     except Exception as e:
         return {"error": str(e)}
 
@@ -636,6 +715,103 @@ def get_coverage_universe() -> dict:
         return {"error": str(e)}
 
 
+def get_stock_ohlcv(symbol: str, start_date: str, end_date: str, interval: str = '1D') -> dict:
+    """
+    Fetches OHLCV data for a stock ticker within a date range.
+    Equivalent to stock_tools.get_stock_ohlcv.
+    """
+    import pandas as pd
+    # Map interval to vietcap timeframe
+    tf_map = {
+        '5m': 'ONE_MINUTE',
+        '15m': 'ONE_MINUTE',
+        '30m': 'ONE_MINUTE',
+        '1H': 'ONE_HOUR',
+        '1D': 'ONE_DAY',
+        '1W': 'ONE_DAY',
+        '1M': 'ONE_DAY',
+    }
+    timeframe = tf_map.get(interval, 'ONE_DAY')
+
+    # Calculate count_back based on start_date to end_date (or now)
+    try:
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+        end_dt = datetime.strptime(end_date, "%Y-%m-%d") if end_date else datetime.now()
+
+        business_days = len(pd.bdate_range(start=start_dt, end=end_dt))
+        business_days += (business_days // 260 + 1) * 20 # Buffer holidays, 20 days / year, 260 weekdays / year
+        if timeframe == 'ONE_DAY':
+            # Exact trading days count (excluding weekends)
+            count_back = business_days + 1
+        elif timeframe == 'ONE_HOUR':
+            # Days * 6.5 trading hours per day
+            count_back = int((business_days * 6.5) + 1)
+        elif timeframe == 'ONE_MINUTE':
+            # Days * 6.5 trading hours per day * 60 minutes per hour
+            count_back = int((business_days * 6.5 * 60) + 1)
+        else:
+            count_back = 1000 # Default fallback
+
+    except Exception as e:
+        count_back = 1000
+
+    result = get_ohlcv_data(symbol, count_back=count_back, timeframe=timeframe, to_time=int(end_dt.timestamp()))
+    if "error" in result:
+        return result
+
+    candles = result.get("candles", [])
+    if not candles:
+        return {"symbol": symbol, "interval": interval, "data": []}
+
+    # Convert to DataFrame for easier manipulation and resampling
+    df = pd.DataFrame(candles)
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    df.set_index('timestamp', inplace=True)
+
+    # Filter by date range before resampling
+    df = df[(df.index >= start_dt) & (df.index <= end_dt + timedelta(days=1))]
+
+    # Map interval to pandas frequency for resampling
+    agg_map = {
+        '5m': '5min',
+        '15m': '15min',
+        '30m': '30min',
+        '1H': '1H',
+        '1D': '1D',
+        '1W': 'W-MON',
+        '1M': 'ME',
+    }
+
+    freq = agg_map.get(interval)
+
+    if freq and freq != timeframe:
+        # Resample data if the interval is different from the base timeframe fetched
+        resampled = df.resample(freq, closed='left', label='left').agg({
+            'open': 'first',
+            'high': 'max',
+            'low': 'min',
+            'close': 'last',
+            'volume': 'sum'
+        }).dropna()
+        df = resampled
+
+    # Convert back to the expected list of dictionaries
+    filtered_data = []
+    for ts, row in df.iterrows():
+        dt_str = ts.strftime("%Y-%m-%d %H:%M:%S")
+        # Final filter check (safety)
+        if start_date <= dt_str.split(" ")[0] <= (end_date or "9999-12-31"):
+            filtered_data.append({
+                "time": dt_str,
+                "open": float(row["open"]),
+                "high": float(row["high"]),
+                "low": float(row["low"]),
+                "close": float(row["close"]),
+                "volume": int(row["volume"]),
+            })
+
+    return {"symbol": symbol, "interval": interval, "data": filtered_data}
+
 # List of all tools for function calling
 VIETCAP_TOOLS = [
     get_all_symbols,
@@ -652,6 +828,7 @@ VIETCAP_TOOLS = [
     get_price_earnings,
     get_annual_return,
     get_stock_news,
+    get_company_news,
     get_stock_events,
     get_sector_comparison,
 ]

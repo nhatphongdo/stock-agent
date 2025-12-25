@@ -1,6 +1,5 @@
 pydantic-settings
 python-dotenv
-vnstock
 requests
 pandas
 google-genai

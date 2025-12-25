@@ -378,10 +378,9 @@ III. NGUYÊN TẮC TUYỆT ĐỐI
 IV. THÔNG TIN NGỮ CẢNH CÁ NHÂN
 ────────────────────────────────
 - Thời gian hệ thống: {date + " 00:00:00" if (date and len(date) == 10) else (date if date else datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}
-- Danh mục cá nhân đang nắm giữ (Mã (Giá vốn)): {"Không có" if stocks is None else ', '.join(stocks)}
-- Loại trừ lĩnh vực: {', '.join(blacklist) if blacklist is not None else "Không có"}
-- Danh mục theo dõi (whitelist): {', '.join(whitelist) if whitelist is not None else "Không có"}
-- Tỷ suất lợi nhuận tối thiểu: {divident_rate or 6}%
+- Danh mục cá nhân đang nắm giữ (Mã (Giá vốn)): {', '.join(stocks) if stocks else "Không có"}
+- Loại trừ lĩnh vực: {', '.join(blacklist) if blacklist else "Không có"}
+- Danh mục theo dõi (whitelist): {', '.join(whitelist) if whitelist else "Không có"}
 
 ────────────────────────────────
 V. NHIỆM VỤ
@@ -395,7 +394,7 @@ V. NHIỆM VỤ
 1. Phân tích tổng quan thị trường hiện tại.
 2. Đưa ra khuyến nghị đầu tư dựa trên:
    - Dữ liệu thị trường.
-   - Danh mục cá nhân.
+   - Thông tin cá nhân.
 3. Danh sách 05 mã cổ phiếu có xu hướng tăng ngắn hạn (< 1 tháng) theo phân tích kỹ thuật:
    - Phân loại: **NÊN MUA**, **THEO DÕI**, **THẬN TRỌNG**
    - Trình bày bảng gồm:
@@ -440,7 +439,7 @@ VI. QUY ƯỚC OUTPUT (BẮT BUỘC)
 ────────────────────────────────
 VII. YÊU CẦU NGƯỜI DÙNG
 ────────────────────────────────
-{"Không có" if task is None else task}
+{task if task else "Không có"}
 """
 
         # Collect tool calls for reasoning

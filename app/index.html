@@ -1574,16 +1574,6 @@
       TIMEFRAME_DAYS: {
         "1D": 1,
         "1W": 7,
-        "1M": 30,
-        "3M": 90,
-        "6M": 180,
-        "9M": 270,
-        "1Y": 365,
-        "2Y": 730,
-      },
-      INTERVAL_MINUTES: {
-        "1H": 60,
-        "1D": 24 * 60,
       },
       // UI Settings
       UI: {
@@ -1598,7 +1588,6 @@
     Object.freeze(CONFIG.CHART);
     Object.freeze(CONFIG.COLORS);
     Object.freeze(CONFIG.TIMEFRAME_DAYS);
-    Object.freeze(CONFIG.INTERVAL_MINUTES);
     Object.freeze(CONFIG.UI);
 
     // Resizer Logic
@@ -1699,7 +1688,7 @@
           symbolsMap = {};
           for (const [symbol, info] of Object.entries(data.symbols || {})) {
             const exchange = (info?.exchange || 'HOSE').toUpperCase();
-            if (VALID_EXCHANGES.includes(exchange)) {
+            if (VALID_EXCHANGES.includes(exchange) && info.type === 'STOCK') {
               symbolsMap[symbol] = info;
             }
           }
@@ -1943,7 +1932,7 @@
       const timeframe =
         document.getElementById("chart-timeframe")?.value || "1M";
       const interval =
-        document.getElementById("chart-interval")?.value || "1d";
+        document.getElementById("chart-interval")?.value || "1D";
 
       renderAdvancedChart(symbol, timeframe, interval);
 
@@ -2007,15 +1996,21 @@
       // Calculate date range from timeframe
       const end = new Date();
       const start = new Date();
-      start.setDate(
-        start.getDate() - (CONFIG.TIMEFRAME_DAYS[timeframe] || 30),
-      );
+      if (timeframe.endsWith("M")) {
+        start.setMonth(start.getMonth() - parseInt(timeframe));
+      } else if (timeframe.endsWith("Y")) {
+        start.setFullYear(start.getFullYear() - parseInt(timeframe));
+      } else {
+        start.setDate(
+          start.getDate() - (CONFIG.TIMEFRAME_DAYS[timeframe] || 30),
+        );
+      }
 
       const formatDate = (d) => d.toISOString().split("T")[0];
       const startStr = formatDate(start);
       const endStr = formatDate(end);
 
-      // Interval is passed directly to API (vnstock VCI supports: 1m, 5m, 15m, 30m, 1H, 1D)
+      // Interval is passed directly to API (ONE_MINUTE, ONE_DAY)
       const apiInterval = interval;
 
       // Show skeleton loading
@@ -2683,14 +2678,21 @@
                                 <option value="9M">9 Tháng</option>
                                 <option value="1Y">1 Năm</option>
                                 <option value="2Y">2 Năm</option>
+                                <option value="5Y">5 Năm</option>
+                                <option value="10Y">10 Năm</option>
                             </select>
                         </div>
                         <!-- Interval Selector -->
                         <div class="flex items-center gap-1">
                             <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Chu kỳ:</span>
                             <select id="chart-interval" class="text-xs font-bold bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-primary-500/30">
+                                <option value="5m">5 phút</option>
+                                <option value="15m">15 phút</option>
+                                <option value="30m">30 phút</option>
                                 <option value="1H">1 giờ</option>
                                 <option value="1D" selected>1 ngày</option>
+                                <option value="1W">1 tuần</option>
+                                <option value="1M">1 tháng</option>
                             </select>
                         </div>
                         <!-- Indicator Toggles with Mobile Dropdown -->
