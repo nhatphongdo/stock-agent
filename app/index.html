@@ -2044,10 +2044,10 @@
           // Convert API data to chart format
           data = result.data.map((d) => ({
             x: new Date(d.time),
-            o: d.open * 1000, // Convert to VND (vnstock returns in 1000 VND)
-            h: d.high * 1000,
-            l: d.low * 1000,
-            c: d.close * 1000,
+            o: d.open,
+            h: d.high,
+            l: d.low,
+            c: d.close,
             v: d.volume,
           }));
         } else {

@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.llm.gemini_client import GeminiClient
-from app.tools.vietcap_tools import get_company_news
+from app.tools.vietcap_tools import get_company_news, get_company_events
 
 # Constants for parsing delimiters
 SENTIMENT_DELIMITER = "---SENTIMENT_LABEL---"
@@ -14,25 +14,57 @@ class NewsAgent:
     async def run(self, symbol: str, company_name: str = ""):
         import json
 
-        # 1. Fetch News Programmatically
+        # 1. Fetch News and Events
         news_data = get_company_news(symbol)
         tool_news_items = news_data.get("news", [])
 
-        # 2. Immediately yield data chunk so UI updates with Tool News
-        yield json.dumps({"type": "data", "news": tool_news_items}) + "\n"
+        events_data = get_company_events(symbol)
+        all_events = events_data.get("events", [])
 
-        # 3. Prepare Context
-        news_context = ""
-        if tool_news_items:
-            news_context = "Dưới đây là các tin tức mới nhất được thu thập từ nguồn dữ liệu thực tế:\n"
-            for item in tool_news_items:
+        # Filter events in the last 90 days
+        ninety_days_ago = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
+        recent_events = [e for e in all_events if e.get("publicDate", "0000-00-00") >= ninety_days_ago]
+
+        # 2. Build Initial News List & Context
+        final_news_list = []
+        seen_links = set()
+
+        def add_to_list(items, is_event=False):
+            for item in items:
+                if is_event:
+                    # Normalize event to news format
+                    normalized = {
+                        "title": item.get('title'),
+                        "date": item.get("date"),
+                        "description": item.get('eventTypeName', 'Sự kiện'),
+                        "link": item.get("link"),
+                    }
+                else:
+                    normalized = item
+
+                link = normalized.get("link")
+                if link and link not in seen_links:
+                    final_news_list.append(normalized)
+                    seen_links.add(link)
+
+        add_to_list(tool_news_items)
+        add_to_list(recent_events, is_event=True)
+
+        # 3. Prepare Context for LLM
+        def build_context(items, header, empty_msg):
+            if not items:
+                return f"{header}\n- {empty_msg}\n"
+            ctx = f"{header}\n"
+            for item in items:
+                link = item.get('link')
                 title = item.get('title', 'N/A')
                 date = item.get('date', 'N/A')
-                source = item.get('source', 'N/A')
-                link = item.get('link', 'N/A')
-                news_context += f"- {title} (Ngày: {date}, Nguồn: {source}) ({link})\n"
-        else:
-            news_context = "Hiện tại chưa tìm thấy tin tức mới nhất từ hệ thống dữ liệu."
+                source = item.get('source', 'Vietcap')
+                ctx += f"- {title} (Ngày: {date}, Nguồn: {source}) ({link})\n"
+            return ctx
+
+        news_context = build_context(tool_news_items, "Dưới đây là các tin tức mới nhất:", "Không có tin tức mới.")
+        events_context = build_context(recent_events, "\nDưới đây là các sự kiện doanh nghiệp quan trọng:", "Không có sự kiện quan trọng.")
 
         # 4. Construct Prompt
         prompt = f"""
@@ -44,6 +76,7 @@ Nhiệm vụ của bạn là phân tích tình hình hiện tại của mã cổ
 2. **Kiến thức/Tìm kiếm của bạn (Internet)**: Hãy tìm kiếm thêm thông tin mới nhất trên Internet (nếu có khả năng) hoặc sử dụng kiến thức của bạn để bổ sung các sự kiện quan trọng.
 
 {news_context}
+{events_context}
 
 **Yêu cầu phân tích:**
 1. **Kết hợp thông tin**: Tổng hợp tin tức từ cả dữ liệu cung cấp và kiến thức/tìm kiếm của bạn.
@@ -75,7 +108,6 @@ Tiềm năng
 
         is_parsing_sources = False
         collected_sources_text = ""
-
         is_parsing_sentiment = False
         collected_sentiment_text = ""
 
@@ -136,9 +168,8 @@ Tiềm năng
 
             # --- PROCESS SENTIMENT ---
             if collected_sentiment_text.strip():
-                label = collected_sentiment_text.strip()
                 # Clean up if AI added extra formatting
-                label = label.replace("`", "").replace("*", "").strip()
+                label = collected_sentiment_text.strip().replace("`", "").replace("*", "").strip()
 
                 # Determine color
                 color = "gray"
@@ -164,9 +195,7 @@ Tiềm năng
 
                 yield json.dumps({"type": "sentiment", "label": label, "color": color}) + "\n"
 
-            # --- PROCESS SOURCES ---
-            final_news_list = list(tool_news_items) # Start with tool items
-
+            # --- PROCESS SOURCES & MERGE ---
             if collected_sources_text.strip():
                 try:
                     json_text = collected_sources_text.strip()
@@ -178,16 +207,7 @@ Tiềm năng
                                 json_text = json_text[4:]
 
                     ai_sources = json.loads(json_text.strip())
-
-                    # Merge Logic
-                    existing_links = {item.get('link') for item in final_news_list if item.get('link')}
-
-                    for src in ai_sources:
-                        link = src.get('link', '')
-                        if (link and link in existing_links):
-                            continue
-                        final_news_list.append(src)
-
+                    add_to_list(ai_sources)
                 except Exception as parse_err:
                     print(f"Error parsing AI sources: {parse_err}")
                     pass

@@ -14,7 +14,7 @@ from app.llm.gemini_client import GeminiClient
 from app.agents.trading_agent import TradingAgent
 from app.agents.news_agent import NewsAgent
 from app.db.database import get_all_users, update_user_settings, get_user_stocks, add_user_stock, remove_user_stock, update_user_stock
-from app.tools.vietcap_tools import get_all_symbols, get_stock_ohlcv
+from app.tools.vietcap_tools import get_all_symbols, get_stock_ohlcv, get_latest_ohlcv, get_latest_price_batch
 
 # Load environment variables early
 load_dotenv()
@@ -159,6 +159,31 @@ async def get_chart_data(symbol: str, start: str, end: str, interval: str = "1D"
         interval: Data interval ('1D' for daily, '1H' for hourly. Valid: 5m, 15m, 30m, 1H, 1D, 1W, 1M)
     """
     result = get_stock_ohlcv(symbol.upper(), start, end, interval)
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    return result
+
+@app.get("/price/{symbol}")
+async def get_latest_price(symbol: str):
+    """
+    Returns the latest price data for a stock symbol.
+    """
+    result = get_latest_ohlcv(symbol.upper())
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    return result
+
+@app.get("/prices")
+async def get_batch_prices(symbols: str):
+    """
+    Returns the latest price data for multiple stock symbols.
+    Args:
+        symbols: Comma-separated list of stock ticker symbols (e.g., 'VNM,SSI,HPG')
+    """
+    if not symbols:
+        return {}
+    ticker_list = [s.strip().upper() for s in symbols.split(",")]
+    result = get_latest_price_batch(ticker_list)
     if "error" in result:
         raise HTTPException(status_code=404, detail=result["error"])
     return result

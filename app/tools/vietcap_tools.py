@@ -53,23 +53,24 @@ def get_company_info(ticker: str) -> dict:
         return {"error": str(e), "ticker": ticker}
 
 
-def get_ohlcv_data(ticker: str, count_back: int = 250, timeframe: str = "ONE_DAY", to_time: Optional[int] = None) -> dict:
+def get_ohlcv_data(ticker: str | list[str], count_back: int = 250, timeframe: str = "ONE_DAY", to_time: Optional[int] = None) -> dict:
     """
-    Get OHLCV (Open, High, Low, Close, Volume) price data for a stock.
+    Get OHLCV (Open, High, Low, Close, Volume) price data for one or more stocks.
 
     Args:
-        ticker: Stock ticker symbol (e.g., 'VNM', 'SSI')
+        ticker: Single stock ticker symbol or list of symbols
         count_back: Number of data points to retrieve (default 250)
         timeframe: Time interval - ONE_MINUTE, ONE_HOUR, ONE_DAY
         to_time: Optional timestamp to get data up to
 
     Returns:
-        Historical price data as a list of dictionaries
+        Dict mapping each ticker to its candle data, or error info
     """
     try:
+        symbols = [ticker] if isinstance(ticker, str) else ticker
         url = "https://trading.vietcap.com.vn/api/chart/OHLCChart/gap-chart"
         payload = {
-            "symbols": [ticker],
+            "symbols": symbols,
             "timeFrame": timeframe,
             "countBack": count_back,
             "to": to_time if to_time else int(time.time())
@@ -78,52 +79,77 @@ def get_ohlcv_data(ticker: str, count_back: int = 250, timeframe: str = "ONE_DAY
         response.raise_for_status()
         data = response.json()
 
-        if data and isinstance(data, list) and len(data) > 0:
-            stock_data = data[0]
-            if "o" in stock_data:
-                results = []
+        if not data or not isinstance(data, list):
+            return {"error": "No data found", "tickers": symbols}
+
+        results = {}
+        for stock_data in data:
+            current_symbol = stock_data.get("symbol")
+            if current_symbol and "o" in stock_data:
+                candles = []
                 for i in range(len(stock_data["o"])):
                     time_val = stock_data["t"][i] if i < len(stock_data["t"]) else 0
                     time_str = datetime.fromtimestamp(int(time_val)).strftime("%Y-%m-%d %H:%M:%S") if time_val else "N/A"
-                    results.append({
+                    candles.append({
                         "open": stock_data["o"][i] if i < len(stock_data["o"]) else None,
                         "high": stock_data["h"][i] if i < len(stock_data["h"]) else None,
                         "low": stock_data["l"][i] if i < len(stock_data["l"]) else None,
                         "close": stock_data["c"][i] if i < len(stock_data["c"]) else None,
                         "volume": stock_data["v"][i] if i < len(stock_data["v"]) else None,
-                        "timestamp": time_str
+                        "timestamp": time_str,
+                        "_ts": time_val  # For sorting
                     })
-                return {"ticker": ticker, "candles": results}
-        return {"error": "No data found", "ticker": ticker}
+                # Sort by timestamp ascending (oldest first, newest last)
+                candles.sort(key=lambda x: x.get("_ts", 0))
+                # Remove internal sorting key
+                for c in candles:
+                    c.pop("_ts", None)
+                results[current_symbol] = candles
+
+        return results
     except Exception as e:
-        return {"error": str(e), "ticker": ticker}
+        return {"error": str(e), "ticker": str(ticker)}
+
+
+def get_latest_price_batch(tickers: list[str]) -> dict:
+    """
+    Get the latest OHLCV data for multiple stocks in a single request.
+    """
+    if not tickers:
+        return {}
+
+    # Get data of 1 trading day for buffer, 6.5 hours * 60 minutes
+    data = get_ohlcv_data(tickers, count_back=390, timeframe="ONE_MINUTE")
+    if "error" in data:
+        return data
+
+    results = {}
+    for ticker in tickers:
+        candles = data.get(ticker, [])
+        if candles:
+            latest = candles[-1]
+            results[ticker] = {
+                "ticker": ticker,
+                "open": latest.get("open"),
+                "high": latest.get("high"),
+                "low": latest.get("low"),
+                "close": latest.get("close"),
+                "volume": latest.get("volume"),
+                "timestamp": latest.get("timestamp"),
+            }
+        else:
+            results[ticker] = {"error": "No data found", "ticker": ticker}
+    return results
 
 
 def get_latest_ohlcv(ticker: str) -> dict:
     """
     Get the latest OHLCV (Open, High, Low, Close, Volume) data for a stock.
-
-    Args:
-        ticker: Stock ticker symbol (e.g., 'VNM', 'SSI')
-
-    Returns:
-        Latest price data with open, high, low, close, volume and timestamp
     """
-    result = get_ohlcv_data(ticker, count_back=1, timeframe="ONE_MINUTE")
-    if "error" in result:
-        return result
-    if "candles" in result and len(result["candles"]) > 0:
-        latest = result["candles"][-1]
-        return {
-            "ticker": ticker,
-            "open": latest.get("open"),
-            "high": latest.get("high"),
-            "low": latest.get("low"),
-            "close": latest.get("close"),
-            "volume": latest.get("volume"),
-            "timestamp": latest.get("timestamp"),
-        }
-    return {"error": "No data found", "ticker": ticker}
+    results = get_latest_price_batch([ticker])
+    if "error" in results:
+         return results
+    return results.get(ticker, {"error": "No data found", "ticker": ticker})
 
 
 def get_ohlcv_by_day(ticker: str, days: int = 30) -> dict:
@@ -140,9 +166,11 @@ def get_ohlcv_by_day(ticker: str, days: int = 30) -> dict:
     result = get_ohlcv_data(ticker, count_back=days + (days // 7 + 1) * 2, timeframe="ONE_DAY") # Buffer days for weekends
     if "error" in result:
         return result
-    if "candles" in result and len(result["candles"]) > 0:
+
+    candles = result.get(ticker, [])
+    if len(candles) > 0:
         price_by_date = {}
-        for candle in result["candles"]:
+        for candle in candles:
             timestamp = candle.get("timestamp", "")
             # Extract date part (YYYY-MM-DD) from timestamp
             date_key = timestamp.split(" ")[0] if timestamp else None
@@ -517,6 +545,93 @@ def get_company_news(ticker: str, lang: str = "vi") -> dict:
         return {"error": str(e), "ticker": ticker}
 
 
+def get_company_events(ticker: str) -> dict:
+    """
+    Get corporate events for a stock using GraphQL API.
+
+    Args:
+        ticker: Stock ticker symbol
+
+    Returns:
+        Dictionary containing corporate events
+    """
+    try:
+        url = "https://trading.vietcap.com.vn/data-mt/graphql"
+        query = """
+        query Query($ticker: String!) {
+          OrganizationEvents(ticker: $ticker) {
+            id
+            eventTitle
+            en_EventTitle
+            publicDate
+            issueDate
+            sourceUrl
+            eventListCode
+            ratio
+            value
+            recordDate
+            exrightDate
+            eventListName
+            en_EventListName
+          }
+        }
+        """
+        payload = {
+            "query": query,
+            "variables": {"ticker": ticker}
+        }
+
+        response = requests.post(url, json=payload, headers=VIETCAP_HEADERS, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        def parse_date(d):
+            if not d:
+                return "N/A"
+            if isinstance(d, int):
+                # Handle timestamp (ms or s)
+                try:
+                    ts = d / 1000 if d > 1e11 else d
+                    return datetime.fromtimestamp(ts).strftime("%Y-%m-%d")
+                except:
+                    return str(d)
+            if isinstance(d, str):
+                return d.split("T")[0]
+            return str(d)
+
+        result = {"ticker": ticker, "events": []}
+
+        if data and "data" in data and "OrganizationEvents" in data["data"]:
+            for e in data["data"]["OrganizationEvents"]:
+                link = e.get("sourceUrl")
+                source = "Vietcap"
+                if link:
+                    try:
+                        parsed_uri = urlparse(link)
+                        source = parsed_uri.netloc.replace("www.", "")
+                    except:
+                        pass
+
+                result["events"].append({
+                    "id": e.get("id"),
+                    "title": e.get("eventTitle"),
+                    "en_title": e.get("en_EventTitle"),
+                    "date": parse_date(e.get("publicDate")),
+                    "issueDate": parse_date(e.get("issueDate")),
+                    "exrightDate": parse_date(e.get("exrightDate")),
+                    "recordDate": parse_date(e.get("recordDate")),
+                    "ratio": e.get("ratio"),
+                    "value": e.get("value"),
+                    "eventTypeName": e.get("eventListName"),
+                    "link": link,
+                    "source": source,
+                })
+
+        return result
+    except Exception as e:
+        return {"error": str(e), "ticker": ticker}
+
+
 def get_stock_events(ticker: str, from_date: Optional[str] = None, to_date: Optional[str] = None) -> dict:
     """
     Get corporate events for a stock (dividends, meetings, etc.).
@@ -715,10 +830,10 @@ def get_coverage_universe() -> dict:
         return {"error": str(e)}
 
 
+# Exclude this from tools
 def get_stock_ohlcv(symbol: str, start_date: str, end_date: str, interval: str = '1D') -> dict:
     """
     Fetches OHLCV data for a stock ticker within a date range.
-    Equivalent to stock_tools.get_stock_ohlcv.
     """
     import pandas as pd
     # Map interval to vietcap timeframe
@@ -759,7 +874,7 @@ def get_stock_ohlcv(symbol: str, start_date: str, end_date: str, interval: str =
     if "error" in result:
         return result
 
-    candles = result.get("candles", [])
+    candles = result.get(symbol, [])
     if not candles:
         return {"symbol": symbol, "interval": interval, "data": []}
 
@@ -829,6 +944,7 @@ VIETCAP_TOOLS = [
     get_annual_return,
     get_stock_news,
     get_company_news,
+    get_company_events,
     get_stock_events,
     get_sector_comparison,
 ]
