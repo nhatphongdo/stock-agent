@@ -9,6 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")
 
 from app.tools.vietcap_tools import VIETCAP_TOOLS
 
+
 def get_tool_schema(func) -> Dict[str, Any]:
     """
     Very basic schema generation from function signature and docstring.
@@ -22,7 +23,8 @@ def get_tool_schema(func) -> Dict[str, Any]:
     required = []
 
     for name, param in sig.parameters.items():
-        if name == "self": continue
+        if name == "self":
+            continue
 
         # Simple type mapping
         p_type = "string"
@@ -33,10 +35,7 @@ def get_tool_schema(func) -> Dict[str, Any]:
         elif param.annotation == List[str] or param.annotation == list:
             p_type = "array"
 
-        properties[name] = {
-            "type": p_type,
-            "description": f"Parameter {name}"
-        }
+        properties[name] = {"type": p_type, "description": f"Parameter {name}"}
 
         if param.default == inspect.Parameter.empty:
             required.append(name)
@@ -47,9 +46,10 @@ def get_tool_schema(func) -> Dict[str, Any]:
         "inputSchema": {
             "type": "object",
             "properties": properties,
-            "required": required
-        }
+            "required": required,
+        },
     }
+
 
 def main():
     """
@@ -73,26 +73,15 @@ def main():
                     "id": req_id,
                     "result": {
                         "protocolVersion": "2024-11-05",
-                        "capabilities": {
-                            "tools": {}
-                        },
-                        "serverInfo": {
-                            "name": "stock-agent-tools",
-                            "version": "1.0.0"
-                        }
-                    }
+                        "capabilities": {"tools": {}},
+                        "serverInfo": {"name": "stock-agent-tools", "version": "1.0.0"},
+                    },
                 }
             elif method == "notifications/initialized":
-                continue # No response needed
+                continue  # No response needed
             elif method == "tools/list":
                 tools = [get_tool_schema(t) for t in VIETCAP_TOOLS]
-                response = {
-                    "jsonrpc": "2.0",
-                    "id": req_id,
-                    "result": {
-                        "tools": tools
-                    }
-                }
+                response = {"jsonrpc": "2.0", "id": req_id, "result": {"tools": tools}}
             elif method == "tools/call":
                 tool_name = params.get("name")
                 tool_args = params.get("arguments", {})
@@ -102,24 +91,27 @@ def main():
                     if tool.__name__ == tool_name:
                         try:
                             res = tool(**tool_args)
-                            result = {"content": [{"type": "text", "text": json.dumps(res, ensure_ascii=False)}]}
+                            result = {
+                                "content": [
+                                    {
+                                        "type": "text",
+                                        "text": json.dumps(res, ensure_ascii=False),
+                                    }
+                                ]
+                            }
                         except Exception as e:
-                            result = {"isError": True, "content": [{"type": "text", "text": str(e)}]}
+                            result = {
+                                "isError": True,
+                                "content": [{"type": "text", "text": str(e)}],
+                            }
                         break
 
-                response = {
-                    "jsonrpc": "2.0",
-                    "id": req_id,
-                    "result": result
-                }
+                response = {"jsonrpc": "2.0", "id": req_id, "result": result}
             else:
                 response = {
                     "jsonrpc": "2.0",
                     "id": req_id,
-                    "error": {
-                        "code": -32601,
-                        "message": f"Method {method} not found"
-                    }
+                    "error": {"code": -32601, "message": f"Method {method} not found"},
                 }
 
             sys.stdout.write(json.dumps(response) + "\n")
@@ -127,6 +119,7 @@ def main():
 
         except Exception as e:
             pass
+
 
 if __name__ == "__main__":
     main()

@@ -13,8 +13,20 @@ from fastapi.staticfiles import StaticFiles
 from app.llm.gemini_client import GeminiClient
 from app.agents.trading_agent import TradingAgent
 from app.agents.news_agent import NewsAgent
-from app.db.database import get_all_users, update_user_settings, get_user_stocks, add_user_stock, remove_user_stock, update_user_stock
-from app.tools.vietcap_tools import get_all_symbols, get_stock_ohlcv, get_latest_ohlcv, get_latest_price_batch
+from app.db.database import (
+    get_all_users,
+    update_user_settings,
+    get_user_stocks,
+    add_user_stock,
+    remove_user_stock,
+    update_user_stock,
+)
+from app.tools.vietcap_tools import (
+    get_all_symbols,
+    get_stock_ohlcv,
+    get_latest_ohlcv,
+    get_latest_price_batch,
+)
 
 # Load environment variables early
 load_dotenv()
@@ -23,6 +35,7 @@ load_dotenv()
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(level=getattr(logging, LOG_LEVEL, logging.INFO))
 logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -42,11 +55,12 @@ async def lifespan(app: FastAPI):
     # Cleanup if needed
     logger.info("🛑 Shutting down...")
 
+
 app = FastAPI(
     title="Stock Trading Agent API",
     description="A modular API for building stock trading agents using Gemini Pro",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Add CORS middleware
@@ -59,7 +73,12 @@ app.add_middleware(
 )
 
 # Mount static files
-app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
+app.mount(
+    "/static",
+    StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")),
+    name="static",
+)
+
 
 class AnalyzeRequest(BaseModel):
     task: Optional[str] = "Phân tích thị trường tổng quan"
@@ -68,9 +87,13 @@ class AnalyzeRequest(BaseModel):
     blacklist: Optional[List[str]] = None
     whitelist: Optional[List[str]] = None
     return_rate: Optional[float] = None
+    dividend_rate: Optional[float] = None
+    profit_rate: Optional[float] = None
+
 
 class AnalyzeResponse(BaseModel):
     agent_response: str
+
 
 class UserResponse(BaseModel):
     id: int
@@ -79,11 +102,17 @@ class UserResponse(BaseModel):
     black_list: List[str]
     white_list: List[str]
     return_rate: float
+    dividend_rate: float
+    profit_rate: float
+
 
 class SettingsUpdateRequest(BaseModel):
     black_list: List[str]
     white_list: Optional[List[str]] = None
     return_rate: float
+    dividend_rate: Optional[float] = None
+    profit_rate: Optional[float] = None
+
 
 class StockResponse(BaseModel):
     id: int
@@ -91,19 +120,24 @@ class StockResponse(BaseModel):
     stock_name: str
     avg_price: Optional[float]
 
+
 class StockCreateRequest(BaseModel):
     stock_name: str
     avg_price: float
+
 
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Stock Trading Agent API", "status": "online"}
 
+
 class NewsRequest(BaseModel):
     symbol: str
     company_name: Optional[str] = ""
 
+
 from fastapi.responses import StreamingResponse
+
 
 @app.post("/news-analysis")
 async def analyze_news(request: NewsRequest):
@@ -111,25 +145,29 @@ async def analyze_news(request: NewsRequest):
     Analyzes news for a given stock symbol using NewsAgent (Streaming).
     """
     if not hasattr(app.state, "news_agent"):
-         raise HTTPException(status_code=503, detail="News Agent not initialized")
+        raise HTTPException(status_code=503, detail="News Agent not initialized")
 
     # Use StreamingResponse
     return StreamingResponse(
         app.state.news_agent.run(request.symbol, request.company_name),
-        media_type="application/x-ndjson"
+        media_type="application/x-ndjson",
     )
+
 
 # Cache for stock symbols (symbol -> company name) with TTL
 _symbols_cache: dict = {}
 _symbols_cache_timestamp: float = 0
 SYMBOLS_CACHE_TTL: int = 3600  # 1 hour in seconds
 
+
 def is_symbols_cache_valid() -> bool:
     """Check if the symbols cache is still valid based on TTL."""
     import time
+
     if not _symbols_cache:
         return False
     return (time.time() - _symbols_cache_timestamp) < SYMBOLS_CACHE_TTL
+
 
 @app.get("/symbols")
 async def get_symbols():
@@ -138,14 +176,18 @@ async def get_symbols():
     Results are cached in memory with TTL for performance.
     """
     import time
+
     global _symbols_cache, _symbols_cache_timestamp
 
     if not is_symbols_cache_valid():
         logger.info("Fetching stock symbols from vnstock...")
         _symbols_cache = get_all_symbols()
         _symbols_cache_timestamp = time.time()
-        logger.info(f"Cached {len(_symbols_cache)} stock symbols (TTL: {SYMBOLS_CACHE_TTL}s)")
+        logger.info(
+            f"Cached {len(_symbols_cache)} stock symbols (TTL: {SYMBOLS_CACHE_TTL}s)"
+        )
     return {"symbols": _symbols_cache}
+
 
 @app.get("/chart/{symbol}")
 async def get_chart_data(symbol: str, start: str, end: str, interval: str = "1D"):
@@ -163,6 +205,7 @@ async def get_chart_data(symbol: str, start: str, end: str, interval: str = "1D"
         raise HTTPException(status_code=404, detail=result["error"])
     return result
 
+
 @app.get("/price/{symbol}")
 async def get_latest_price(symbol: str):
     """
@@ -172,6 +215,7 @@ async def get_latest_price(symbol: str):
     if "error" in result:
         raise HTTPException(status_code=404, detail=result["error"])
     return result
+
 
 @app.get("/prices")
 async def get_batch_prices(symbols: str):
@@ -188,6 +232,7 @@ async def get_batch_prices(symbols: str):
         raise HTTPException(status_code=404, detail=result["error"])
     return result
 
+
 @app.get("/trade-agent", response_class=HTMLResponse)
 async def get_ui():
     """
@@ -199,7 +244,10 @@ async def get_ui():
             return f.read()
     except Exception as e:
         logger.error(f"Error reading index.html: {e}")
-        raise HTTPException(status_code=500, detail=f"Error reading index.html: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error reading index.html: {str(e)}"
+        )
+
 
 @app.post("/stock-analyze")
 async def analyze_stock(request: Request, body: AnalyzeRequest):
@@ -219,7 +267,9 @@ async def analyze_stock(request: Request, body: AnalyzeRequest):
                     stocks=body.stocks,
                     blacklist=body.blacklist if body.blacklist else None,
                     whitelist=body.whitelist if body.whitelist else None,
-                    divident_rate=body.return_rate,
+                    return_rate=body.return_rate,
+                    dividend_rate=body.dividend_rate,
+                    profit_rate=body.profit_rate,
                 ):
                     if chunk:
                         yield chunk
@@ -233,6 +283,7 @@ async def analyze_stock(request: Request, body: AnalyzeRequest):
         logger.error(f"❌ Error initiating analysis: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/users", response_model=List[UserResponse])
 async def get_users_endpoint():
     """
@@ -244,6 +295,7 @@ async def get_users_endpoint():
         logger.error(f"❌ Error fetching users: {e}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
+
 @app.put("/users/{user_id}/settings", response_model=UserResponse)
 async def update_user_settings_endpoint(user_id: int, body: SettingsUpdateRequest):
     """
@@ -254,9 +306,18 @@ async def update_user_settings_endpoint(user_id: int, body: SettingsUpdateReques
         valid_whitelist = None
         if body.white_list is not None:
             valid_symbols = get_all_symbols()
-            valid_whitelist = [t.upper() for t in body.white_list if t.upper() in valid_symbols][:30]
+            valid_whitelist = [
+                t.upper() for t in body.white_list if t.upper() in valid_symbols
+            ][:30]
 
-        updated_user = update_user_settings(user_id, body.black_list, body.return_rate, valid_whitelist)
+        updated_user = update_user_settings(
+            user_id,
+            body.black_list,
+            body.return_rate,
+            valid_whitelist,
+            body.dividend_rate,
+            body.profit_rate,
+        )
         if not updated_user:
             raise HTTPException(status_code=404, detail="User not found")
         return updated_user
@@ -265,6 +326,7 @@ async def update_user_settings_endpoint(user_id: int, body: SettingsUpdateReques
     except Exception as e:
         logger.error(f"❌ Error updating settings: {e}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
 
 @app.get("/users/{user_id}/stocks", response_model=List[StockResponse])
 async def get_stocks_endpoint(user_id: int):
@@ -275,6 +337,7 @@ async def get_stocks_endpoint(user_id: int):
         logger.error(f"❌ Error fetching stocks: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/users/{user_id}/stocks", response_model=StockResponse)
 async def add_stock_endpoint(user_id: int, body: StockCreateRequest):
     """Add a stock to user portfolio."""
@@ -284,11 +347,12 @@ async def add_stock_endpoint(user_id: int, body: StockCreateRequest):
             id=stock_id,
             user_id=user_id,
             stock_name=body.stock_name.upper(),
-            avg_price=body.avg_price
+            avg_price=body.avg_price,
         )
     except Exception as e:
         logger.error(f"❌ Error adding stock: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.delete("/stocks/{stock_id}")
 async def remove_stock_endpoint(stock_id: int):
@@ -304,6 +368,7 @@ async def remove_stock_endpoint(stock_id: int):
         logger.error(f"❌ Error removing stock: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.put("/stocks/{stock_id}", response_model=StockResponse)
 async def update_stock_endpoint(stock_id: int, body: StockCreateRequest):
     """Update a stock in the portfolio."""
@@ -317,15 +382,16 @@ async def update_stock_endpoint(stock_id: int, body: StockCreateRequest):
         # Minimal change: return the update info.
         return StockResponse(
             id=stock_id,
-            user_id=0, # Placeholder or could be passed in body
+            user_id=0,  # Placeholder or could be passed in body
             stock_name=body.stock_name.upper(),
-            avg_price=body.avg_price
+            avg_price=body.avg_price,
         )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"❌ Error updating stock: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
@@ -335,5 +401,5 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=port,
         reload=True,
-        log_level=LOG_LEVEL.lower()
+        log_level=LOG_LEVEL.lower(),
     )

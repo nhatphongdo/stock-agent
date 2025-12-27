@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+
 class GeminiClient:
     def __init__(self, model_name: str = None):
         """
@@ -41,14 +42,18 @@ class GeminiClient:
             async for chunk in self._generate_cli(prompt):
                 yield chunk
 
-    async def generate_with_tools(self, prompt: str, tools: list, on_tool_call: callable = None):
+    async def generate_with_tools(
+        self, prompt: str, tools: list, on_tool_call: callable = None
+    ):
         """
         Generates content with tools.
         SDK mode handles tool loop manually.
         CLI mode delegates everything to the gemini command.
         """
         if self.provider == "api":
-            async for chunk in self._generate_with_tools_api(prompt, tools, on_tool_call):
+            async for chunk in self._generate_with_tools_api(
+                prompt, tools, on_tool_call
+            ):
                 yield chunk
         else:
             # In CLI mode, the gemini CLI handles tools via registered MCP servers
@@ -58,8 +63,7 @@ class GeminiClient:
     async def _generate_api(self, prompt: str):
         try:
             response_stream = self.client.models.generate_content_stream(
-                model=self.model_name,
-                contents=prompt
+                model=self.model_name, contents=prompt
             )
             for chunk in response_stream:
                 if chunk.text:
@@ -67,14 +71,18 @@ class GeminiClient:
         except Exception as e:
             yield f"❌ Error calling Google AI SDK: {str(e)}"
 
-    async def _generate_with_tools_api(self, prompt: str, tools: list, on_tool_call: callable = None):
+    async def _generate_with_tools_api(
+        self, prompt: str, tools: list, on_tool_call: callable = None
+    ):
         try:
-            contents = [types.Content(role="user", parts=[types.Part.from_text(text=prompt)])]
+            contents = [
+                types.Content(role="user", parts=[types.Part.from_text(text=prompt)])
+            ]
             config = types.GenerateContentConfig(
                 tools=tools,
                 automatic_function_calling=types.AutomaticFunctionCallingConfig(
                     disable=True  # We handle function calls manually for streaming
-                )
+                ),
             )
 
             max_iterations = 10  # Prevent infinite loops
@@ -85,13 +93,13 @@ class GeminiClient:
 
                 # Generate response stream
                 response_stream = self.client.models.generate_content_stream(
-                    model=self.model_name,
-                    contents=contents,
-                    config=config
+                    model=self.model_name, contents=contents, config=config
                 )
 
                 function_calls = []
-                text_accumulated = [] # To keep track of text in current candidate for history
+                text_accumulated = (
+                    []
+                )  # To keep track of text in current candidate for history
 
                 # Process the stream
                 for chunk in response_stream:
@@ -108,7 +116,9 @@ class GeminiClient:
 
                 # Add model's response (with function calls) to conversation history
                 model_parts = [types.Part.from_text(text=t) for t in text_accumulated]
-                model_parts.extend([types.Part(function_call=fc) for fc in function_calls])
+                model_parts.extend(
+                    [types.Part(function_call=fc) for fc in function_calls]
+                )
                 contents.append(types.Content(role="model", parts=model_parts))
 
                 # Execute function calls
@@ -135,7 +145,11 @@ class GeminiClient:
                     function_responses.append(
                         types.Part.from_function_response(
                             name=tool_name,
-                            response=result if isinstance(result, dict) else {"result": result}
+                            response=(
+                                result
+                                if isinstance(result, dict)
+                                else {"result": result}
+                            ),
                         )
                     )
 
@@ -161,7 +175,14 @@ class GeminiClient:
             ) + prompt
 
             # gemini CLI command
-            cmd = ["gemini", "--sandbox", "--yolo", "--output-format", "text", full_prompt]
+            cmd = [
+                "gemini",
+                "--sandbox",
+                "--yolo",
+                "--output-format",
+                "text",
+                full_prompt,
+            ]
             if self.model_name:
                 cmd.extend(["--model", self.model_name])
 
@@ -170,10 +191,7 @@ class GeminiClient:
 
             # Run in a separate thread to avoid blocking asyncio
             process = await asyncio.create_subprocess_exec(
-                *cmd,
-                cwd=sandbox_path,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
+                *cmd, cwd=sandbox_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE
             )
 
             async def read_stdout(stream):
@@ -181,28 +199,33 @@ class GeminiClient:
                     line = await stream.readline()
                     if not line:
                         break
-                    yield line.decode('utf-8')
+                    yield line.decode("utf-8")
 
             async def read_stderr(stream, cb):
                 while True:
                     line = await stream.readline()
                     if not line:
                         break
-                    decoded = line.decode('utf-8')
+                    decoded = line.decode("utf-8")
                     # Common patterns for tool calls in Gemini CLI:
                     # "→ Calling <tool_name>(...)"
                     # "Using tool: <tool_name>"
                     if "Calling" in decoded or "Using tool" in decoded:
                         # Extract tool name if possible
                         import re
-                        match = re.search(r'(?:Calling|Using tool:)\s+([a-zA-Z0-9_]+)', decoded)
+
+                        match = re.search(
+                            r"(?:Calling|Using tool:)\s+([a-zA-Z0-9_]+)", decoded
+                        )
                         if match and cb:
                             tool_name = match.group(1)
                             # Pass to callback (args/result unknown in real-time CLI stream easily)
                             cb(tool_name, {}, None)
 
             # Start stderr reader in background to capture tool calls
-            stderr_reader_task = asyncio.create_task(read_stderr(process.stderr, on_tool_call))
+            stderr_reader_task = asyncio.create_task(
+                read_stderr(process.stderr, on_tool_call)
+            )
 
             async for chunk in read_stdout(process.stdout):
                 yield chunk
@@ -219,7 +242,7 @@ class GeminiClient:
 
             if process.returncode != 0:
                 stderr = await process.stderr.read()
-                err_msg = stderr.decode('utf-8')
+                err_msg = stderr.decode("utf-8")
                 if err_msg:
                     yield f"\n❌ CLI Error: {err_msg}"
 
