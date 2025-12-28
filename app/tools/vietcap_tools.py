@@ -17,6 +17,53 @@ VIETCAP_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 }
 
+# Cache for company list (1 day TTL)
+_company_list_cache: dict = {"data": None, "timestamp": None}
+_COMPANY_LIST_CACHE_TTL = 86400  # 1 day in seconds
+
+
+def get_company_list() -> list:
+    """
+    Get list of all companies from Vietcap search-bar API.
+    Results are cached for 1 day.
+
+    Returns:
+        List of company dictionaries with id, ticker, and name
+    """
+    global _company_list_cache
+
+    # Check cache validity
+    if (
+        _company_list_cache["data"] is not None
+        and _company_list_cache["timestamp"] is not None
+        and (time.time() - _company_list_cache["timestamp"]) < _COMPANY_LIST_CACHE_TTL
+    ):
+        return _company_list_cache["data"]
+
+    try:
+        url = "https://iq.vietcap.com.vn/api/iq-insight-service/v2/company/search-bar?language=1"
+        response = requests.get(url, headers=VIETCAP_HEADERS, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        if data and "data" in data and isinstance(data["data"], list):
+            results = []
+            for item in data["data"]:
+                results.append(
+                    {
+                        "id": item.get("id"),
+                        "ticker": item.get("code"),
+                        "name": item.get("name"),
+                    }
+                )
+            # Update cache
+            _company_list_cache["data"] = results
+            _company_list_cache["timestamp"] = time.time()
+            return results
+        return []
+    except Exception as e:
+        return [{"error": str(e)}]
+
 
 def get_company_info(ticker: str) -> dict:
     """
@@ -1114,6 +1161,74 @@ def get_stock_ohlcv(
             )
 
     return {"symbol": symbol, "interval": interval, "data": filtered_data}
+
+
+def get_company_analysis(
+    ticker: str,
+    page: int = 0,
+    size: int = 20,
+) -> dict:
+    """
+    Get company analysis reports from Vietcap CMS.
+
+    Args:
+        ticker: Stock ticker symbol (e.g., 'VNM', 'SSI')
+        page: Page number for pagination (default 0)
+        size: Number of results per page (default 20)
+
+    Returns:
+        List of analysis reports for the company
+    """
+    try:
+        # Look up company_id from ticker
+        company_list = get_company_list()
+        company_id = None
+        for company in company_list:
+            if company.get("ticker") == ticker.upper():
+                company_id = company.get("id")
+                break
+
+        if company_id is None:
+            return {
+                "error": f"Company not found for ticker: {ticker}",
+                "ticker": ticker,
+            }
+
+        url = (
+            f"https://www.vietcap.com.vn/api/cms-service/v2/page/analysis"
+            f"?is-all=false&page={page}&size={size}&direction=DESC&sortBy=date"
+            f"&companyId={company_id}&page-ids=144&page-ids=141&language=1"
+        )
+        response = requests.get(url, headers=VIETCAP_HEADERS, timeout=10)
+        response.raise_for_status()
+        content = response.json()
+
+        data = content.get("data") if content else None
+        paging_responses = data.get("pagingGeneralResponses") if data else None
+        items = paging_responses.get("content") if paging_responses else None
+
+        if items:
+            results = []
+            for item in items:
+                if not item:
+                    continue
+                created_date = item.get("createdDate")
+                link = item.get("link")
+                results.append(
+                    {
+                        "title": item.get("name"),
+                        "date": created_date.split("T")[0] if created_date else None,
+                        "link": (
+                            f"https://trading.vietcap.com.vn/iq/report-detail/vi/{link}"
+                            if link
+                            else None
+                        ),
+                    }
+                )
+            return results
+        return {"error": "No data found", "ticker": ticker}
+    except Exception as e:
+        return {"error": str(e), "ticker": ticker}
 
 
 # List of all tools for function calling

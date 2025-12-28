@@ -1,6 +1,10 @@
 from datetime import datetime, timedelta
 from app.llm.gemini_client import GeminiClient
-from app.tools.vietcap_tools import get_company_news, get_company_events
+from app.tools.vietcap_tools import (
+    get_company_news,
+    get_company_events,
+    get_company_analysis,
+)
 
 # Constants for parsing delimiters
 SENTIMENT_DELIMITER = "---SENTIMENT_LABEL---"
@@ -15,12 +19,15 @@ class NewsAgent:
     async def run(self, symbol: str, company_name: str = ""):
         import json
 
-        # 1. Fetch News and Events
+        # 1. Fetch News, Events, and Analysis
         news_data = get_company_news(symbol)
         tool_news_items = news_data.get("news", [])
 
         events_data = get_company_events(symbol)
         all_events = events_data.get("events", [])
+
+        analysis_data = get_company_analysis(symbol)
+        analysis_items = analysis_data if isinstance(analysis_data, list) else []
 
         # Filter events in the last 90 days
         ninety_days_ago = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
@@ -34,7 +41,7 @@ class NewsAgent:
         final_news_list = []
         seen_links = set()
 
-        def add_to_list(items, is_event=False):
+        def add_to_list(items, is_event=False, is_analysis=False):
             for item in items:
                 if is_event:
                     # Normalize event to news format
@@ -43,6 +50,16 @@ class NewsAgent:
                         "date": item.get("date"),
                         "description": item.get("eventTypeName", "Sự kiện"),
                         "link": item.get("link"),
+                        "source": "Vietcap",
+                    }
+                elif is_analysis:
+                    # Normalize analysis to news format
+                    normalized = {
+                        "title": item.get("title"),
+                        "date": item.get("date"),
+                        "description": "Báo cáo phân tích",
+                        "link": item.get("link"),
+                        "source": "Vietcap",
                     }
                 else:
                     normalized = item
@@ -54,6 +71,7 @@ class NewsAgent:
 
         add_to_list(tool_news_items)
         add_to_list(recent_events, is_event=True)
+        add_to_list(analysis_items, is_analysis=True)
 
         # 3. Prepare Context for LLM
         def build_context(items, header, empty_msg):
@@ -78,6 +96,11 @@ class NewsAgent:
             "\nDưới đây là các sự kiện doanh nghiệp quan trọng:",
             "Không có sự kiện quan trọng.",
         )
+        analysis_context = build_context(
+            analysis_items,
+            "\nDưới đây là các báo cáo phân tích từ Vietcap:",
+            "Không có báo cáo phân tích.",
+        )
 
         # 4. Construct Prompt
         prompt = f"""
@@ -90,6 +113,7 @@ Nhiệm vụ của bạn là phân tích tình hình hiện tại của mã cổ
 
 {news_context}
 {events_context}
+{analysis_context}
 
 **Yêu cầu phân tích:**
 1. **Kết hợp thông tin**: Tổng hợp tin tức từ cả dữ liệu cung cấp và kiến thức/tìm kiếm của bạn.

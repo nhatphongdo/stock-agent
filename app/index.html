@@ -1556,12 +1556,16 @@
             class="flex w-full flex-col lg:flex-row items-stretch lg:items-center gap-3 p-3 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/30 dark:border-white/10"
           >
             <!-- Row 1: Symbol & Name -->
-            <div class="flex items-center gap-3 w-full lg:w-auto lg:flex-1">
+            <div
+              class="flex items-center gap-3 w-full lg:w-auto lg:flex-1 min-w-0"
+            >
               <!-- Glassmorphic Stock Symbol Badge -->
               <div
-                class="w-10 h-10 bg-gradient-to-br from-primary-500/80 to-blue-500/80 backdrop-blur-md rounded-xl flex items-center justify-center text-white font-black text-sm shadow-lg border border-white/20 shrink-0"
+                class="min-w-10 h-10 px-2 bg-gradient-to-br from-primary-500/80 to-blue-500/80 backdrop-blur-md rounded-xl flex items-center justify-center text-white font-black text-xs shadow-lg border border-white/20 shrink-0"
               >
-                <span id="stock-header-symbol">---</span>
+                <span id="stock-header-symbol" class="truncate max-w-[80px]"
+                  >---</span
+                >
               </div>
               <div class="flex-1 min-w-0">
                 <h3
@@ -1968,7 +1972,10 @@
             symbolsMap = {};
             for (const [symbol, info] of Object.entries(data.symbols || {})) {
               const exchange = (info?.exchange || "HOSE").toUpperCase();
-              if (VALID_EXCHANGES.includes(exchange) && info.type === "STOCK") {
+              if (
+                VALID_EXCHANGES.includes(exchange) &&
+                ["STOCK", "ETF"].includes(info.type)
+              ) {
                 symbolsMap[symbol] = info;
               }
             }
@@ -3409,7 +3416,7 @@
 
         // Wrap stock tickers in clickable spans
         // Only highlight if the ticker exists in our valid symbols list
-        html = html.replace(/\b([A-Z0-9]{3,4})\b/g, (match, ticker) => {
+        html = html.replace(/\b([A-Z0-9]{3,10})\b/g, (match, ticker) => {
           // Check against the valid symbols list fetched from backend
           if (ticker in symbolsMap) {
             return `<span class="stock-ticker" data-symbol="${ticker}">${ticker}</span>`;

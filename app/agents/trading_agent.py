@@ -249,6 +249,9 @@ def format_context_for_prompt(context: dict) -> str:
             lines.append(
                 f"- Vốn hóa: {company.get('marketCap', 'N/A')} | KLGD TB: {company.get('averageMatchVolume1Month', 'N/A')}"
             )
+            lines.append(
+                f"- Dividend per share TSR: {company.get('dividendPerShareTsr', 'N/A')} | Projected TSR percentage: {company.get('projectedTSRPercentage', 'N/A')}"
+            )
             lines.append(f"- Rating: {company.get('rating', 'N/A')}")
 
             indicators = tech.get("indicators", {})
@@ -523,7 +526,7 @@ V. NHIỆM VỤ
    - Loại trừ cổ phiếu có tỷ suất lợi nhuận trung bình < {return_rate or 6}%
    - Loại trừ cổ phiếu có tỷ lệ chia cổ tức trung bình 5 năm gần nhất < {dividend_rate or 0}%
    - Trình bày bảng gồm:
-     Mã | Tên công ty | Giá hiện tại | Giá mua KN | Giá bán KN | TSLN TB (%) | RSI | Xu hướng | P/E | P/B | Phân tích
+     Mã | Tên công ty | Giá hiện tại | Giá mua KN | Giá bán KN | TSLN TB (%) | Cổ tức TB | RSI | Xu hướng | P/E | P/B | Phân tích
 5. Danh sách các mã cổ phiếu nên tránh mua hiện tại:
    - Trình bày bảng gồm:
      Mã | Tên công ty | Giá hiện tại | RSI | MACD Signal | Xu hướng | Lý do tránh
