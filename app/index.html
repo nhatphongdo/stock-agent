@@ -935,6 +935,91 @@
         }
       }
 
+      /* Indicator Tooltip Styles */
+      .indicator-tooltip {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        cursor: help;
+      }
+
+      .indicator-tooltip .tooltip-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        margin-left: 4px;
+        color: #64748b;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+      }
+
+      .indicator-tooltip .tooltip-icon svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .dark .indicator-tooltip .tooltip-icon {
+        color: #94a3b8;
+      }
+
+      .indicator-tooltip:hover .tooltip-icon {
+        color: #6366f1;
+      }
+
+      .dark .indicator-tooltip:hover .tooltip-icon {
+        color: #818cf8;
+      }
+
+      /* Hide the inline tooltip-content, we use global tooltip instead */
+      .indicator-tooltip .tooltip-content {
+        display: none !important;
+      }
+
+      /* Global Tooltip Container */
+      #global-tooltip {
+        position: fixed;
+        display: none;
+        min-width: 220px;
+        max-width: 300px;
+        padding: 10px 12px;
+        background: #1e293b;
+        color: #f1f5f9;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.5;
+        border-radius: 10px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        z-index: 999999;
+        text-align: left;
+        white-space: normal;
+        pointer-events: none;
+      }
+
+      #global-tooltip::before {
+        content: "";
+        position: absolute;
+        bottom: 100%;
+        left: 20px;
+        border-width: 6px;
+        border-style: solid;
+        border-color: transparent transparent #1e293b transparent;
+      }
+
+      .dark #global-tooltip {
+        background: #334155;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      }
+
+      .dark #global-tooltip::before {
+        border-color: transparent transparent #334155 transparent;
+      }
+
+      #global-tooltip.show {
+        display: block;
+      }
+
       /* Resizer Styles */
       #resizer {
         width: 4px;
@@ -1001,6 +1086,9 @@
   <body
     class="bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-slate-100 transition-colors duration-300 h-screen overflow-hidden flex flex-col relative"
   >
+    <!-- Global Tooltip Container -->
+    <div id="global-tooltip"></div>
+
     <!-- Background Blobs -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
       <div
@@ -1135,16 +1223,16 @@
               <input
                 type="text"
                 id="whitelist-input"
-                class="w-full p-4 pr-12 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all text-sm"
-                placeholder="Nhập mã cổ phiếu để thêm vào whitelist"
+                class="w-full p-4 pr-12 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all text-sm font-bold uppercase"
+                placeholder="Nhập mã cổ phiếu (VD: FPT)"
               />
-              <i data-lucide="star" class="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-400 w-4 h-4"></i>
-            </div>
-            <div
-              id="whitelist-suggestions"
-              class="hidden mt-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg max-h-48 overflow-y-auto"
-            >
-              <!-- Suggestions will be rendered here -->
+              <i data-lucide="search" class="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-400 w-4 h-4"></i>
+              <div
+                id="whitelist-suggestions"
+                class="hidden absolute left-0 right-0 top-full mt-2 z-50 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg max-h-48 overflow-y-auto"
+              >
+                <!-- Suggestions will be rendered here -->
+              </div>
             </div>
             <div id="whitelist-tags-container" class="blacklist-tags">
               <!-- Tags will be rendered here -->
@@ -1249,26 +1337,38 @@
         <!-- Add Stock Form -->
         <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 mb-6">
           <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1"
+            <div class="relative">
+              <label
+                class="block text-[11px] font-black text-emerald-600 dark:text-emerald-400 mb-3 uppercase tracking-[0.2em] px-1"
                 >Mã cổ phiếu</label
               >
-              <input
-                type="text"
-                id="new-stock-symbol"
-                placeholder="VD: VNM"
-                class="w-full bg-white dark:bg-[#020617] border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 outline-none transition-all"
-              />
+              <div class="relative">
+                <input
+                  type="text"
+                  id="new-stock-symbol"
+                  placeholder="Nhập mã (VD: VNM)"
+                  autocomplete="off"
+                  class="w-full p-4 pr-12 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all text-sm font-bold uppercase"
+                />
+                <i data-lucide="search" class="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-400 w-4 h-4"></i>
+              </div>
+              <div
+                id="portfolio-symbol-suggestions"
+                class="hidden absolute left-0 top-full mt-2 z-50 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg max-h-48 overflow-y-auto w-[450px] max-w-[calc(100vw-4rem)]"
+              >
+                <!-- Suggestions will be rendered here -->
+              </div>
             </div>
             <div>
-              <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1"
+              <label
+                class="block text-[11px] font-black text-primary-600 dark:text-primary-400 mb-3 uppercase tracking-[0.2em] px-1"
                 >Giá vốn (VND)</label
               >
               <input
                 type="number"
                 id="new-stock-price"
                 placeholder="VD: 70000"
-                class="w-full bg-white dark:bg-[#020617] border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                class="w-full p-4 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all text-sm font-bold"
               />
             </div>
           </div>
@@ -1674,6 +1774,80 @@
 
       // Initialize Lucide Icons
       lucide.createIcons();
+
+      // Global Tooltip System
+      (function initGlobalTooltip() {
+        const globalTooltip = document.getElementById("global-tooltip");
+        if (!globalTooltip) return;
+
+        let hideTimeout = null;
+
+        document.addEventListener(
+          "mouseenter",
+          (e) => {
+            const tooltipTrigger = e.target.closest(".indicator-tooltip");
+            if (!tooltipTrigger) return;
+
+            const content = tooltipTrigger.querySelector(".tooltip-content");
+            if (!content) return;
+
+            // Clear any pending hide
+            if (hideTimeout) {
+              clearTimeout(hideTimeout);
+              hideTimeout = null;
+            }
+
+            // Set content
+            globalTooltip.textContent = content.textContent;
+
+            // Get position of the trigger
+            const rect = tooltipTrigger.getBoundingClientRect();
+
+            // Calculate tooltip position (below the icon)
+            let left = rect.left;
+            let top = rect.bottom + 8;
+
+            // Show tooltip to measure its size
+            globalTooltip.classList.add("show");
+
+            // Adjust if overflowing right edge
+            const tooltipRect = globalTooltip.getBoundingClientRect();
+            if (left + tooltipRect.width > window.innerWidth - 10) {
+              left = window.innerWidth - tooltipRect.width - 10;
+            }
+            if (left < 10) left = 10;
+
+            // Adjust if overflowing bottom edge (show above instead)
+            if (top + tooltipRect.height > window.innerHeight - 10) {
+              top = rect.top - tooltipRect.height - 8;
+              // Change arrow to point down
+              globalTooltip.style.setProperty("--arrow-top", "100%");
+              globalTooltip.style.setProperty("--arrow-bottom", "auto");
+            } else {
+              globalTooltip.style.setProperty("--arrow-top", "auto");
+              globalTooltip.style.setProperty("--arrow-bottom", "100%");
+            }
+
+            globalTooltip.style.left = left + "px";
+            globalTooltip.style.top = top + "px";
+          },
+          true,
+        );
+
+        document.addEventListener(
+          "mouseleave",
+          (e) => {
+            const tooltipTrigger = e.target.closest(".indicator-tooltip");
+            if (!tooltipTrigger) return;
+
+            // Small delay to prevent flicker
+            hideTimeout = setTimeout(() => {
+              globalTooltip.classList.remove("show");
+            }, 100);
+          },
+          true,
+        );
+      })();
 
       // ===========================================
       // CONFIGURATION - All constants in one place
@@ -3334,6 +3508,7 @@
         profitRateInput.value = currentUser.profit_rate || 0;
         renderBlacklistTags();
         renderWhitelistTags();
+        lucide.createIcons({ root: settingsOverlay });
       }
 
       function closeSettings() {
@@ -3406,11 +3581,13 @@
         renderWhitelistTags();
       }
 
-      function setupWhitelistAutocomplete() {
-        whitelistInput.addEventListener("input", () => {
-          const query = whitelistInput.value.trim().toUpperCase();
+      function sharedSetupSymbolAutocomplete(inputEl, suggestionsEl, onSelect) {
+        if (!inputEl || !suggestionsEl) return;
+
+        inputEl.addEventListener("input", () => {
+          const query = inputEl.value.trim().toUpperCase();
           if (!query || query.length < 1) {
-            whitelistSuggestions.classList.add("hidden");
+            suggestionsEl.classList.add("hidden");
             return;
           }
 
@@ -3423,37 +3600,63 @@
             .slice(0, 10);
 
           if (matches.length === 0) {
-            whitelistSuggestions.classList.add("hidden");
+            suggestionsEl.classList.add("hidden");
             return;
           }
 
-          whitelistSuggestions.innerHTML = matches
+          suggestionsEl.innerHTML = matches
             .map(([symbol, info]) => {
               const name = typeof info === "object" ? info.name : info;
               return `
-                <div class="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex justify-between items-center" onclick="addWhitelistItem('${symbol}')">
+                <div class="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex justify-between items-center" data-symbol="${symbol}">
                   <span class="font-bold text-emerald-600 dark:text-emerald-400">${symbol}</span>
                   <span class="text-xs text-slate-500 truncate ml-2">${name || ""}</span>
                 </div>
               `;
             })
             .join("");
-          whitelistSuggestions.classList.remove("hidden");
+
+          // Add click handlers for suggestions
+          suggestionsEl.querySelectorAll("[data-symbol]").forEach((item) => {
+            item.addEventListener("click", () => {
+              const symbol = item.getAttribute("data-symbol");
+              onSelect(symbol);
+              suggestionsEl.classList.add("hidden");
+            });
+          });
+
+          suggestionsEl.classList.remove("hidden");
         });
 
-        whitelistInput.addEventListener("keydown", (e) => {
+        inputEl.addEventListener("keydown", (e) => {
           if (e.key === "Enter") {
-            e.preventDefault();
-            const val = whitelistInput.value.trim().toUpperCase();
-            if (val) addWhitelistItem(val);
+            const query = inputEl.value.trim().toUpperCase();
+            if (query) {
+              onSelect(query);
+              suggestionsEl.classList.add("hidden");
+            }
           }
         });
 
         // Hide suggestions when clicking outside
         document.addEventListener("click", (e) => {
-          if (!whitelistInput.contains(e.target) && !whitelistSuggestions.contains(e.target)) {
-            whitelistSuggestions.classList.add("hidden");
+          if (!inputEl.contains(e.target) && !suggestionsEl.contains(e.target)) {
+            suggestionsEl.classList.add("hidden");
           }
+        });
+      }
+
+      function setupWhitelistAutocomplete() {
+        sharedSetupSymbolAutocomplete(whitelistInput, whitelistSuggestions, (symbol) => {
+          addWhitelistItem(symbol);
+        });
+      }
+
+      function setupPortfolioSymbolAutocomplete() {
+        const portfolioSymbolSuggestions = document.getElementById("portfolio-symbol-suggestions");
+        sharedSetupSymbolAutocomplete(newStockSymbol, portfolioSymbolSuggestions, (symbol) => {
+          newStockSymbol.value = symbol;
+          newStockPrice.focus();
         });
       }
 
@@ -3522,6 +3725,7 @@
         userMenu.classList.remove("show");
         portfolioOverlay.classList.add("show");
         fetchPortfolioStocks();
+        lucide.createIcons({ root: portfolioOverlay });
       }
 
       function closePortfolio() {
@@ -3687,6 +3891,9 @@
       // Setup whitelist autocomplete
       setupWhitelistAutocomplete();
 
+      // Setup portfolio symbol autocomplete
+      setupPortfolioSymbolAutocomplete();
+
       function removeSkeleton(elementId) {
         const el = document.getElementById(elementId);
         if (el) {
@@ -3847,13 +4054,14 @@
                 <!-- Momentum Box -->
                 <div class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/40 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300">
                    <h5 class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4">
-                      <i data-lucide="gauge" class="w-4 h-4"></i> Momentum
+                      <i data-lucide="gauge" class="w-4 h-4"></i> Động lượng
+                      <span class="indicator-tooltip"><span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Nhóm chỉ báo đo lường tốc độ và sức mạnh biến động giá, giúp xác định điểm quá mua/quá bán và đảo chiều xu hướng</span></span>
                    </h5>
                    <div class="space-y-4">
                       <!-- RSI -->
                       <div class="space-y-1.5">
                         <div class="flex justify-between text-sm font-medium">
-                          <span class="text-slate-500">RSI (14)</span>
+                          <span class="text-slate-500 indicator-tooltip">RSI (14)<span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Relative Strength Index - Chỉ số Sức mạnh Tương đối. Đo lường tốc độ thay đổi giá. RSI &lt; 30 = Quá bán (có thể tăng), RSI &gt; 70 = Quá mua (có thể giảm)</span></span>
                           <span id="tech-rsi-value" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-5"></span>
                         </div>
                         <!-- RSI Bar with clear zones -->
@@ -3893,7 +4101,7 @@
                       <!-- Stochastic -->
                       <div class="space-y-1.5">
                         <div class="flex justify-between text-sm font-medium">
-                          <span class="text-slate-500">Stochastic</span>
+                          <span class="text-slate-500 indicator-tooltip">Stochastic<span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Stochastic Oscillator - So sánh giá đóng cửa với phạm vi giá trong 14 phiên. K &lt; 20 = Quá bán, K &gt; 80 = Quá mua. Giao cắt K/D báo hiệu đảo chiều</span></span>
                           <div class="flex gap-2">
                              <span id="tech-stoch-k" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-5"></span>
                              <span id="tech-stoch-d" class="text-slate-400 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-5"></span>
@@ -3904,7 +4112,7 @@
                       <!-- MACD -->
                       <div class="space-y-1.5">
                         <div class="flex justify-between text-sm font-medium">
-                          <span class="text-slate-500">MACD (12, 26, 9)</span>
+                          <span class="text-slate-500 indicator-tooltip">MACD (12, 26, 9)<span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Moving Average Convergence Divergence - Đo động lượng xu hướng. Histogram dương = xu hướng tăng mạnh, âm = xu hướng giảm. Giao cắt MACD/Signal báo hiệu mua/bán</span></span>
                           <div class="flex gap-2">
                              <span id="tech-macd-line" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-12 h-5"></span>
                              <span id="tech-macd-signal-val" class="text-slate-400 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-12 h-5"></span>
@@ -3917,7 +4125,7 @@
                       </div>
                       <!-- Williams %R -->
                       <div class="flex justify-between text-sm font-medium">
-                        <span class="text-slate-500">Williams %R</span>
+                        <span class="text-slate-500 indicator-tooltip">Williams %R<span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Williams Percent Range - Đo vị trí giá trong phạm vi cao/thấp. Giá trị từ -100 đến 0. &lt; -80 = Quá bán, &gt; -20 = Quá mua</span></span>
                         <span id="tech-willr" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-5"></span>
                       </div>
                    </div>
@@ -3926,20 +4134,21 @@
                 <!-- Trend Indicators -->
                 <div class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/40 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300">
                    <h5 class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4">
-                      <i data-lucide="move-up-right" class="w-4 h-4"></i> Trend
+                      <i data-lucide="move-up-right" class="w-4 h-4"></i> Xu hướng
+                      <span class="indicator-tooltip"><span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Nhóm chỉ báo xác định chiều hướng và sức mạnh xu hướng giá, bao gồm đường trung bình động (MA) và ADX</span></span>
                    </h5>
                    <div class="space-y-4">
                       <div id="tech-ma-list" class="space-y-2 text-sm">
-                         <div class="flex justify-between"><span class="text-slate-500">SMA20:</span><span id="tech-sma20" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                         <div class="flex justify-between"><span class="text-slate-500">SMA50:</span><span id="tech-sma50" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                         <div class="flex justify-between"><span class="text-slate-500">SMA100:</span><span id="tech-sma100" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                         <div class="flex justify-between"><span class="text-slate-500">SMA200:</span><span id="tech-sma200" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                         <div class="flex justify-between"><span class="text-slate-500">EMA20:</span><span id="tech-ema20" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                         <div class="flex justify-between"><span class="text-slate-500">EMA50:</span><span id="tech-ema50" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                         <div class="flex justify-between"><span class="text-slate-500 indicator-tooltip">SMA20:<span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Simple Moving Average 20 - Trung bình giá đóng cửa 20 phiên gần nhất. Dùng để xác định xu hướng ngắn hạn</span></span><span id="tech-sma20" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                         <div class="flex justify-between"><span class="text-slate-500 indicator-tooltip">SMA50:<span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Simple Moving Average 50 - Trung bình giá đóng cửa 50 phiên. Dùng để xác định xu hướng trung hạn</span></span><span id="tech-sma50" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                         <div class="flex justify-between"><span class="text-slate-500 indicator-tooltip">SMA100:<span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Simple Moving Average 100 - Trung bình giá 100 phiên. Hỗ trợ/kháng cự quan trọng cho xu hướng trung-dài hạn</span></span><span id="tech-sma100" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                         <div class="flex justify-between"><span class="text-slate-500 indicator-tooltip">SMA200:<span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Simple Moving Average 200 - Trung bình giá 200 phiên. Chỉ báo quan trọng nhất cho xu hướng dài hạn</span></span><span id="tech-sma200" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                         <div class="flex justify-between"><span class="text-slate-500 indicator-tooltip">EMA20:<span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Exponential Moving Average 20 - Trung bình lũy thừa 20 phiên. Nhạy hơn SMA, phản ánh nhanh biến động giá</span></span><span id="tech-ema20" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                         <div class="flex justify-between"><span class="text-slate-500 indicator-tooltip">EMA50:<span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Exponential Moving Average 50 - Trung bình lũy thừa 50 phiên. Kết hợp độ nhạy và xu hướng trung hạn</span></span><span id="tech-ema50" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
                       </div>
                       <div class="pt-3 border-t border-slate-200 dark:border-white/5">
                          <div class="flex justify-between text-sm font-medium mb-1">
-                            <span class="text-slate-500">ADX Strength</span>
+                            <span class="text-slate-500 indicator-tooltip">ADX<span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Average Directional Index - Chỉ số Định hướng Trung bình. Đo sức mạnh xu hướng. ADX &gt; 25 = xu hướng mạnh, &lt; 20 = đi ngang. +DI/-DI xác định chiều tăng/giảm</span></span>
                             <span id="tech-adx-val" class="font-bold text-indigo-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-5"></span>
                          </div>
                          <div class="flex items-center gap-2 mb-2">
@@ -3955,32 +4164,34 @@
                 <!-- Volatility -->
                 <div class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/40 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300">
                    <h5 class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4">
-                      <i data-lucide="waves" class="w-4 h-4"></i> Volatility
+                      <i data-lucide="waves" class="w-4 h-4"></i> Biến động
+                      <span class="indicator-tooltip"><span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Nhóm chỉ báo đo lường mức độ dao động giá, giúp xác định ngưỡng hỗ trợ/kháng cự và đánh giá rủi ro</span></span>
                    </h5>
                    <div class="space-y-3 text-sm">
-                      <div class="flex justify-between"><span class="text-slate-500">BB Upper:</span><span id="tech-bb-upper" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                      <div class="flex justify-between"><span class="text-slate-500">BB Middle:</span><span id="tech-bb-middle" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                      <div class="flex justify-between"><span class="text-slate-500">BB Lower:</span><span id="tech-bb-lower" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                      <div class="flex justify-between"><span class="text-slate-500 indicator-tooltip">BB Trên:<span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Bollinger Band Upper - Dải Bollinger trên. Giá chạm BB trên thường cho thấy quá mua, có thể điều chỉnh</span></span><span id="tech-bb-upper" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                      <div class="flex justify-between"><span class="text-slate-500 indicator-tooltip">BB Giữa:<span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Bollinger Band Middle - Đường trung bình 20 phiên, là mức hỗ trợ/kháng cự động của dải Bollinger</span></span><span id="tech-bb-middle" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                      <div class="flex justify-between"><span class="text-slate-500 indicator-tooltip">BB Dưới:<span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Bollinger Band Lower - Dải Bollinger dưới. Giá chạm BB dưới thường cho thấy quá bán, có thể hồi phục</span></span><span id="tech-bb-lower" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
                        <div id="tech-bb-signal" class="text-sm font-bold flex items-center justify-center skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-full w-24 h-6"></div>
                       <div class="pt-2 border-t border-slate-200 dark:border-white/5 flex justify-between">
-                         <span class="text-slate-500">ATR:</span>
+                         <span class="text-slate-500 indicator-tooltip">ATR:<span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Average True Range - Phạm vi Thực Trung bình. Đo biên độ dao động giá trung bình. ATR cao = biến động mạnh</span></span>
                          <span id="tech-atr" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span>
                       </div>
                    </div>
                 </div>
 
-                <!-- Volume & Flow -->
+                <!-- Khối lượng & Dòng tiền -->
                 <div class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/40 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300">
                    <h5 class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4">
-                      <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Volume & Flow
+                      <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Khối lượng & Dòng tiền
+                      <span class="indicator-tooltip"><span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Nhóm chỉ báo phân tích khối lượng giao dịch và dòng tiền, giúp xác nhận xu hướng</span></span>
                    </h5>
                    <div class="space-y-3 text-sm">
                       <div class="flex justify-between">
-                        <span class="text-slate-500">OBV Trend:</span>
+                        <span class="text-slate-500 indicator-tooltip">OBV:<span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">On-Balance Volume - Khối lượng Cân bằng. Tăng = dòng tiền vào, Giảm = dòng tiền ra. Xác nhận sức mạnh xu hướng</span></span>
                         <span id="tech-obv-trend" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-14 h-5"></span>
                       </div>
                       <div class="flex justify-between">
-                        <span class="text-slate-500">CMF:</span>
+                        <span class="text-slate-500 indicator-tooltip">CMF:<span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Chaikin Money Flow - Dòng tiền Chaikin. CMF > 0 = áp lực mua, CMF < 0 = áp lực bán</span></span>
                         <span id="tech-cmf" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-14 h-5 text-right"></span>
                       </div>
                        <div id="tech-vol-signal" class="text-sm font-bold flex items-center justify-center skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-full w-32 h-6"></div>
@@ -3990,31 +4201,33 @@
                 <!-- Pivot Points -->
                 <div class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/40 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300">
                   <h5 class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4">
-                    <i data-lucide="target" class="w-4 h-4"></i> Pivot Points
+                    <i data-lucide="target" class="w-4 h-4"></i> Điểm Pivot
+                    <span class="indicator-tooltip"><span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Các mức giá quan trậng tính từ giá Cao/Thấp/Đóng cửa phiên trước. Hỗ trợ (S) và Kháng cự (R) là các mức giá tiềm năng đảo chiều</span></span>
                   </h5>
                   <div class="space-y-2 text-sm">
                     <div class="flex justify-between font-bold text-indigo-500 mb-1"><span class="text-slate-500 font-medium">Pivot</span><span id="tech-pivot" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                    <div class="flex justify-between"><span class="text-slate-500">Resistance 1</span><span id="tech-pivot-r1" class="text-rose-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                    <div class="flex justify-between"><span class="text-slate-500">Resistance 2</span><span id="tech-pivot-r2" class="text-rose-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                    <div class="flex justify-between"><span class="text-slate-500">Resistance 3</span><span id="tech-pivot-r3" class="text-rose-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                    <div class="flex justify-between"><span class="text-slate-500">Support 1</span><span id="tech-pivot-s1" class="text-emerald-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                    <div class="flex justify-between"><span class="text-slate-500">Support 2</span><span id="tech-pivot-s2" class="text-emerald-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                    <div class="flex justify-between"><span class="text-slate-500">Support 3</span><span id="tech-pivot-s3" class="text-emerald-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Kháng cự 1</span><span id="tech-pivot-r1" class="text-rose-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Kháng cự 2</span><span id="tech-pivot-r2" class="text-rose-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Kháng cự 3</span><span id="tech-pivot-r3" class="text-rose-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Hỗ trợ 1</span><span id="tech-pivot-s1" class="text-emerald-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Hỗ trợ 2</span><span id="tech-pivot-s2" class="text-emerald-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Hỗ trợ 3</span><span id="tech-pivot-s3" class="text-emerald-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
                   </div>
                 </div>
                 <!-- Fibonacci -->
                 <div class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/40 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300">
                   <h5 class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4">
                     <i data-lucide="layers" class="w-4 h-4"></i> Fibonacci
+                    <span class="indicator-tooltip"><span class="tooltip-icon"><i data-lucide="info"></i></span><span class="tooltip-content">Các mức tỉ lệ Fibonacci (0%, 23.6%, 38.2%, 50%, 61.8%, 78.6%, 100%) dựa trên biên độ giá. Thường dùng để xác định mức hồi/điều chỉnh</span></span>
                   </h5>
                   <div class="space-y-2 text-sm pt-1">
-                    <div class="flex justify-between"><span class="text-slate-500">Level 0.0%</span><span id="tech-fib-0" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                    <div class="flex justify-between text-yellow-500 font-medium"><span class="text-slate-500 font-normal">Level 23.6%</span><span id="tech-fib-236" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                    <div class="flex justify-between text-amber-500 font-medium"><span class="text-slate-500 font-normal">Level 38.2%</span><span id="tech-fib-382" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                    <div class="flex justify-between text-indigo-500 font-bold"><span class="text-slate-500 font-normal">Level 50.0%</span><span id="tech-fib-500" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                    <div class="flex justify-between text-emerald-500 font-medium"><span class="text-slate-500 font-normal">Level 61.8%</span><span id="tech-fib-618" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                    <div class="flex justify-between text-teal-500 font-medium"><span class="text-slate-500 font-normal">Level 78.6%</span><span id="tech-fib-786" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
-                    <div class="flex justify-between"><span class="text-slate-500">Level 100.0%</span><span id="tech-fib-100" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Mức 0.0%</span><span id="tech-fib-0" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between text-yellow-500 font-medium"><span class="text-slate-500 font-normal">Mức 23.6%</span><span id="tech-fib-236" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between text-amber-500 font-medium"><span class="text-slate-500 font-normal">Mức 38.2%</span><span id="tech-fib-382" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between text-indigo-500 font-bold"><span class="text-slate-500 font-normal">Mức 50.0%</span><span id="tech-fib-500" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between text-emerald-500 font-medium"><span class="text-slate-500 font-normal">Mức 61.8%</span><span id="tech-fib-618" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between text-teal-500 font-medium"><span class="text-slate-500 font-normal">Mức 78.6%</span><span id="tech-fib-786" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Mức 100.0%</span><span id="tech-fib-100" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
                   </div>
                 </div>
               </div>
