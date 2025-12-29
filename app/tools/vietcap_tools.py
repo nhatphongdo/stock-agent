@@ -1096,7 +1096,8 @@ def get_stock_ohlcv(
         symbol,
         count_back=count_back,
         timeframe=timeframe,
-        to_time=int(end_dt.timestamp()),
+        to_time=int(end_dt.timestamp())
+        + 86400,  # end_dt is start of day so need to add 1 day to cover intraday data
     )
     if "error" in result:
         return result
@@ -1118,7 +1119,7 @@ def get_stock_ohlcv(
         "5m": "5min",
         "15m": "15min",
         "30m": "30min",
-        "1H": "1H",
+        "1H": "1h",
         "1D": "1D",
         "1W": "W-MON",
         "1M": "ME",

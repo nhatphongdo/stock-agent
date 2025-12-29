@@ -41,10 +41,8 @@
               },
             },
             backgroundImage: {
-              "premium-gradient":
-                "linear-gradient(135deg, #5c64eb 0%, #8b5cf6 100%)",
-              "dark-premium-gradient":
-                "linear-gradient(135deg, #37388d 0%, #5c64eb 100%)",
+              "premium-gradient": "linear-gradient(135deg, #5c64eb 0%, #8b5cf6 100%)",
+              "dark-premium-gradient": "linear-gradient(135deg, #37388d 0%, #5c64eb 100%)",
             },
           },
         },
@@ -78,11 +76,7 @@
       }
 
       .bubble-user {
-        background: linear-gradient(
-          135deg,
-          rgba(92, 100, 235, 0.8) 0%,
-          rgba(139, 92, 246, 0.8) 100%
-        );
+        background: linear-gradient(135deg, rgba(92, 100, 235, 0.8) 0%, rgba(139, 92, 246, 0.8) 100%);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         color: white;
@@ -92,11 +86,7 @@
       }
 
       .dark .bubble-user {
-        background: linear-gradient(
-          135deg,
-          rgba(79, 70, 229, 0.8) 0%,
-          rgba(124, 58, 237, 0.8) 100%
-        );
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.8) 0%, rgba(124, 58, 237, 0.8) 100%);
         box-shadow: 0 8px 30px -5px rgba(0, 0, 0, 0.2);
       }
 
@@ -433,11 +423,7 @@
 
       .dark .markdown-content blockquote {
         color: #c7d2fe;
-        background: linear-gradient(
-          to right,
-          rgba(99, 102, 241, 0.1),
-          transparent
-        );
+        background: linear-gradient(to right, rgba(99, 102, 241, 0.1), transparent);
       }
 
       /* User Bubble Markdown Fix */
@@ -852,12 +838,7 @@
         left: 0;
         width: 60%;
         height: 100%;
-        background: linear-gradient(
-          to right,
-          transparent,
-          rgba(255, 255, 255, 0.4),
-          transparent
-        );
+        background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.4), transparent);
         animation: shimmer-pill 2.5s infinite linear;
       }
 
@@ -870,12 +851,7 @@
       }
 
       .dark #tab-indicator::after {
-        background: linear-gradient(
-          to right,
-          transparent,
-          rgba(255, 255, 255, 0.3),
-          transparent
-        );
+        background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
       }
 
       input::-webkit-outer-spin-button,
@@ -893,24 +869,14 @@
 
       /* Skeleton Loading */
       .skeleton {
-        background: linear-gradient(
-          90deg,
-          #f1f5f9 25%,
-          #e2e8f0 50%,
-          #f1f5f9 75%
-        );
+        background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
         background-size: 200% 100%;
         animation: skeleton-loading 1.8s infinite ease-in-out;
         border-radius: 6px;
       }
 
       .dark .skeleton {
-        background: linear-gradient(
-          90deg,
-          #0f172a 25%,
-          #1e293b 50%,
-          #0f172a 75%
-        );
+        background: linear-gradient(90deg, #0f172a 25%, #1e293b 50%, #0f172a 75%);
         background-size: 200% 100%;
       }
 
@@ -933,6 +899,42 @@
         margin-bottom: 0;
       }
 
+      /* Skeleton Shimmer - reusable shimmer effect */
+      .skeleton-shimmer {
+        position: relative;
+        overflow: hidden;
+        background: #e2e8f0;
+      }
+
+      .dark .skeleton-shimmer {
+        background: #334155;
+      }
+
+      .skeleton-shimmer::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+        animation: shimmer 1.5s infinite;
+      }
+
+      .dark .skeleton-shimmer::after {
+        background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+      }
+
+      @keyframes shimmer {
+        0% {
+          transform: translateX(-100%);
+        }
+
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
       /* Resizer Styles */
       #resizer {
         width: 4px;
@@ -953,11 +955,7 @@
         align-items: center;
         gap: 0.25rem;
         padding: 0.125rem 0.5rem;
-        background: linear-gradient(
-          135deg,
-          rgba(139, 92, 246, 0.15),
-          rgba(59, 130, 246, 0.15)
-        );
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15));
         border: 1px solid rgba(139, 92, 246, 0.3);
         border-radius: 0.5rem;
         font-weight: 700;
@@ -969,11 +967,7 @@
       }
 
       .stock-ticker:hover {
-        background: linear-gradient(
-          135deg,
-          rgba(139, 92, 246, 0.25),
-          rgba(59, 130, 246, 0.25)
-        );
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(59, 130, 246, 0.25));
         border-color: rgba(139, 92, 246, 0.5);
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
@@ -987,21 +981,13 @@
       }
 
       .dark .stock-ticker {
-        background: linear-gradient(
-          135deg,
-          rgba(139, 92, 246, 0.2),
-          rgba(59, 130, 246, 0.2)
-        );
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2));
         border-color: rgba(139, 92, 246, 0.4);
         color: #a78bfa;
       }
 
       .dark .stock-ticker:hover {
-        background: linear-gradient(
-          135deg,
-          rgba(139, 92, 246, 0.35),
-          rgba(59, 130, 246, 0.35)
-        );
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(59, 130, 246, 0.35));
         border-color: rgba(139, 92, 246, 0.6);
       }
 
@@ -1038,16 +1024,10 @@
         <div
           class="bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900/30 p-1.5 rounded-xl shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500/10 dark:ring-white/10"
         >
-          <img
-            src="/static/logo.svg"
-            alt="Trade Agent Logo"
-            class="w-7 h-7 object-contain"
-          />
+          <img src="/static/logo.svg" alt="Trade Agent Logo" class="w-7 h-7 object-contain" />
         </div>
         <div>
-          <h1
-            class="text-2xl font-black bg-clip-text text-transparent bg-premium-gradient tracking-tight"
-          >
+          <h1 class="text-2xl font-black bg-clip-text text-transparent bg-premium-gradient tracking-tight">
             Trade Agent
           </h1>
           <p
@@ -1077,16 +1057,8 @@
               ??
             </div>
             <div>
-              <div
-                id="menu-user-name"
-                class="font-bold text-slate-900 dark:text-white leading-tight"
-              >
-                User Name
-              </div>
-              <div
-                id="menu-user-email"
-                class="text-xs text-slate-600 dark:text-slate-400 font-medium"
-              >
+              <div id="menu-user-name" class="font-bold text-slate-900 dark:text-white leading-tight">User Name</div>
+              <div id="menu-user-email" class="text-xs text-slate-600 dark:text-slate-400 font-medium">
                 email@example.com
               </div>
             </div>
@@ -1114,14 +1086,10 @@
       <div class="settings-modal">
         <div class="flex items-center justify-between mb-8">
           <div>
-            <h2
-              class="text-2xl font-black bg-clip-text text-transparent bg-premium-gradient tracking-tight"
-            >
+            <h2 class="text-2xl font-black bg-clip-text text-transparent bg-premium-gradient tracking-tight">
               Thiết lập cá nhân
             </h2>
-            <p
-              class="text-xs text-slate-600 dark:text-slate-400 font-bold uppercase tracking-widest mt-1"
-            >
+            <p class="text-xs text-slate-600 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">
               Cấu hình tham số phân tích
             </p>
           </div>
@@ -1147,10 +1115,7 @@
                 class="w-full p-4 pr-12 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all text-sm"
                 placeholder="Nhập tên ngành hoặc cổ phiếu rồi ấn Enter"
               />
-              <i
-                data-lucide="plus"
-                class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"
-              ></i>
+              <i data-lucide="plus" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
             </div>
             <div id="blacklist-tags-container" class="blacklist-tags">
               <!-- Tags will be rendered here -->
@@ -1162,8 +1127,7 @@
             <label
               class="block text-[11px] font-black text-emerald-600 dark:text-emerald-400 mb-3 uppercase tracking-[0.2em] px-1"
               >Danh sách ưu tiên (Whitelist)
-              <span
-                class="text-slate-600 dark:text-slate-400 font-normal lowercase tracking-normal"
+              <span class="text-slate-600 dark:text-slate-400 font-normal lowercase tracking-normal"
                 >- max 30 mã</span
               ></label
             >
@@ -1174,10 +1138,7 @@
                 class="w-full p-4 pr-12 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all text-sm"
                 placeholder="Nhập mã cổ phiếu để thêm vào whitelist"
               />
-              <i
-                data-lucide="star"
-                class="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-400 w-4 h-4"
-              ></i>
+              <i data-lucide="star" class="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-400 w-4 h-4"></i>
             </div>
             <div
               id="whitelist-suggestions"
@@ -1204,10 +1165,7 @@
                 class="w-full p-4 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all text-sm font-bold"
                 placeholder="Ví dụ: 6.0"
               />
-              <span
-                class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm"
-                >%</span
-              >
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">%</span>
             </div>
           </div>
 
@@ -1225,10 +1183,7 @@
                 class="w-full p-4 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-amber-500 dark:focus:border-amber-400 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm font-bold"
                 placeholder="Ví dụ: 3.0"
               />
-              <span
-                class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm"
-                >%</span
-              >
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">%</span>
             </div>
           </div>
 
@@ -1246,10 +1201,7 @@
                 class="w-full p-4 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-4 focus:ring-teal-500/10 outline-none transition-all text-sm font-bold"
                 placeholder="Ví dụ: 15.0"
               />
-              <span
-                class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm"
-                >%</span
-              >
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">%</span>
             </div>
           </div>
         </div>
@@ -1277,9 +1229,7 @@
       <div class="settings-modal" style="max-width: 600px">
         <div class="flex items-center justify-between mb-8">
           <div>
-            <h2
-              class="text-2xl font-black bg-clip-text text-transparent bg-premium-gradient tracking-tight"
-            >
+            <h2 class="text-2xl font-black bg-clip-text text-transparent bg-premium-gradient tracking-tight">
               Danh mục cổ phiếu
             </h2>
             <p
@@ -1297,13 +1247,10 @@
         </div>
 
         <!-- Add Stock Form -->
-        <div
-          class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 mb-6"
-        >
+        <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 mb-6">
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label
-                class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1"
+              <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1"
                 >Mã cổ phiếu</label
               >
               <input
@@ -1314,8 +1261,7 @@
               />
             </div>
             <div>
-              <label
-                class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1"
+              <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1"
                 >Giá vốn (VND)</label
               >
               <input
@@ -1364,10 +1310,7 @@
     </div>
 
     <!-- Main Content -->
-    <main
-      class="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden relative z-10"
-      id="main-container"
-    >
+    <main class="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden relative z-10" id="main-container">
       <!-- Left Column (initially 50%) -->
       <aside
         id="left-column"
@@ -1422,9 +1365,7 @@
               data-lucide="sparkles"
               class="w-5 h-5 text-accent-cyan animate-pulse group-hover/btn:scale-110 transition-transform"
             ></i>
-            <span class="tracking-tight relative z-10"
-              >Phân tích tổng quan thị trường</span
-            >
+            <span class="tracking-tight relative z-10">Phân tích tổng quan thị trường</span>
 
             <!-- Accent line -->
             <div
@@ -1434,10 +1375,7 @@
         </div>
 
         <!-- Bottom Segment (Conversation Display) -->
-        <div
-          id="chat-container"
-          class="flex-1 min-h-0 overflow-y-auto p-4 lg:p-8 custom-scrollbar bg-transparent"
-        >
+        <div id="chat-container" class="flex-1 min-h-0 overflow-y-auto p-4 lg:p-8 custom-scrollbar bg-transparent">
           <div id="messages" class="space-y-8">
             <!-- Default Welcome Message -->
             <div class="flex gap-4 group">
@@ -1449,13 +1387,9 @@
               <div
                 class="flex-1 bubble-bot p-5 rounded-3xl rounded-tl-none markdown-content border border-white/20 dark:border-white/5"
               >
-                <p
-                  class="text-[15px] font-medium leading-relaxed"
-                  id="welcome-text"
-                >
-                  Xin chào! Tôi là <b>Stock Trading Assistant</b>. Hãy nhập yêu
-                  cầu phân tích để tôi có thể hỗ trợ bạn tìm kiếm cơ hội đầu tư
-                  tốt nhất.
+                <p class="text-[15px] font-medium leading-relaxed" id="welcome-text">
+                  Xin chào! Tôi là <b>Stock Trading Assistant</b>. Hãy nhập yêu cầu phân tích để tôi có thể hỗ trợ bạn
+                  tìm kiếm cơ hội đầu tư tốt nhất.
                 </p>
               </div>
             </div>
@@ -1472,23 +1406,11 @@
         class="w-full h-auto min-h-[85vh] lg:flex-1 lg:h-full lg:min-h-0 bg-white/10 dark:bg-slate-950/20 backdrop-blur-sm flex flex-col relative overflow-visible lg:overflow-hidden shrink-0"
       >
         <!-- Background Decoration -->
-        <div
-          class="absolute inset-0 opacity-[0.05] pointer-events-none dark:opacity-[0.02]"
-        >
+        <div class="absolute inset-0 opacity-[0.05] pointer-events-none dark:opacity-[0.02]">
           <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern
-                id="grid"
-                width="40"
-                height="40"
-                patternUnits="userSpaceOnUse"
-              >
-                <path
-                  d="M 40 0 L 0 0 0 40"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="0.5"
-                />
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="0.5" />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#grid)" />
@@ -1496,17 +1418,11 @@
         </div>
 
         <!-- Floating Shapes -->
-        <div
-          class="absolute top-[-10%] right-[-10%] w-64 h-64 bg-primary-500/10 rounded-full blur-3xl"
-        ></div>
-        <div
-          class="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-accent-cyan/10 rounded-full blur-3xl"
-        ></div>
+        <div class="absolute top-[-10%] right-[-10%] w-64 h-64 bg-primary-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-accent-cyan/10 rounded-full blur-3xl"></div>
 
         <!-- Tab Header -->
-        <div
-          class="absolute top-0 left-0 right-0 z-30 px-4 pt-4 lg:px-8 lg:pt-5"
-        >
+        <div class="absolute top-0 left-0 right-0 z-30 px-4 pt-4 lg:px-8 lg:pt-5">
           <div
             class="flex w-full p-1 gap-1 bg-white/40 dark:bg-slate-900/40 backdrop-blur-3xl rounded-2xl border border-white/20 dark:border-white/5 shadow-lg relative"
             id="tab-bar"
@@ -1548,35 +1464,23 @@
         </div>
 
         <!-- Stock Header (shown when a stock is selected) -->
-        <div
-          id="stock-header"
-          class="hidden absolute top-16 left-0 right-0 z-20 px-4 lg:px-8 pt-2 lg:pt-5"
-        >
+        <div id="stock-header" class="hidden absolute top-16 left-0 right-0 z-20 px-4 lg:px-8 pt-2 lg:pt-5">
           <div
             class="flex w-full flex-col lg:flex-row items-stretch lg:items-center gap-3 p-3 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-2xl border border-white/30 dark:border-white/10"
           >
             <!-- Row 1: Symbol & Name -->
-            <div
-              class="flex items-center gap-3 w-full lg:w-auto lg:flex-1 min-w-0"
-            >
+            <div class="flex items-center gap-3 w-full lg:w-auto lg:flex-1 min-w-0">
               <!-- Glassmorphic Stock Symbol Badge -->
               <div
                 class="min-w-10 h-10 px-2 bg-gradient-to-br from-primary-500/80 to-blue-500/80 backdrop-blur-md rounded-xl flex items-center justify-center text-white font-black text-xs shadow-lg border border-white/20 shrink-0"
               >
-                <span id="stock-header-symbol" class="truncate max-w-[80px]"
-                  >---</span
-                >
+                <span id="stock-header-symbol" class="truncate max-w-[80px]">---</span>
               </div>
               <div class="flex-1 min-w-0">
-                <h3
-                  id="stock-header-name"
-                  class="font-bold text-slate-800 dark:text-slate-100 text-sm truncate"
-                >
+                <h3 id="stock-header-name" class="font-bold text-slate-800 dark:text-slate-100 text-sm truncate">
                   Chọn mã cổ phiếu
                 </h3>
-                <p
-                  class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-bold"
-                >
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-bold">
                   Đang xem chi tiết
                 </p>
               </div>
@@ -1609,9 +1513,7 @@
               >
                 <!-- Investing.com Logo -->
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path
-                    d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 7v10h2V7H7zm4 4v6h2v-6h-2zm4-2v8h2V9h-2z"
-                  />
+                  <path d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 7v10h2V7H7zm4 4v6h2v-6h-2zm4-2v8h2V9h-2z" />
                 </svg>
                 Investing
               </a>
@@ -1632,15 +1534,9 @@
             <div
               class="w-20 h-20 bg-white/50 dark:bg-slate-900/50 rounded-3xl shadow-xl flex items-center justify-center mb-6 border border-white/40 dark:border-white/10 transform rotate-6 p-4"
             >
-              <img
-                src="/static/logo.svg"
-                alt="Logo"
-                class="w-full h-full object-contain transform -rotate-6"
-              />
+              <img src="/static/logo.svg" alt="Logo" class="w-full h-full object-contain transform -rotate-6" />
             </div>
-            <h3
-              class="text-xl font-black text-slate-800 dark:text-slate-100 mb-2 tracking-tight"
-            >
+            <h3 class="text-xl font-black text-slate-800 dark:text-slate-100 mb-2 tracking-tight">
               Trung tâm Phân tích
             </h3>
             <p
@@ -1660,23 +1556,13 @@
               >
                 <i data-lucide="candlestick-chart" class="w-10 h-10"></i>
               </div>
-              <h4
-                class="text-lg font-bold text-slate-700 dark:text-slate-300 mb-3"
-              >
-                Biểu đồ kỹ thuật
-              </h4>
-              <p
-                class="text-sm text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed"
-              >
-                Xem biểu đồ giá và phân tích kỹ thuật của cổ phiếu. Hỗ trợ mở
-                chart trực tiếp trên TradingView hoặc Investing.com.
+              <h4 class="text-lg font-bold text-slate-700 dark:text-slate-300 mb-3">Biểu đồ kỹ thuật</h4>
+              <p class="text-sm text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed">
+                Xem biểu đồ giá và phân tích kỹ thuật của cổ phiếu. Hỗ trợ mở chart trực tiếp trên TradingView hoặc
+                Investing.com.
               </p>
-              <div
-                class="mt-6 px-4 py-2 bg-primary-50 dark:bg-primary-900/20 rounded-xl"
-              >
-                <p
-                  class="text-xs text-primary-600 dark:text-primary-400 font-medium"
-                >
+              <div class="mt-6 px-4 py-2 bg-primary-50 dark:bg-primary-900/20 rounded-xl">
+                <p class="text-xs text-primary-600 dark:text-primary-400 font-medium">
                   💡 Click vào mã cổ phiếu trong cuộc trò chuyện để xem biểu đồ
                 </p>
               </div>
@@ -1684,10 +1570,7 @@
           </div>
 
           <!-- Related News Tab -->
-          <div
-            id="tab-content-news"
-            class="hidden h-full w-full overflow-y-auto custom-scrollbar pr-2"
-          >
+          <div id="tab-content-news" class="hidden h-full w-full overflow-y-auto custom-scrollbar pr-2">
             <div
               class="flex-1 bg-white/20 dark:bg-slate-900/20 rounded-3xl border border-white/40 dark:border-white/10 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center border-dashed min-h-full"
             >
@@ -1696,23 +1579,13 @@
               >
                 <i data-lucide="newspaper" class="w-10 h-10"></i>
               </div>
-              <h4
-                class="text-lg font-bold text-slate-700 dark:text-slate-300 mb-3"
-              >
-                Tin tức liên quan
-              </h4>
-              <p
-                class="text-sm text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed"
-              >
-                Tổng hợp tin tức mới nhất về cổ phiếu được chọn từ các nguồn uy
-                tín, giúp bạn cập nhật thông tin thị trường nhanh chóng.
+              <h4 class="text-lg font-bold text-slate-700 dark:text-slate-300 mb-3">Tin tức liên quan</h4>
+              <p class="text-sm text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed">
+                Tổng hợp tin tức mới nhất về cổ phiếu được chọn từ các nguồn uy tín, giúp bạn cập nhật thông tin thị
+                trường nhanh chóng.
               </p>
-              <div
-                class="mt-6 px-4 py-2 bg-orange-50 dark:bg-orange-900/20 rounded-xl"
-              >
-                <p
-                  class="text-xs text-orange-600 dark:text-orange-400 font-medium"
-                >
+              <div class="mt-6 px-4 py-2 bg-orange-50 dark:bg-orange-900/20 rounded-xl">
+                <p class="text-xs text-orange-600 dark:text-orange-400 font-medium">
                   📰 Chọn mã cổ phiếu để xem tin tức liên quan
                 </p>
               </div>
@@ -1720,10 +1593,7 @@
           </div>
 
           <!-- Deep Analysis Tab -->
-          <div
-            id="tab-content-analysis"
-            class="hidden h-full w-full overflow-y-auto custom-scrollbar pr-2"
-          >
+          <div id="tab-content-analysis" class="hidden h-full w-full overflow-y-auto custom-scrollbar px-2">
             <div
               class="flex-1 bg-white/20 dark:bg-slate-900/20 rounded-3xl border border-white/40 dark:border-white/10 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center border-dashed min-h-full"
             >
@@ -1732,20 +1602,12 @@
               >
                 <i data-lucide="microscope" class="w-10 h-10"></i>
               </div>
-              <h4
-                class="text-lg font-bold text-slate-700 dark:text-slate-300 mb-3"
-              >
-                Phân tích chuyên sâu
-              </h4>
-              <p
-                class="text-sm text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed"
-              >
-                Báo cáo phân tích đa chiều về doanh nghiệp, bao gồm định giá, dự
-                báo xu hướng và đánh giá rủi ro do AI tổng hợp.
+              <h4 class="text-lg font-bold text-slate-700 dark:text-slate-300 mb-3">Phân tích chuyên sâu</h4>
+              <p class="text-sm text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed">
+                Báo cáo phân tích đa chiều về doanh nghiệp, bao gồm định giá, dự báo xu hướng và đánh giá rủi ro do AI
+                tổng hợp.
               </p>
-              <div
-                class="mt-6 px-4 py-2 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl"
-              >
+              <div class="mt-6 px-4 py-2 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl">
                 <p class="text-xs text-cyan-600 dark:text-cyan-400 font-medium">
                   🔬 Chọn mã cổ phiếu để xem phân tích chi tiết
                 </p>
@@ -1767,9 +1629,7 @@
         document.getElementById("tab-content-analysis").classList.add("hidden");
 
         // Show selected content
-        document
-          .getElementById(`tab-content-${tabId}`)
-          .classList.remove("hidden");
+        document.getElementById(`tab-content-${tabId}`).classList.remove("hidden");
 
         // Update button states
         document.querySelectorAll(".sidebar-tab-btn").forEach((btn) => {
@@ -1782,13 +1642,15 @@
         updateTabIndicator(activeBtn);
 
         // Trigger news analysis if switching to news tab and it hasn't been loaded for current stock
-        if (
-          tabId === "news" &&
-          selectedStock &&
-          selectedStock !== lastFetchedNewsSymbol
-        ) {
+        if (tabId === "news" && selectedStock && selectedStock !== lastFetchedNewsSymbol) {
           fetchNewsAnalysis(selectedStock, selectedStockCompanyName);
           lastFetchedNewsSymbol = selectedStock;
+        }
+
+        // Trigger technical analysis if switching to analysis tab
+        if (tabId === "analysis" && selectedStock && selectedStock !== lastFetchedTechnicalSymbol) {
+          fetchTechnicalAnalysis(selectedStock, selectedStockCompanyName);
+          lastFetchedTechnicalSymbol = selectedStock;
         }
       }
 
@@ -1972,10 +1834,7 @@
             symbolsMap = {};
             for (const [symbol, info] of Object.entries(data.symbols || {})) {
               const exchange = (info?.exchange || "HOSE").toUpperCase();
-              if (
-                VALID_EXCHANGES.includes(exchange) &&
-                ["STOCK", "ETF"].includes(info.type)
-              ) {
+              if (VALID_EXCHANGES.includes(exchange) && ["STOCK", "ETF"].includes(info.type)) {
                 symbolsMap[symbol] = info;
               }
             }
@@ -2010,10 +1869,7 @@
 
       // --- Conversation Persistence (sessionStorage) ---
       function saveConversation() {
-        sessionStorage.setItem(
-          CONFIG.STORAGE_KEYS.CONVERSATION,
-          messagesContainer.innerHTML,
-        );
+        sessionStorage.setItem(CONFIG.STORAGE_KEYS.CONVERSATION, messagesContainer.innerHTML);
       }
 
       function loadConversation() {
@@ -2027,22 +1883,21 @@
 
       function clearConversation() {
         // Build greeting with user name if available
-        const userName =
-          currentUser && currentUser.full_name ? currentUser.full_name : "";
+        const userName = currentUser && currentUser.full_name ? currentUser.full_name : "";
         const greeting = userName
           ? `Xin chào <b>${userName}</b>! Tôi là <b>Stock Trading Assistant</b>. Hãy nhập yêu cầu phân tích để tôi có thể hỗ trợ bạn tìm kiếm cơ hội đầu tư tốt nhất.`
           : `Xin chào! Tôi là <b>Stock Trading Assistant</b>. Hãy nhập yêu cầu phân tích để tôi có thể hỗ trợ bạn tìm kiếm cơ hội đầu tư tốt nhất.`;
 
         const greetingHTML = `
-                <div class="flex gap-4 group">
-                    <div class="w-10 h-10 rounded-2xl bg-primary-600 shadow-lg shadow-primary-500/20 flex items-center justify-center flex-shrink-0 mt-1 ring-4 ring-primary-500/10">
-                        <i data-lucide="bot" class="w-6 h-6 text-white"></i>
-                    </div>
-                    <div class="flex-1 bubble-bot p-5 rounded-3xl rounded-tl-none markdown-content border border-white/20 dark:border-white/5">
-                        <p class="text-[15px] font-medium leading-relaxed" id="welcome-text">${greeting}</p>
-                    </div>
-                </div>
-            `;
+                      <div class="flex gap-4 group">
+                          <div class="w-10 h-10 rounded-2xl bg-primary-600 shadow-lg shadow-primary-500/20 flex items-center justify-center flex-shrink-0 mt-1 ring-4 ring-primary-500/10">
+                              <i data-lucide="bot" class="w-6 h-6 text-white"></i>
+                          </div>
+                          <div class="flex-1 bubble-bot p-5 rounded-3xl rounded-tl-none markdown-content border border-white/20 dark:border-white/5">
+                              <p class="text-[15px] font-medium leading-relaxed" id="welcome-text">${greeting}</p>
+                          </div>
+                      </div>
+                  `;
         messagesContainer.innerHTML = greetingHTML;
         lucide.createIcons({ root: messagesContainer });
         sessionStorage.removeItem(CONFIG.STORAGE_KEYS.CONVERSATION);
@@ -2055,6 +1910,7 @@
       let selectedStock = null;
       let selectedStockCompanyName = null;
       let lastFetchedNewsSymbol = null;
+      let lastFetchedTechnicalSymbol = null;
 
       // --- Table Drag-to-Scroll ---
       let isDraggingTable = false;
@@ -2131,8 +1987,7 @@
         return ma.map((mean, i) => {
           if (mean === null) return { upper: null, middle: null, lower: null };
           const slice = data.slice(Math.max(0, i - period + 1), i + 1);
-          const variance =
-            slice.reduce((sum, d) => sum + Math.pow(d.c - mean, 2), 0) / period;
+          const variance = slice.reduce((sum, d) => sum + Math.pow(d.c - mean, 2), 0) / period;
           const std = Math.sqrt(variance);
           return {
             upper: mean + stdDev * std,
@@ -2148,10 +2003,8 @@
         const gains = changes.map((c) => (c > 0 ? c : 0));
         const losses = changes.map((c) => (c < 0 ? -c : 0));
 
-        let avgGain =
-          gains.slice(1, period + 1).reduce((a, b) => a + b, 0) / period;
-        let avgLoss =
-          losses.slice(1, period + 1).reduce((a, b) => a + b, 0) / period;
+        let avgGain = gains.slice(1, period + 1).reduce((a, b) => a + b, 0) / period;
+        let avgLoss = losses.slice(1, period + 1).reduce((a, b) => a + b, 0) / period;
 
         return data.map((_, i) => {
           if (i < period) return null;
@@ -2168,9 +2021,7 @@
       function calculateMACD(data, fast = 12, slow = 26, signal = 9) {
         const emaFast = calculateEMA(data, fast);
         const emaSlow = calculateEMA(data, slow);
-        const macdLine = emaFast.map((f, i) =>
-          i < slow - 1 ? null : f - emaSlow[i],
-        );
+        const macdLine = emaFast.map((f, i) => (i < slow - 1 ? null : f - emaSlow[i]));
 
         // Calculate signal line (EMA of MACD line)
         const validMacd = macdLine.filter((v) => v !== null);
@@ -2186,8 +2037,7 @@
             if (validIndex === 0) {
               signalLine.push(signalEma);
             } else if (validIndex < signal) {
-              signalEma =
-                (macdLine[i] + signalEma * validIndex) / (validIndex + 1);
+              signalEma = (macdLine[i] + signalEma * validIndex) / (validIndex + 1);
               signalLine.push(null);
             } else {
               signalEma = macdLine[i] * k + signalEma * (1 - k);
@@ -2197,9 +2047,7 @@
           }
         }
 
-        const histogram = macdLine.map((m, i) =>
-          m === null || signalLine[i] === null ? null : m - signalLine[i],
-        );
+        const histogram = macdLine.map((m, i) => (m === null || signalLine[i] === null ? null : m - signalLine[i]));
 
         return { macdLine, signalLine, histogram };
       }
@@ -2216,32 +2064,26 @@
       // Initialize Advanced Chart
       function initAdvancedChart(symbol) {
         currentChartSymbol = symbol;
-        const timeframe =
-          document.getElementById("chart-timeframe")?.value || "1M";
-        const interval =
-          document.getElementById("chart-interval")?.value || "1D";
+        const timeframe = document.getElementById("chart-timeframe")?.value || "1M";
+        const interval = document.getElementById("chart-interval")?.value || "1D";
 
         renderAdvancedChart(symbol, timeframe, interval);
 
         // Add event listeners for controls
-        document
-          .getElementById("chart-timeframe")
-          ?.addEventListener("change", () => {
-            renderAdvancedChart(
-              currentChartSymbol,
-              document.getElementById("chart-timeframe").value,
-              document.getElementById("chart-interval").value,
-            );
-          });
-        document
-          .getElementById("chart-interval")
-          ?.addEventListener("change", () => {
-            renderAdvancedChart(
-              currentChartSymbol,
-              document.getElementById("chart-timeframe").value,
-              document.getElementById("chart-interval").value,
-            );
-          });
+        document.getElementById("chart-timeframe")?.addEventListener("change", () => {
+          renderAdvancedChart(
+            currentChartSymbol,
+            document.getElementById("chart-timeframe").value,
+            document.getElementById("chart-interval").value,
+          );
+        });
+        document.getElementById("chart-interval")?.addEventListener("change", () => {
+          renderAdvancedChart(
+            currentChartSymbol,
+            document.getElementById("chart-timeframe").value,
+            document.getElementById("chart-interval").value,
+          );
+        });
         [
           "indicator-ma",
           "indicator-ema",
@@ -2288,9 +2130,7 @@
         } else if (timeframe.endsWith("Y")) {
           start.setFullYear(start.getFullYear() - parseInt(timeframe));
         } else {
-          start.setDate(
-            start.getDate() - (CONFIG.TIMEFRAME_DAYS[timeframe] || 30),
-          );
+          start.setDate(start.getDate() - (CONFIG.TIMEFRAME_DAYS[timeframe] || 30));
         }
 
         const formatDate = (d) => d.toISOString().split("T")[0];
@@ -2300,35 +2140,39 @@
         // Interval is passed directly to API (ONE_MINUTE, ONE_DAY)
         const apiInterval = interval;
 
-        // Show skeleton loading
         const skeletonHTML = `
-                <div class="animate-pulse h-full w-full flex flex-col gap-2 p-2">
-                    <div class="flex-1 flex items-end gap-1">
-                        ${Array(20)
-                          .fill(0)
-                          .map(
-                            () =>
-                              `<div class="flex-1 bg-slate-200 dark:bg-slate-700 rounded" style="height: ${
-                                30 + Math.random() * 60
-                              }%"></div>`,
-                          )
-                          .join("")}
-                    </div>
-                    <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded w-full"></div>
-                </div>
-            `;
-        candleCanvas.parentElement.innerHTML =
-          skeletonHTML +
-          `<div id="candlestick-chart" class="hidden" style="width:100%;height:100%"></div>`;
-        volumeCanvas.parentElement.innerHTML =
-          skeletonHTML +
-          `<div id="volume-chart" class="hidden" style="width:100%;height:100%"></div>`;
+                      <div class="h-full w-full flex flex-col gap-2 p-2 chart-skeleton">
+                          <div class="flex-1 flex items-end gap-1">
+                              ${Array(20)
+                                .fill(0)
+                                .map(
+                                  () =>
+                                    `<div class="flex-1 skeleton-shimmer rounded" style="height: ${
+                                      30 + Math.random() * 60
+                                    }%"></div>`,
+                                )
+                                .join("")}
+                          </div>
+                          <div class="h-2 skeleton-shimmer rounded w-full"></div>
+                      </div>
+                  `;
+
+        // Stable container management: don't nuke parents, just toggle contents
+        const candleParent = candleCanvas.parentElement;
+        const volumeParent = volumeCanvas.parentElement;
+
+        if (candleParent) {
+          candleParent.innerHTML =
+            skeletonHTML + `<div id="candlestick-chart" class="hidden" style="width:100%;height:100%"></div>`;
+        }
+        if (volumeParent) {
+          volumeParent.innerHTML =
+            skeletonHTML + `<div id="volume-chart" class="hidden" style="width:100%;height:100%"></div>`;
+        }
 
         let data;
         try {
-          const response = await fetch(
-            `/chart/${symbol}?start=${startStr}&end=${endStr}&interval=${apiInterval}`,
-          );
+          const response = await fetch(`/chart/${symbol}?start=${startStr}&end=${endStr}&interval=${apiInterval}`);
           if (response.ok) {
             const result = await response.json();
             // Convert API data to chart format
@@ -2346,48 +2190,46 @@
         } catch (err) {
           console.error("Chart API error:", err);
           // Show error message with links to external charts
-          const candleParent =
-            document.getElementById("candlestick-chart")?.parentElement;
-          const volumeParent =
-            document.getElementById("volume-chart")?.parentElement;
+          const candleParent = document.getElementById("candlestick-chart")?.parentElement;
+          const volumeParent = document.getElementById("volume-chart")?.parentElement;
           const stockInfo = getStockInfo(symbol);
           const exchange = stockInfo?.exchange || "HOSE";
           const errorHTML = `
-            <div class="flex flex-col items-center justify-center h-full text-center p-6">
-              <i data-lucide="alert-circle" class="w-12 h-12 text-amber-500 mb-4"></i>
-              <p class="text-slate-600 dark:text-slate-400 mb-4">Không thể tải dữ liệu biểu đồ cho <strong>${symbol}</strong></p>
-              <p class="text-sm text-slate-500 dark:text-slate-500 mb-6">Vui lòng sử dụng các nền tảng bên dưới để xem biểu đồ:</p>
-              <div class="flex gap-3">
-                <a href="https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}" target="_blank" rel="noreferrer noopener"
-                   class="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-[#2962FF]/60 to-[#1E88E5]/60 dark:from-[#2962FF]/90 dark:to-[#1E88E5]/90 hover:from-[#2962FF] hover:to-[#1E88E5] backdrop-blur-xl backdrop-saturate-150 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-blue-500/20 dark:shadow-blue-500/30 border border-white/30 dark:border-white/10 ring-1 ring-inset ring-white/10 hover:shadow-xl hover:scale-105">
-                  <svg class="w-4 h-4" viewBox="0 0 36 28" fill="currentColor"><path d="M14 22H7V6h7v16zm8-16h-7v16h7V6zm8 16h-7V6h7v16z"/></svg>
-                  TradingView
-                </a>
-                <a href="https://vn.investing.com/search?q=${symbol}" target="_blank" rel="noreferrer noopener"
-                   class="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-[#EF6C35]/60 to-[#FF8A50]/60 dark:from-[#EF6C35]/90 dark:to-[#FF8A50]/90 hover:from-[#EF6C35] hover:to-[#FF8A50] backdrop-blur-xl backdrop-saturate-150 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 dark:shadow-orange-500/30 border border-white/30 dark:border-white/10 ring-1 ring-inset ring-white/10 hover:shadow-xl hover:scale-105">
-                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 7v10h2V7H7zm4 4v6h2v-6h-2zm4-2v8h2V9h-2z"/></svg>
-                  Investing
-                </a>
-              </div>
-            </div>
-          `;
+                  <div class="flex flex-col items-center justify-center h-full text-center p-6">
+                    <i data-lucide="alert-circle" class="w-12 h-12 text-amber-500 mb-4"></i>
+                    <p class="text-slate-600 dark:text-slate-400 mb-4">Không thể tải dữ liệu biểu đồ cho <strong>${symbol}</strong></p>
+                    <p class="text-sm text-slate-500 dark:text-slate-500 mb-6">Vui lòng sử dụng các nền tảng bên dưới để xem biểu đồ:</p>
+                    <div class="flex gap-3">
+                      <a href="https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}" target="_blank" rel="noreferrer noopener"
+                         class="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-[#2962FF]/60 to-[#1E88E5]/60 dark:from-[#2962FF]/90 dark:to-[#1E88E5]/90 hover:from-[#2962FF] hover:to-[#1E88E5] backdrop-blur-xl backdrop-saturate-150 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-blue-500/20 dark:shadow-blue-500/30 border border-white/30 dark:border-white/10 ring-1 ring-inset ring-white/10 hover:shadow-xl hover:scale-105">
+                        <svg class="w-4 h-4" viewBox="0 0 36 28" fill="currentColor"><path d="M14 22H7V6h7v16zm8-16h-7v16h7V6zm8 16h-7V6h7v16z"/></svg>
+                        TradingView
+                      </a>
+                      <a href="https://vn.investing.com/search?q=${symbol}" target="_blank" rel="noreferrer noopener"
+                         class="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-[#EF6C35]/60 to-[#FF8A50]/60 dark:from-[#EF6C35]/90 dark:to-[#FF8A50]/90 hover:from-[#EF6C35] hover:to-[#FF8A50] backdrop-blur-xl backdrop-saturate-150 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 dark:shadow-orange-500/30 border border-white/30 dark:border-white/10 ring-1 ring-inset ring-white/10 hover:shadow-xl hover:scale-105">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 7v10h2V7H7zm4 4v6h2v-6h-2zm4-2v8h2V9h-2z"/></svg>
+                        Investing
+                      </a>
+                    </div>
+                  </div>
+                `;
           if (candleParent) candleParent.innerHTML = errorHTML;
           if (volumeParent) volumeParent.innerHTML = "";
           lucide.createIcons();
           return; // Exit early, don't try to render chart
         }
 
-        // Remove skeleton, show chart containers (Lightweight Charts uses div)
-        const candleParent =
-          document.getElementById("candlestick-chart")?.parentElement;
-        const volumeParent =
-          document.getElementById("volume-chart")?.parentElement;
-        if (candleParent)
-          candleParent.innerHTML =
-            '<div id="candlestick-chart" style="width:100%;height:100%"></div>';
-        if (volumeParent)
-          volumeParent.innerHTML =
-            '<div id="volume-chart" style="width:100%;height:100%"></div>';
+        // Show chart containers, remove skeletons
+        const candleParentUpdate = document.getElementById("candlestick-chart")?.parentElement;
+        const volumeParentUpdate = document.getElementById("volume-chart")?.parentElement;
+        if (candleParentUpdate) {
+          candleParentUpdate.querySelectorAll(".chart-skeleton").forEach((el) => el.remove());
+          document.getElementById("candlestick-chart")?.classList.remove("hidden");
+        }
+        if (volumeParentUpdate) {
+          volumeParentUpdate.querySelectorAll(".chart-skeleton").forEach((el) => el.remove());
+          document.getElementById("volume-chart")?.classList.remove("hidden");
+        }
 
         const isDark = document.documentElement.classList.contains("dark");
 
@@ -2496,8 +2338,7 @@
         const volumeData = data.map((d) => ({
           time: Math.floor(d.x.getTime() / 1000),
           value: d.v,
-          color:
-            d.c >= d.o ? "rgba(16, 185, 129, 0.6)" : "rgba(239, 68, 68, 0.6)",
+          color: d.c >= d.o ? "rgba(16, 185, 129, 0.6)" : "rgba(239, 68, 68, 0.6)",
         }));
 
         // Add Candlestick Series
@@ -2524,8 +2365,7 @@
         const showBB = document.getElementById("indicator-bb")?.checked;
         const showRSI = document.getElementById("indicator-rsi")?.checked;
         const showMACD = document.getElementById("indicator-macd")?.checked;
-        const showVolSMA =
-          document.getElementById("indicator-vol-sma")?.checked;
+        const showVolSMA = document.getElementById("indicator-vol-sma")?.checked;
 
         if (showMA) {
           const maData = calculateMA(data, 20)
@@ -2625,10 +2465,7 @@
           const rsiData = rsi
             .map((v, i) => ({
               time: Math.floor(data[i].x.getTime() / 1000),
-              value:
-                v === null
-                  ? null
-                  : minPrice + (v / 100) * (maxPrice - minPrice),
+              value: v === null ? null : minPrice + (v / 100) * (maxPrice - minPrice),
             }))
             .filter((d) => d.value !== null);
           const rsiSeries = priceChart.addLineSeries({
@@ -2658,10 +2495,7 @@
           const priceRange = maxPrice - minPrice;
           const macdValues = macd.macdLine.filter((v) => v !== null);
           const macdMax = Math.max(...macdValues.map(Math.abs)) || 1;
-          const scaleMACD = (v) =>
-            v === null
-              ? null
-              : (maxPrice + minPrice) / 2 + (v / macdMax) * (priceRange / 4);
+          const scaleMACD = (v) => (v === null ? null : (maxPrice + minPrice) / 2 + (v / macdMax) * (priceRange / 4));
 
           const macdData = macd.macdLine
             .map((v, i) => ({
@@ -2696,11 +2530,7 @@
           indicatorSeries.push(signalSeries);
           // Store raw MACD values for tooltip
           macd.macdLine.forEach((v, i) => {
-            if (
-              v !== null ||
-              macd.signalLine[i] !== null ||
-              macd.histogram[i] !== null
-            ) {
+            if (v !== null || macd.signalLine[i] !== null || macd.histogram[i] !== null) {
               const time = Math.floor(data[i].x.getTime() / 1000);
               if (!indicatorValues[time]) indicatorValues[time] = {};
               indicatorValues[time].macdLine = v;
@@ -2748,23 +2578,23 @@
         const createTooltip = (container) => {
           const tooltip = document.createElement("div");
           tooltip.style.cssText = `
-          position: absolute;
-          z-index: 100;
-          font-size: 12px;
-          font-family: sans-serif;
-          line-height: 1.5;
-          padding: 10px 14px;
-          border-radius: 8px;
-          pointer-events: none;
-          display: none;
-          white-space: nowrap;
-          ${
-            isDark
-              ? "background: rgba(30, 41, 59, 0.95); color: #e2e8f0; border: 1px solid rgba(148, 163, 184, 0.2);"
-              : "background: rgba(255, 255, 255, 0.95); color: #1e293b; border: 1px solid rgba(100, 116, 139, 0.2);"
-          }
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        `;
+                position: absolute;
+                z-index: 100;
+                font-size: 12px;
+                font-family: sans-serif;
+                line-height: 1.5;
+                padding: 10px 14px;
+                border-radius: 8px;
+                pointer-events: none;
+                display: none;
+                white-space: nowrap;
+                ${
+                  isDark
+                    ? "background: rgba(30, 41, 59, 0.95); color: #e2e8f0; border: 1px solid rgba(148, 163, 184, 0.2);"
+                    : "background: rgba(255, 255, 255, 0.95); color: #1e293b; border: 1px solid rgba(100, 116, 139, 0.2);"
+                }
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+              `;
           container.style.position = "relative";
           container.appendChild(tooltip);
           return tooltip;
@@ -2803,8 +2633,7 @@
         const renderTooltipIndicators = (time, isVolumeChart = false) => {
           const values = indicatorValues[time];
           if (!values) return "";
-          let html =
-            '<div style="margin-top: 6px; border-top: 1px solid rgba(148, 163, 184, 0.2); padding-top: 4px;">';
+          let html = '<div style="margin-top: 6px; border-top: 1px solid rgba(148, 163, 184, 0.2); padding-top: 4px;">';
           let count = 0;
 
           if (!isVolumeChart) {
@@ -2832,31 +2661,23 @@
             if (values.rsi !== undefined) {
               html += `<div><span style="color: ${
                 CONFIG.COLORS.RSI
-              }; opacity: 0.8;">RSI(14):</span> <strong>${values.rsi.toFixed(
-                2,
-              )}</strong></div>`;
+              }; opacity: 0.8;">RSI(14):</span> <strong>${values.rsi.toFixed(2)}</strong></div>`;
               count++;
             }
             if (values.macdLine !== undefined) {
               html += `<div><span style="color: ${
                 CONFIG.COLORS.MACD_LINE
-              }; opacity: 0.8;">MACD:</span> <strong>${values.macdLine.toFixed(
-                2,
-              )}</strong></div>`;
+              }; opacity: 0.8;">MACD:</span> <strong>${values.macdLine.toFixed(2)}</strong></div>`;
               html += `<div><span style="color: ${
                 CONFIG.COLORS.MACD_SIGNAL
-              }; opacity: 0.8;">Signal:</span> <strong>${values.macdSignal.toFixed(
-                2,
-              )}</strong></div>`;
+              }; opacity: 0.8;">Signal:</span> <strong>${values.macdSignal.toFixed(2)}</strong></div>`;
               count++;
             }
           } else {
             if (values.volSma !== undefined) {
               html += `<div><span style="color: ${
                 CONFIG.COLORS.VOLUME_SMA
-              }; opacity: 0.8;">Vol SMA(20):</span> <strong>${formatVolume(
-                values.volSma,
-              )}</strong></div>`;
+              }; opacity: 0.8;">Vol SMA(20):</span> <strong>${formatVolume(values.volSma)}</strong></div>`;
               count++;
             }
           }
@@ -2894,41 +2715,30 @@
         priceChart.subscribeCrosshairMove((param) => {
           if (param.time && param.point) {
             // Sync crosshair with volume chart
-            volumeChart.setCrosshairPosition(
-              volumeSeries.dataByIndex(param.logical),
-              param.time,
-              volumeSeries,
-            );
+            volumeChart.setCrosshairPosition(volumeSeries.dataByIndex(param.logical), param.time, volumeSeries);
 
             // Update price tooltip with OHLC
             const candlePrice = param.seriesData.get(candleSeries);
             if (candlePrice) {
-              const changePercent = (
-                ((candlePrice.close - candlePrice.open) / candlePrice.open) *
-                100
-              ).toFixed(2);
-              const changeColor =
-                candlePrice.close >= candlePrice.open ? "#10b981" : "#ef4444";
-              const changeSign =
-                candlePrice.close >= candlePrice.open ? "+" : "";
+              const changePercent = (((candlePrice.close - candlePrice.open) / candlePrice.open) * 100).toFixed(2);
+              const changeColor = candlePrice.close >= candlePrice.open ? "#10b981" : "#ef4444";
+              const changeSign = candlePrice.close >= candlePrice.open ? "+" : "";
               priceTooltip.innerHTML = `
-              <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatFullDateTime(
-                param.time,
-              )}</div>
-              <div><span style="opacity: 0.6;">Open:</span> <strong>${formatPrice(
-                candlePrice.open,
-              )}</strong></div>
-              <div><span style="opacity: 0.6;">High:</span> <strong>${formatPrice(
-                candlePrice.high,
-              )}</strong></div>
-              <div><span style="opacity: 0.6;">Low:</span> <strong>${formatPrice(
-                candlePrice.low,
-              )}</strong></div>
-              <div><span style="opacity: 0.6;">Close:</span> <strong>${formatPrice(
-                candlePrice.close,
-              )}</strong> <span style="color: ${changeColor};">(${changeSign}${changePercent}%)</span></div>
-              ${renderTooltipIndicators(param.time)}
-            `;
+                    <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatFullDateTime(
+                      param.time,
+                    )}</div>
+                    <div><span style="opacity: 0.6;">Open:</span> <strong>${formatPrice(
+                      candlePrice.open,
+                    )}</strong></div>
+                    <div><span style="opacity: 0.6;">High:</span> <strong>${formatPrice(
+                      candlePrice.high,
+                    )}</strong></div>
+                    <div><span style="opacity: 0.6;">Low:</span> <strong>${formatPrice(candlePrice.low)}</strong></div>
+                    <div><span style="opacity: 0.6;">Close:</span> <strong>${formatPrice(
+                      candlePrice.close,
+                    )}</strong> <span style="color: ${changeColor};">(${changeSign}${changePercent}%)</span></div>
+                    ${renderTooltipIndicators(param.time)}
+                  `;
               priceTooltip.style.display = "block";
               updateTooltipPosition(priceTooltip, priceContainer, param);
             }
@@ -2937,14 +2747,14 @@
             const volData = param.seriesData.get(volumeSeries);
             if (volData) {
               volumeTooltip.innerHTML = `
-              <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatFullDateTime(
-                param.time,
-              )}</div>
-              <div><span style="opacity: 0.6;">Volume:</span> <strong>${formatVolume(
-                volData.value,
-              )}</strong></div>
-              ${renderTooltipIndicators(param.time, true)}
-            `;
+                    <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatFullDateTime(
+                      param.time,
+                    )}</div>
+                    <div><span style="opacity: 0.6;">Volume:</span> <strong>${formatVolume(
+                      volData.value,
+                    )}</strong></div>
+                    ${renderTooltipIndicators(param.time, true)}
+                  `;
               volumeTooltip.style.display = "block";
               updateTooltipPosition(volumeTooltip, volumeContainer, param);
             }
@@ -2957,24 +2767,20 @@
         volumeChart.subscribeCrosshairMove((param) => {
           if (param.time && param.point) {
             // Sync crosshair with price chart
-            priceChart.setCrosshairPosition(
-              candleSeries.dataByIndex(param.logical),
-              param.time,
-              candleSeries,
-            );
+            priceChart.setCrosshairPosition(candleSeries.dataByIndex(param.logical), param.time, candleSeries);
 
             // Update volume tooltip
             const volData = param.seriesData.get(volumeSeries);
             if (volData) {
               volumeTooltip.innerHTML = `
-              <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatFullDateTime(
-                param.time,
-              )}</div>
-              <div><span style="opacity: 0.6;">Volume:</span> <strong>${formatVolume(
-                volData.value,
-              )}</strong></div>
-              ${renderTooltipIndicators(param.time, true)}
-            `;
+                    <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatFullDateTime(
+                      param.time,
+                    )}</div>
+                    <div><span style="opacity: 0.6;">Volume:</span> <strong>${formatVolume(
+                      volData.value,
+                    )}</strong></div>
+                    ${renderTooltipIndicators(param.time, true)}
+                  `;
               volumeTooltip.style.display = "block";
               updateTooltipPosition(volumeTooltip, volumeContainer, param);
             }
@@ -2982,32 +2788,25 @@
             // Update price tooltip from synced data
             const candlePrice = candleSeries.dataByIndex(param.logical);
             if (candlePrice) {
-              const changePercent = (
-                ((candlePrice.close - candlePrice.open) / candlePrice.open) *
-                100
-              ).toFixed(2);
-              const changeColor =
-                candlePrice.close >= candlePrice.open ? "#10b981" : "#ef4444";
-              const changeSign =
-                candlePrice.close >= candlePrice.open ? "+" : "";
+              const changePercent = (((candlePrice.close - candlePrice.open) / candlePrice.open) * 100).toFixed(2);
+              const changeColor = candlePrice.close >= candlePrice.open ? "#10b981" : "#ef4444";
+              const changeSign = candlePrice.close >= candlePrice.open ? "+" : "";
               priceTooltip.innerHTML = `
-              <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatFullDateTime(
-                param.time,
-              )}</div>
-              <div><span style="opacity: 0.6;">Open:</span> <strong>${formatPrice(
-                candlePrice.open,
-              )}</strong></div>
-              <div><span style="opacity: 0.6;">High:</span> <strong>${formatPrice(
-                candlePrice.high,
-              )}</strong></div>
-              <div><span style="opacity: 0.6;">Low:</span> <strong>${formatPrice(
-                candlePrice.low,
-              )}</strong></div>
-              <div><span style="opacity: 0.6;">Close:</span> <strong>${formatPrice(
-                candlePrice.close,
-              )}</strong> <span style="color: ${changeColor};">(${changeSign}${changePercent}%)</span></div>
-              ${renderTooltipIndicators(param.time)}
-            `;
+                    <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatFullDateTime(
+                      param.time,
+                    )}</div>
+                    <div><span style="opacity: 0.6;">Open:</span> <strong>${formatPrice(
+                      candlePrice.open,
+                    )}</strong></div>
+                    <div><span style="opacity: 0.6;">High:</span> <strong>${formatPrice(
+                      candlePrice.high,
+                    )}</strong></div>
+                    <div><span style="opacity: 0.6;">Low:</span> <strong>${formatPrice(candlePrice.low)}</strong></div>
+                    <div><span style="opacity: 0.6;">Close:</span> <strong>${formatPrice(
+                      candlePrice.close,
+                    )}</strong> <span style="color: ${changeColor};">(${changeSign}${changePercent}%)</span></div>
+                    ${renderTooltipIndicators(param.time)}
+                  `;
               priceTooltip.style.display = "block";
             }
           } else {
@@ -3017,8 +2816,17 @@
         });
 
         // Fit content to show all data
-        priceChart.timeScale().fitContent();
-        volumeChart.timeScale().fitContent();
+        const fitAll = () => {
+          if (priceChart) {
+            priceChart.timeScale().fitContent();
+          }
+          if (volumeChart) {
+            volumeChart.timeScale().fitContent();
+          }
+        };
+
+        requestAnimationFrame(fitAll);
+        setTimeout(fitAll, 50);
       }
 
       function selectStock(symbol) {
@@ -3028,6 +2836,7 @@
         const companyName = stockInfo.name;
         selectedStockCompanyName = companyName;
         lastFetchedNewsSymbol = null;
+        lastFetchedTechnicalSymbol = null;
 
         const exchange = stockInfo.exchange;
 
@@ -3037,11 +2846,9 @@
         });
 
         // Add selected class to all instances of the clicked ticker
-        document
-          .querySelectorAll(`.stock-ticker[data-symbol="${symbol}"]`)
-          .forEach((el) => {
-            el.classList.add("selected");
-          });
+        document.querySelectorAll(`.stock-ticker[data-symbol="${symbol}"]`).forEach((el) => {
+          el.classList.add("selected");
+        });
 
         // Show and update Stock Header
         const stockHeader = document.getElementById("stock-header");
@@ -3052,102 +2859,97 @@
         document.getElementById("link-tradingview").href =
           `https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}`;
         // Use Investing.com equities search for Vietnamese stocks
-        document.getElementById("link-investing").href =
-          `https://vn.investing.com/search?q=${symbol}`;
+        document.getElementById("link-investing").href = `https://vn.investing.com/search?q=${symbol}`;
         lucide.createIcons({ root: stockHeader });
 
         // Adjust content container padding to ensure clearance for stock header
-        document
-          .getElementById("tab-content-container")
-          .classList.remove("pt-16", "lg:pt-20");
-        document
-          .getElementById("tab-content-container")
-          .classList.add("pt-52", "lg:pt-44");
+        document.getElementById("tab-content-container").classList.remove("pt-16", "lg:pt-20");
+        document.getElementById("tab-content-container").classList.add("pt-52", "lg:pt-44");
 
         // Update Chart Tab with Advanced Controls + Dual Charts
         const chartTab = document.getElementById("tab-content-chart");
         chartTab.innerHTML = `
-                <div class="h-full w-full flex flex-col gap-3">
-                    <!-- Chart Controls -->
-                    <div class="flex flex-wrap items-center gap-2 p-3 bg-white/30 dark:bg-slate-900/30 rounded-2xl border border-white/40 dark:border-white/10 backdrop-blur-sm relative z-20">
-                        <!-- Timeframe Selector -->
-                        <div class="flex items-center gap-1">
-                            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Khoảng:</span>
-                            <select id="chart-timeframe" class="text-xs font-bold bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-primary-500/30">
-                                <option value="1D">1 Ngày</option>
-                                <option value="1W">1 Tuần</option>
-                                <option value="1M">1 Tháng</option>
-                                <option value="3M">3 Tháng</option>
-                                <option value="6M" selected>6 Tháng</option>
-                                <option value="9M">9 Tháng</option>
-                                <option value="1Y">1 Năm</option>
-                                <option value="2Y">2 Năm</option>
-                                <option value="5Y">5 Năm</option>
-                                <option value="10Y">10 Năm</option>
-                            </select>
-                        </div>
-                        <!-- Interval Selector -->
-                        <div class="flex items-center gap-1">
-                            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Chu kỳ:</span>
-                            <select id="chart-interval" class="text-xs font-bold bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-primary-500/30">
-                                <option value="5m">5 phút</option>
-                                <option value="15m">15 phút</option>
-                                <option value="30m">30 phút</option>
-                                <option value="1H">1 giờ</option>
-                                <option value="1D" selected>1 ngày</option>
-                                <option value="1W">1 tuần</option>
-                                <option value="1M">1 tháng</option>
-                            </select>
-                        </div>
-                        <!-- Indicator Toggles with Mobile Dropdown -->
-                        <div class="relative ml-auto">
-                            <!-- Mobile Trigger Button -->
-                            <button onclick="document.getElementById('mobile-indicators').classList.toggle('hidden')" class="lg:hidden flex items-center gap-1 text-xs font-bold px-2 py-1 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700">
-                                <span>Chỉ báo</span>
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
+                      <div class="h-full w-full flex flex-col gap-3">
+                          <!-- Chart Controls -->
+                          <div class="flex flex-wrap items-center gap-2 p-3 bg-white/30 dark:bg-slate-900/30 rounded-2xl border border-white/40 dark:border-white/10 backdrop-blur-sm relative z-20">
+                              <!-- Timeframe Selector -->
+                              <div class="flex items-center gap-1">
+                                  <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Khoảng:</span>
+                                  <select id="chart-timeframe" class="text-xs font-bold bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-primary-500/30">
+                                      <option value="1D">1 Ngày</option>
+                                      <option value="1W">1 Tuần</option>
+                                      <option value="1M">1 Tháng</option>
+                                      <option value="3M">3 Tháng</option>
+                                      <option value="6M" selected>6 Tháng</option>
+                                      <option value="9M">9 Tháng</option>
+                                      <option value="1Y">1 Năm</option>
+                                      <option value="2Y">2 Năm</option>
+                                      <option value="5Y">5 Năm</option>
+                                      <option value="10Y">10 Năm</option>
+                                  </select>
+                              </div>
+                              <!-- Interval Selector -->
+                              <div class="flex items-center gap-1">
+                                  <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Chu kỳ:</span>
+                                  <select id="chart-interval" class="text-xs font-bold bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-primary-500/30">
+                                      <option value="5m">5 phút</option>
+                                      <option value="15m">15 phút</option>
+                                      <option value="30m">30 phút</option>
+                                      <option value="1H">1 giờ</option>
+                                      <option value="1D" selected>1 ngày</option>
+                                      <option value="1W">1 tuần</option>
+                                      <option value="1M">1 tháng</option>
+                                  </select>
+                              </div>
+                              <!-- Indicator Toggles with Mobile Dropdown -->
+                              <div class="relative ml-auto">
+                                  <!-- Mobile Trigger Button -->
+                                  <button onclick="document.getElementById('mobile-indicators').classList.toggle('hidden')" class="lg:hidden flex items-center gap-1 text-xs font-bold px-2 py-1 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700">
+                                      <span>Chỉ báo</span>
+                                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                  </button>
 
-                            <!-- Indicators List -->
-                            <div id="mobile-indicators" class="hidden lg:flex lg:items-center lg:gap-3 absolute lg:static top-full right-0 mt-2 lg:mt-0 p-3 lg:p-0 bg-white/90 dark:bg-slate-900/90 lg:bg-transparent backdrop-blur-xl lg:backdrop-blur-none border border-white/20 lg:border-0 rounded-xl lg:rounded-none shadow-xl lg:shadow-none flex-col lg:flex-row gap-3 min-w-[120px] z-50">
-                                <label class="flex items-center gap-1.5 cursor-pointer group whitespace-nowrap">
-                                    <input type="checkbox" id="indicator-ma" class="w-4 h-4 rounded border-slate-300 accent-blue-500 transition-transform group-hover:scale-110">
-                                    <span class="text-xs font-bold text-blue-500">MA20</span>
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer group whitespace-nowrap">
-                                    <input type="checkbox" id="indicator-ema" class="w-4 h-4 rounded border-slate-300 accent-orange-500 transition-transform group-hover:scale-110">
-                                    <span class="text-xs font-bold text-orange-500">EMA9</span>
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer group whitespace-nowrap">
-                                    <input type="checkbox" id="indicator-bb" class="w-4 h-4 rounded border-slate-300 accent-purple-500 transition-transform group-hover:scale-110">
-                                    <span class="text-xs font-bold text-purple-500">BB</span>
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer group whitespace-nowrap">
-                                    <input type="checkbox" id="indicator-rsi" class="w-4 h-4 rounded border-slate-300 accent-amber-500 transition-transform group-hover:scale-110">
-                                    <span class="text-xs font-bold text-amber-500">RSI</span>
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer group whitespace-nowrap">
-                                    <input type="checkbox" id="indicator-macd" class="w-4 h-4 rounded border-slate-300 accent-blue-500 transition-transform group-hover:scale-110">
-                                    <span class="text-xs font-bold text-blue-500">MACD</span>
-                                </label>
-                                <label class="flex items-center gap-1.5 cursor-pointer group whitespace-nowrap">
-                                    <input type="checkbox" id="indicator-vol-sma" class="w-4 h-4 rounded border-slate-300 accent-violet-500 transition-transform group-hover:scale-110">
-                                    <span class="text-xs font-bold text-violet-500">Vol SMA</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
+                                  <!-- Indicators List -->
+                                  <div id="mobile-indicators" class="hidden lg:flex lg:items-center lg:gap-3 absolute lg:static top-full right-0 mt-2 lg:mt-0 p-3 lg:p-0 bg-white/90 dark:bg-slate-900/90 lg:bg-transparent backdrop-blur-xl lg:backdrop-blur-none border border-white/20 lg:border-0 rounded-xl lg:rounded-none shadow-xl lg:shadow-none flex-col lg:flex-row gap-3 min-w-[120px] z-50">
+                                      <label class="flex items-center gap-1.5 cursor-pointer group whitespace-nowrap">
+                                          <input type="checkbox" id="indicator-ma" class="w-4 h-4 rounded border-slate-300 accent-blue-500 transition-transform group-hover:scale-110">
+                                          <span class="text-xs font-bold text-blue-500">MA20</span>
+                                      </label>
+                                      <label class="flex items-center gap-1.5 cursor-pointer group whitespace-nowrap">
+                                          <input type="checkbox" id="indicator-ema" class="w-4 h-4 rounded border-slate-300 accent-orange-500 transition-transform group-hover:scale-110">
+                                          <span class="text-xs font-bold text-orange-500">EMA9</span>
+                                      </label>
+                                      <label class="flex items-center gap-1.5 cursor-pointer group whitespace-nowrap">
+                                          <input type="checkbox" id="indicator-bb" class="w-4 h-4 rounded border-slate-300 accent-purple-500 transition-transform group-hover:scale-110">
+                                          <span class="text-xs font-bold text-purple-500">BB</span>
+                                      </label>
+                                      <label class="flex items-center gap-1.5 cursor-pointer group whitespace-nowrap">
+                                          <input type="checkbox" id="indicator-rsi" class="w-4 h-4 rounded border-slate-300 accent-amber-500 transition-transform group-hover:scale-110">
+                                          <span class="text-xs font-bold text-amber-500">RSI</span>
+                                      </label>
+                                      <label class="flex items-center gap-1.5 cursor-pointer group whitespace-nowrap">
+                                          <input type="checkbox" id="indicator-macd" class="w-4 h-4 rounded border-slate-300 accent-blue-500 transition-transform group-hover:scale-110">
+                                          <span class="text-xs font-bold text-blue-500">MACD</span>
+                                      </label>
+                                      <label class="flex items-center gap-1.5 cursor-pointer group whitespace-nowrap">
+                                          <input type="checkbox" id="indicator-vol-sma" class="w-4 h-4 rounded border-slate-300 accent-violet-500 transition-transform group-hover:scale-110">
+                                          <span class="text-xs font-bold text-violet-500">Vol SMA</span>
+                                      </label>
+                                  </div>
+                              </div>
+                          </div>
 
-                    <!-- Candlestick Chart (70%) -->
-                    <div class="flex-[7] bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-white/40 dark:border-white/10 backdrop-blur-sm p-3 min-h-0">
-                        <div id="candlestick-chart" style="width:100%;height:100%"></div>
-                    </div>
+                          <!-- Candlestick Chart (70%) -->
+                          <div class="flex-[7] bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-white/40 dark:border-white/10 backdrop-blur-sm p-3 min-h-0">
+                              <div id="candlestick-chart" style="width:100%;height:100%"></div>
+                          </div>
 
-                    <!-- Volume Chart (30%) -->
-                    <div class="flex-[3] bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-white/40 dark:border-white/10 backdrop-blur-sm p-3 min-h-0">
-                        <div id="volume-chart" style="width:100%;height:100%"></div>
-                    </div>
-                </div>
-            `;
+                          <!-- Volume Chart (30%) -->
+                          <div class="flex-[3] bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-white/40 dark:border-white/10 backdrop-blur-sm p-3 min-h-0">
+                              <div id="volume-chart" style="width:100%;height:100%"></div>
+                          </div>
+                      </div>
+                  `;
 
         // Initialize chart with controls
         initAdvancedChart(symbol);
@@ -3158,22 +2960,11 @@
           lastFetchedNewsSymbol = symbol;
         }
 
-        // Update Analysis Tab
-        const analysisTab = document.getElementById("tab-content-analysis");
-        analysisTab.innerHTML = `
-                <div class="p-5 bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-white/50 dark:border-white/10 backdrop-blur-2xl">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="w-10 h-10 bg-accent-cyan/20 rounded-xl flex items-center justify-center text-accent-cyan">
-                            <i data-lucide="search" class="w-5 h-5"></i>
-                        </div>
-                        <h4 class="font-black text-slate-800 dark:text-white uppercase tracking-tighter">Phân tích chuyên sâu</h4>
-                    </div>
-                    <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-                        Phân tích đa chiều về ${companyName} (${symbol}) bao gồm định giá, dự báo xu hướng và đánh giá rủi ro.
-                    </p>
-                </div>
-            `;
-        lucide.createIcons({ root: analysisTab });
+        // Trigger technical analysis if currently on analysis tab
+        if (currentTabId === "analysis") {
+          fetchTechnicalAnalysis(symbol, companyName);
+          lastFetchedTechnicalSymbol = symbol;
+        }
       }
 
       async function analyzeTask(isGeneral = false) {
@@ -3208,9 +2999,7 @@
               const stocksRes = await fetch(`/users/${currentUser.id}/stocks`);
               if (stocksRes.ok) {
                 const stocksData = await stocksRes.json();
-                userStocks = stocksData.map(
-                  (s) => `${s.stock_name} (${s.avg_price})`,
-                );
+                userStocks = stocksData.map((s) => `${s.stock_name} (${s.avg_price})`);
               }
             } catch (e) {
               console.warn("Could not fetch portfolio for analysis:", e);
@@ -3274,27 +3063,27 @@
                 // Reasoning section (collapsible, default collapsed)
                 if (reasoningContent.trim()) {
                   displayHtml += `
-                  <details class="reasoning-section mb-4 p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700" ${
-                    isStillProcessing ? "open" : ""
-                  }>
-                    <summary class="cursor-pointer font-semibold text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2">
-                      ${
-                        isStillProcessing
-                          ? '<span class="inline-block w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></span>'
-                          : '<i data-lucide="brain" class="w-4 h-4"></i>'
-                      }
-                      <span>Quá trình suy luận</span>
-                      ${
-                        isStillProcessing
-                          ? '<span class="text-xs text-primary-500 animate-pulse">đang xử lý...</span>'
-                          : '<span class="text-xs opacity-60">(click để mở rộng)</span>'
-                      }
-                    </summary>
-                    <div class="mt-3 text-sm text-slate-600 dark:text-slate-400 reasoning-content">
-                      ${processContent(reasoningContent)}
-                    </div>
-                  </details>
-                `;
+                        <details class="reasoning-section mb-4 p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700" ${
+                          isStillProcessing ? "open" : ""
+                        }>
+                          <summary class="cursor-pointer font-semibold text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                            ${
+                              isStillProcessing
+                                ? '<span class="inline-block w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></span>'
+                                : '<i data-lucide="brain" class="w-4 h-4"></i>'
+                            }
+                            <span>Quá trình suy luận</span>
+                            ${
+                              isStillProcessing
+                                ? '<span class="text-xs text-primary-500 animate-pulse">đang xử lý...</span>'
+                                : '<span class="text-xs opacity-60">(click để mở rộng)</span>'
+                            }
+                          </summary>
+                          <div class="mt-3 text-sm text-slate-600 dark:text-slate-400 reasoning-content">
+                            ${processContent(reasoningContent)}
+                          </div>
+                        </details>
+                      `;
                 }
 
                 // Final section (always visible)
@@ -3316,8 +3105,7 @@
         } catch (error) {
           console.error("Error:", error);
           if (contentDiv) {
-            contentDiv.innerHTML =
-              "❌ Đã xảy ra lỗi khi kết nối với máy chủ: " + error.message;
+            contentDiv.innerHTML = "❌ Đã xảy ra lỗi khi kết nối với máy chủ: " + error.message;
           }
         } finally {
           submitBtn.disabled = false;
@@ -3334,19 +3122,19 @@
         messageDiv.id = id;
 
         messageDiv.innerHTML = `
-                <div class="w-10 h-10 rounded-2xl bg-primary-600 shadow-lg shadow-primary-500/20 flex items-center justify-center flex-shrink-0 mt-1 ring-4 ring-primary-500/10">
-                    <i data-lucide="bot" class="w-6 h-6 text-white"></i>
-                </div>
-                <div class="flex-1 bubble-bot p-5 rounded-3xl rounded-tl-none overflow-x-auto">
-                    <div class="markdown-content text-[15px] prose dark:prose-invert max-w-none">
-                        <div class="skeleton-bars">
-                            <div class="skeleton skeleton-bar w-3/4"></div>
-                            <div class="skeleton skeleton-bar w-full"></div>
-                            <div class="skeleton skeleton-bar w-5/6"></div>
-                        </div>
-                    </div>
-                </div>
-            `;
+                      <div class="w-10 h-10 rounded-2xl bg-primary-600 shadow-lg shadow-primary-500/20 flex items-center justify-center flex-shrink-0 mt-1 ring-4 ring-primary-500/10">
+                          <i data-lucide="bot" class="w-6 h-6 text-white"></i>
+                      </div>
+                      <div class="flex-1 bubble-bot p-5 rounded-3xl rounded-tl-none overflow-x-auto">
+                          <div class="markdown-content text-[15px] prose dark:prose-invert max-w-none">
+                              <div class="skeleton-bars">
+                                  <div class="skeleton skeleton-bar w-3/4"></div>
+                                  <div class="skeleton skeleton-bar w-full"></div>
+                                  <div class="skeleton skeleton-bar w-5/6"></div>
+                              </div>
+                          </div>
+                      </div>
+                  `;
 
         messagesContainer.appendChild(messageDiv);
         lucide.createIcons({ root: messageDiv });
@@ -3357,54 +3145,49 @@
         if (sender === "bot") {
           const id = "bot-msg-" + Date.now();
           const div = addInitialBotMessage(id);
-          div.querySelector(".markdown-content").innerHTML =
-            processContent(content);
+          div.querySelector(".markdown-content").innerHTML = processContent(content);
           return;
         }
 
         const messageDiv = document.createElement("div");
-        messageDiv.className =
-          "flex gap-4 justify-end group user-bubble-container";
+        messageDiv.className = "flex gap-4 justify-end group user-bubble-container";
 
         messageDiv.innerHTML = `
-                <div class="flex-1 bubble-user p-5 rounded-3xl rounded-tr-none max-w-[85%]">
-                    <div class="markdown-content user-markdown text-[15px] font-medium leading-relaxed">
-                        ${marked.parse(content)}
-                    </div>
-                </div>
-                <div class="w-10 h-10 rounded-2xl bg-white dark:bg-slate-800 shadow-xl flex items-center justify-center flex-shrink-0 mt-1 border border-slate-100 dark:border-white/10">
-                    <i data-lucide="user" class="w-6 h-6 text-primary-500"></i>
-                </div>
-            `;
+                      <div class="flex-1 bubble-user p-5 rounded-3xl rounded-tr-none max-w-[85%]">
+                          <div class="markdown-content user-markdown text-[15px] font-medium leading-relaxed">
+                              ${marked.parse(content)}
+                          </div>
+                      </div>
+                      <div class="w-10 h-10 rounded-2xl bg-white dark:bg-slate-800 shadow-xl flex items-center justify-center flex-shrink-0 mt-1 border border-slate-100 dark:border-white/10">
+                          <i data-lucide="user" class="w-6 h-6 text-primary-500"></i>
+                      </div>
+                  `;
 
         messagesContainer.appendChild(messageDiv);
         lucide.createIcons({ root: messageDiv });
         chatContainer.scrollTop = chatContainer.scrollHeight;
       }
 
-      function processContent(text) {
+      // Process markdown content with optional stock ticker highlighting
+      // highlightTickers: true (default) = wrap stock symbols in clickable spans
+      //                   false = no ticker highlighting (for News/Technical Analysis tabs)
+      function processContent(text, highlightTickers = true) {
         // Handle unclosed thought tags during streaming
         let processedText = text;
-        if (
-          processedText.includes("<thought>") &&
-          !processedText.includes("</thought>")
-        ) {
+        if (processedText.includes("<thought>") && !processedText.includes("</thought>")) {
           processedText += "</thought>";
         }
 
         // Replace thought tags with collapsible details
-        processedText = processedText.replace(
-          /<thought>([\s\S]*?)<\/thought>/g,
-          (match, content) => {
-            return `
-<details class="thinking-section">
-    <summary class="thinking-header">Xem quá trình suy luận</summary>
-    <div class="thinking-content">
-        ${marked.parse(content.trim())}
-    </div>
-</details>`;
-          },
-        );
+        processedText = processedText.replace(/<thought>([\s\S]*?)<\/thought>/g, (match, content) => {
+          return `
+      <details class="thinking-section">
+          <summary class="thinking-header">Xem quá trình suy luận</summary>
+          <div class="thinking-content">
+              ${marked.parse(content.trim())}
+          </div>
+      </details>`;
+        });
         // Ensure space after punctuation (., !, ?) if not followed by a space, number, or other punctuation
         // Skip file extensions (dot followed by lowercase letter like .pdf, .xlsx)
         // Add space when dot followed by uppercase letter (new sentence)
@@ -3414,21 +3197,19 @@
         // Parse markdown first
         let html = marked.parse(processedText);
 
-        // Wrap stock tickers in clickable spans
-        // Only highlight if the ticker exists in our valid symbols list
-        html = html.replace(/\b([A-Z0-9]{3,10})\b/g, (match, ticker) => {
-          // Check against the valid symbols list fetched from backend
-          if (ticker in symbolsMap) {
-            return `<span class="stock-ticker" data-symbol="${ticker}">${ticker}</span>`;
-          }
-          return match;
-        });
+        // Wrap stock tickers in clickable spans (only if highlightTickers is true)
+        if (highlightTickers) {
+          html = html.replace(/\b([A-Z0-9]{3,10})\b/g, (match, ticker) => {
+            // Check against the valid symbols list fetched from backend
+            if (ticker in symbolsMap) {
+              return `<span class="stock-ticker" data-symbol="${ticker}">${ticker}</span>`;
+            }
+            return match;
+          });
+        }
 
         // Wrap tables in scrollable container
-        html = html.replace(
-          /<table>/g,
-          '<div class="table-outer-container"><div class="table-wrapper"><table>',
-        );
+        html = html.replace(/<table>/g, '<div class="table-outer-container"><div class="table-wrapper"><table>');
         html = html.replace(/<\/table>/g, "</table></div></div>");
 
         // Post-process: merge cells in rows with only one cell having content
@@ -3439,9 +3220,7 @@
           const cells = row.querySelectorAll("td");
           if (cells.length > 1) {
             // Count cells with actual content (not empty)
-            const nonEmptyCells = Array.from(cells).filter(
-              (td) => td.textContent.trim() !== "",
-            );
+            const nonEmptyCells = Array.from(cells).filter((td) => td.textContent.trim() !== "");
             // If only one cell has content, merge all cells into that one
             if (nonEmptyCells.length === 1) {
               const contentCell = nonEmptyCells[0];
@@ -3465,6 +3244,12 @@
         return html;
       }
 
+      // Wrapper for processContent without stock ticker highlighting
+      // Used for News and Technical Analysis tabs
+      function processContentNoTickers(text) {
+        return processContent(text, false);
+      }
+
       // --- User management logic ---
       let users = [];
       let currentUser = null;
@@ -3478,9 +3263,7 @@
 
       const settingsOverlay = document.getElementById("settings-overlay");
       const blacklistInput = document.getElementById("blacklist-input");
-      const blacklistTagsContainer = document.getElementById(
-        "blacklist-tags-container",
-      );
+      const blacklistTagsContainer = document.getElementById("blacklist-tags-container");
       const returnRateInput = document.getElementById("return-rate-input");
       const dividendRateInput = document.getElementById("dividend-rate-input");
       const profitRateInput = document.getElementById("profit-rate-input");
@@ -3488,12 +3271,8 @@
 
       // Whitelist elements
       const whitelistInput = document.getElementById("whitelist-input");
-      const whitelistTagsContainer = document.getElementById(
-        "whitelist-tags-container",
-      );
-      const whitelistSuggestions = document.getElementById(
-        "whitelist-suggestions",
-      );
+      const whitelistTagsContainer = document.getElementById("whitelist-tags-container");
+      const whitelistSuggestions = document.getElementById("whitelist-suggestions");
 
       let tempBlacklist = [];
       let tempWhitelist = [];
@@ -3567,11 +3346,11 @@
           const tag = document.createElement("div");
           tag.className = "blacklist-tag";
           tag.innerHTML = `
-                    <span>${item}</span>
-                    <span class="remove-tag" onclick="removeBlacklistItem(${index})">
-                        <i data-lucide="x" class="w-3 h-3"></i>
-                    </span>
-                `;
+                          <span>${item}</span>
+                          <span class="remove-tag" onclick="removeBlacklistItem(${index})">
+                              <i data-lucide="x" class="w-3 h-3"></i>
+                          </span>
+                      `;
           blacklistTagsContainer.appendChild(tag);
         });
         lucide.createIcons({ root: blacklistTagsContainer });
@@ -3598,11 +3377,11 @@
           const tag = document.createElement("div");
           tag.className = "blacklist-tag whitelist-tag";
           tag.innerHTML = `
-          <span style="font-weight: 600;">${item}</span>
-          <span class="remove-tag whitelist-remove" onclick="removeWhitelistItem(${index})">
-            <i data-lucide="x" class="w-3 h-3"></i>
-          </span>
-        `;
+                <span style="font-weight: 600;">${item}</span>
+                <span class="remove-tag whitelist-remove" onclick="removeWhitelistItem(${index})">
+                  <i data-lucide="x" class="w-3 h-3"></i>
+                </span>
+              `;
 
           whitelistTagsContainer.appendChild(tag);
         });
@@ -3639,10 +3418,7 @@
           const matches = Object.entries(symbolsMap)
             .filter(([symbol, info]) => {
               const name = typeof info === "object" ? info.name : info;
-              return (
-                symbol.includes(query) ||
-                (name && name.toLowerCase().includes(query.toLowerCase()))
-              );
+              return symbol.includes(query) || (name && name.toLowerCase().includes(query.toLowerCase()));
             })
             .slice(0, 10);
 
@@ -3655,13 +3431,11 @@
             .map(([symbol, info]) => {
               const name = typeof info === "object" ? info.name : info;
               return `
-          <div class="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex justify-between items-center" onclick="addWhitelistItem('${symbol}')">
-            <span class="font-bold text-emerald-600 dark:text-emerald-400">${symbol}</span>
-            <span class="text-xs text-slate-500 truncate ml-2">${
-              name || ""
-            }</span>
-          </div>
-        `;
+                <div class="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex justify-between items-center" onclick="addWhitelistItem('${symbol}')">
+                  <span class="font-bold text-emerald-600 dark:text-emerald-400">${symbol}</span>
+                  <span class="text-xs text-slate-500 truncate ml-2">${name || ""}</span>
+                </div>
+              `;
             })
             .join("");
           whitelistSuggestions.classList.remove("hidden");
@@ -3677,10 +3451,7 @@
 
         // Hide suggestions when clicking outside
         document.addEventListener("click", (e) => {
-          if (
-            !whitelistInput.contains(e.target) &&
-            !whitelistSuggestions.contains(e.target)
-          ) {
+          if (!whitelistInput.contains(e.target) && !whitelistSuggestions.contains(e.target)) {
             whitelistSuggestions.classList.add("hidden");
           }
         });
@@ -3723,17 +3494,11 @@
           } else {
             const errorData = await response.json().catch(() => ({}));
             console.error("Save failed:", response.status, errorData);
-            alert(
-              `Lỗi khi lưu thiết lập: ${response.status} ${
-                errorData.detail || ""
-              }`,
-            );
+            alert(`Lỗi khi lưu thiết lập: ${response.status} ${errorData.detail || ""}`);
           }
         } catch (error) {
           console.error("Network or unexpected error:", error);
-          alert(
-            "Lỗi kết nối máy chủ hoặc lỗi bất ngờ. Vui lòng kiểm tra console.",
-          );
+          alert("Lỗi kết nối máy chủ hoặc lỗi bất ngờ. Vui lòng kiểm tra console.");
         } finally {
           saveSettingsBtn.innerText = originalText;
           saveSettingsBtn.disabled = false;
@@ -3785,27 +3550,23 @@
         stocks.forEach((stock) => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-                    <td class="font-bold text-primary-600">${
-                      stock.stock_name
-                    }</td>
-                    <td class="text-sm font-medium">${stock.avg_price.toLocaleString()} VND</td>
-                    <td>
-                        <div class="flex items-center gap-1">
-                            <button onclick="editPortfolioStock(${stock.id}, '${
-                              stock.stock_name
-                            }', ${
-                              stock.avg_price
-                            })" class="p-2 text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors" title="Sửa">
-                                <i data-lucide="edit-3" class="w-4 h-4"></i>
-                            </button>
-                            <button onclick="removePortfolioStock(${
-                              stock.id
-                            })" class="p-2 text-slate-600 dark:text-slate-300 hover:text-red-500 transition-colors" title="Xóa">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </td>
-                `;
+                          <td class="font-bold text-primary-600">${stock.stock_name}</td>
+                          <td class="text-sm font-medium">${stock.avg_price.toLocaleString()} VND</td>
+                          <td>
+                              <div class="flex items-center gap-1">
+                                  <button onclick="editPortfolioStock(${stock.id}, '${stock.stock_name}', ${
+                                    stock.avg_price
+                                  })" class="p-2 text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors" title="Sửa">
+                                      <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                  </button>
+                                  <button onclick="removePortfolioStock(${
+                                    stock.id
+                                  })" class="p-2 text-slate-600 dark:text-slate-300 hover:text-red-500 transition-colors" title="Xóa">
+                                      <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                  </button>
+                              </div>
+                          </td>
+                      `;
           portfolioList.appendChild(tr);
         });
         lucide.createIcons({ root: portfolioList });
@@ -3844,9 +3605,7 @@
         }
 
         try {
-          const url = editingStockId
-            ? `/stocks/${editingStockId}`
-            : `/users/${currentUser.id}/stocks`;
+          const url = editingStockId ? `/stocks/${editingStockId}` : `/users/${currentUser.id}/stocks`;
           const method = editingStockId ? "PUT" : "POST";
 
           const response = await fetch(url, {
@@ -3859,11 +3618,7 @@
             cancelEditStock();
             fetchPortfolioStocks();
           } else {
-            alert(
-              editingStockId
-                ? "Lỗi khi cập nhật cổ phiếu"
-                : "Lỗi khi thêm cổ phiếu",
-            );
+            alert(editingStockId ? "Lỗi khi cập nhật cổ phiếu" : "Lỗi khi thêm cổ phiếu");
           }
         } catch (error) {
           console.error("Error adding/updating stock:", error);
@@ -3894,11 +3649,11 @@
           const item = document.createElement("div");
           item.className = "menu-item";
           item.innerHTML = `
-                    <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center text-xs font-bold">
-                        ${getInitials(user.full_name)}
-                    </div>
-                    <span>${user.full_name}</span>
-                `;
+                          <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center text-xs font-bold">
+                              ${getInitials(user.full_name)}
+                          </div>
+                          <span>${user.full_name}</span>
+                      `;
           item.onclick = () => selectUser(user);
           userListContainer.appendChild(item);
         });
@@ -3932,72 +3687,390 @@
       // Setup whitelist autocomplete
       setupWhitelistAutocomplete();
 
+      function removeSkeleton(elementId) {
+        const el = document.getElementById(elementId);
+        if (el) {
+          el.classList.remove(
+            "skeleton-shimmer",
+            "text-transparent",
+            "bg-slate-200/50",
+            "dark:bg-slate-800/50",
+            "bg-slate-200/50",
+            "dark:bg-slate-800/40",
+          );
+        }
+      }
+
+      function renderNewsLayout() {
+        const skeletonItem = `
+          <div class="flex gap-4 p-4 bg-white/30 dark:bg-slate-900/30 rounded-2xl border border-white/30 dark:border-white/5">
+              <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-slate-200/50 dark:bg-slate-800/50 skeleton-shimmer"></div>
+              <div class="flex-1 space-y-2.5">
+                  <div class="h-4 bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-3/4 skeleton-shimmer"></div>
+                  <div class="h-3 bg-slate-200/50 dark:bg-slate-800/40 rounded-md w-full opacity-60 skeleton-shimmer"></div>
+                  <div class="flex gap-2 pt-1">
+                      <div class="h-3 bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 skeleton-shimmer"></div>
+                      <div class="h-3 bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-24 skeleton-shimmer"></div>
+                  </div>
+              </div>
+          </div>
+        `;
+
+        return `
+          <div class="space-y-5 animate-fade-in-up p-1">
+              <!-- AI Analysis Container -->
+              <div class="p-5 bg-gradient-to-br from-white/60 to-white/40 dark:from-slate-900/60 dark:to-slate-900/40 rounded-3xl border border-white/50 dark:border-white/10 shadow-xl backdrop-blur-xl">
+                   <div class="flex items-center gap-3 mb-4 border-b border-slate-200 dark:border-white/10 pb-3">
+                      <div class="w-8 h-8 rounded-full bg-indigo-600/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                            <i data-lucide="brain-circuit" class="w-4 h-4"></i>
+                      </div>
+                      <h4 class="font-bold text-slate-800 dark:text-white text-sm">Tổng hợp & Nhận định AI</h4>
+                      <div class="flex-1 flex justify-end">
+                        <div id="news-sentiment-badge" class="h-7 w-24 bg-slate-200/50 dark:bg-slate-800/50 rounded-full skeleton-shimmer text-transparent border border-transparent"></div>
+                      </div>
+                   </div>
+                   <div id="news-analysis-content" class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed min-h-[100px] markdown-content prose-sm dark:prose-invert max-w-none">
+                      <div class="flex items-center gap-2 text-slate-400 mb-2">
+                        <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
+                        <span class="text-sm">Đang phân tích tin tức và sự kiện...</span>
+                      </div>
+                   </div>
+              </div>
+
+              <!-- News List Section -->
+              <div class="space-y-4">
+                  <div class="flex items-center justify-between">
+                    <h4 class="font-bold text-slate-800 dark:text-white text-sm flex items-center gap-2">
+                      <i data-lucide="list-filter" class="w-4 h-4 text-primary-500"></i>
+                      Luồng tin chi tiết
+                      <span id="news-count-badge" class="hidden px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold rounded-md border border-slate-200 dark:border-slate-700 shadow-sm ml-1">0</span>
+                    </h4>
+                  </div>
+                  <div id="news-list-container" class="grid grid-cols-1 gap-3">
+                      ${skeletonItem}
+                      ${skeletonItem}
+                      ${skeletonItem}
+                  </div>
+              </div>
+          </div>
+        `;
+      }
+
+      function renderTechnicalLayout() {
+        return `
+          <div class="space-y-4 p-1">
+            <!-- Summary Cards as Timeframe Selectors: Sticky outside the animated container -->
+            <div class="sticky top-[-1px] z-30 bg-[#f8fafc]/95 dark:bg-[#020617]/95 backdrop-blur-xl py-2 border-b border-slate-200/50 dark:border-white/10 -mx-1 px-1 mb-4 shadow-sm">
+              <div class="animate-fade-in-up">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- Short Term Summary -->
+                  <div id="tech-card-short" class="cursor-pointer transition-all duration-300 p-4 rounded-3xl border-2 border-indigo-400/60 bg-gradient-to-br from-indigo-100 via-indigo-50 to-purple-100 dark:from-indigo-600/30 dark:via-indigo-500/20 dark:to-purple-600/20 backdrop-blur-xl shadow-[0_8px_32px_rgba(99,102,241,0.3)] scale-[1.03] z-10">
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-white dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm border border-indigo-100 dark:border-transparent">
+                          <i data-lucide="zap" class="w-4 h-4"></i>
+                        </div>
+                        <span class="text-base font-bold text-slate-700 dark:text-indigo-200">Ngắn hạn</span>
+                      </div>
+                      <span id="tech-short-trend-badge" class="h-6 w-16 bg-slate-200/50 dark:bg-slate-800/50 rounded-full skeleton-shimmer text-transparent border border-transparent"></span>
+                    </div>
+                    <div class="flex flex-wrap gap-x-8 gap-y-3">
+                      <div class="min-w-0">
+                        <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold mb-0.5">Xu hướng</p>
+                        <p id="tech-short-trend" class="text-base font-bold text-slate-700 dark:text-indigo-100 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-[4rem] h-6 whitespace-nowrap"></p>
+                      </div>
+                      <div class="min-w-0">
+                        <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold mb-0.5">Tín hiệu</p>
+                        <p id="tech-short-signal" class="text-base font-bold text-slate-700 dark:text-indigo-100 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-[4rem] h-6 whitespace-nowrap"></p>
+                      </div>
+                      <div class="col-span-2">
+                        <div class="flex justify-between items-center gap-2 mb-1.5">
+                          <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold">Độ tin cậy</p>
+                          <span id="tech-short-confidence" class="text-xs font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-4"></span>
+                        </div>
+                        <div id="tech-short-confidence-container" class="relative h-3 w-full rounded-full overflow-visible">
+                          <!-- Skeleton overlay -->
+                          <div id="tech-short-confidence-skeleton" class="absolute inset-0 bg-slate-300/90 dark:bg-slate-600/90 rounded-full skeleton-shimmer z-20"></div>
+                          <!-- Gradient bar -->
+                          <div class="absolute inset-0 rounded-full" style="background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #22c55e 100%)"></div>
+                          <div id="tech-short-confidence-bar" class="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full shadow-lg z-10 transition-all duration-1000 opacity-0" style="left: 0%; background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%); border: 3px solid #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5)"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Long Term Summary -->
+                  <div id="tech-card-long" class="cursor-pointer transition-all duration-300 p-4 rounded-3xl border border-slate-200 dark:border-white/10 bg-gradient-to-br from-slate-100 via-white to-slate-50 dark:from-slate-800/60 dark:via-slate-900/40 dark:to-slate-800/40 backdrop-blur-md shadow-sm opacity-60 hover:opacity-100 hover:scale-[1.01]">
+                    <div class="flex items-center justify-between mb-3">
+                      <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-white dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-sm border border-emerald-100 dark:border-transparent">
+                          <i data-lucide="anchor" class="w-4 h-4"></i>
+                        </div>
+                        <span class="text-base font-bold text-slate-700 dark:text-emerald-200">Dài hạn</span>
+                      </div>
+                      <span id="tech-long-trend-badge" class="h-6 w-16 bg-slate-200/50 dark:bg-slate-800/50 rounded-full skeleton-shimmer text-transparent border border-transparent"></span>
+                    </div>
+                    <div class="flex flex-wrap gap-x-8 gap-y-3">
+                      <div class="min-w-0">
+                        <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold mb-0.5">Xu hướng</p>
+                        <p id="tech-long-trend" class="text-base font-bold text-slate-700 dark:text-emerald-100 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-[4rem] h-6 whitespace-nowrap"></p>
+                      </div>
+                      <div class="min-w-0">
+                        <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold mb-0.5">Tín hiệu</p>
+                        <p id="tech-long-signal" class="text-base font-bold text-slate-700 dark:text-emerald-100 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-[4rem] h-6 whitespace-nowrap"></p>
+                      </div>
+                      <div class="col-span-2">
+                        <div class="flex justify-between items-center gap-2 mb-1.5">
+                          <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold">Độ tin cậy</p>
+                          <span id="tech-long-confidence" class="text-xs font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-4"></span>
+                        </div>
+                        <div id="tech-long-confidence-container" class="relative h-3 w-full rounded-full overflow-visible">
+                          <!-- Skeleton overlay -->
+                          <div id="tech-long-confidence-skeleton" class="absolute inset-0 bg-slate-300/90 dark:bg-slate-600/90 rounded-full skeleton-shimmer z-20"></div>
+                          <!-- Gradient bar -->
+                          <div class="absolute inset-0 rounded-full" style="background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #22c55e 100%)"></div>
+                          <div id="tech-long-confidence-bar" class="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full shadow-lg z-10 transition-all duration-1000 opacity-0" style="left: 0%; background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%); border: 3px solid #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5)"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Main Indicators Grid: Animated -->
+            <div class="animate-fade-in-up">
+
+            <!-- Main Indicators Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              <!-- Left Column: Primary Indicators -->
+              <div class="space-y-4">
+                <!-- Momentum Box -->
+                <div class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/40 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                   <h5 class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4">
+                      <i data-lucide="gauge" class="w-4 h-4"></i> Momentum
+                   </h5>
+                   <div class="space-y-4">
+                      <!-- RSI -->
+                      <div class="space-y-1.5">
+                        <div class="flex justify-between text-sm font-medium">
+                          <span class="text-slate-500">RSI (14)</span>
+                          <span id="tech-rsi-value" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-5"></span>
+                        </div>
+                        <!-- RSI Bar with clear zones -->
+                        <div id="tech-rsi-bar-container" class="relative mt-2 mb-4">
+                          <!-- Skeleton overlay -->
+                          <div id="tech-rsi-bar-skeleton" class="absolute inset-0 bg-slate-100 dark:bg-slate-900 rounded-lg skeleton-shimmer z-20"></div>
+                          <!-- Labels -->
+                          <div class="flex justify-between text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-1">
+                            <span>0</span>
+                            <span class="ml-[25%]">30</span>
+                            <span class="ml-auto mr-[25%]">70</span>
+                            <span>100</span>
+                          </div>
+                          <!-- Bar -->
+                          <div class="relative h-3 w-full rounded-full overflow-hidden shadow-inner">
+                            <!-- Oversold zone (0-30) - Green -->
+                            <div class="absolute inset-y-0 left-0 w-[30%] bg-gradient-to-r from-green-400 to-green-300 dark:from-green-600 dark:to-green-500"></div>
+                            <!-- Neutral zone (30-70) - Amber/Yellow -->
+                            <div class="absolute inset-y-0 left-[30%] w-[40%] bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-300 dark:from-amber-600/60 dark:via-yellow-500/50 dark:to-amber-600/60"></div>
+                            <!-- Overbought zone (70-100) - Red -->
+                            <div class="absolute inset-y-0 right-0 w-[30%] bg-gradient-to-r from-red-300 to-red-400 dark:from-red-500 dark:to-red-600"></div>
+                            <!-- Zone separators -->
+                            <div class="absolute inset-y-0 left-[30%] w-0.5 bg-white/60 dark:bg-white/20"></div>
+                            <div class="absolute inset-y-0 left-[70%] w-0.5 bg-white/60 dark:bg-white/20"></div>
+                            <!-- Marker -->
+                            <div id="tech-rsi-marker" class="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white dark:bg-slate-200 rounded-full border-2 border-slate-700 dark:border-slate-900 shadow-lg z-10 transition-all duration-500" style="left: calc(50% - 8px)"></div>
+                          </div>
+                          <!-- Zone labels -->
+                          <div class="flex justify-between text-[9px] font-semibold mt-1">
+                            <span class="text-green-600 dark:text-green-400 w-[30%] text-center">Quá bán</span>
+                            <span class="text-yellow-600 dark:text-yellow-400 w-[40%] text-center">Trung tính</span>
+                            <span class="text-red-600 dark:text-red-400 w-[30%] text-center">Quá mua</span>
+                          </div>
+                        </div>
+                         <div id="tech-rsi-signal" class="text-sm font-bold flex items-center justify-center skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-full w-24 h-6 ml-auto"></div>
+                      </div>
+                      <!-- Stochastic -->
+                      <div class="space-y-1.5">
+                        <div class="flex justify-between text-sm font-medium">
+                          <span class="text-slate-500">Stochastic</span>
+                          <div class="flex gap-2">
+                             <span id="tech-stoch-k" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-5"></span>
+                             <span id="tech-stoch-d" class="text-slate-400 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-5"></span>
+                          </div>
+                        </div>
+                         <div id="tech-stoch-signal" class="text-sm font-bold flex items-center justify-center skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-full w-24 h-6"></div>
+                      </div>
+                      <!-- MACD -->
+                      <div class="space-y-1.5">
+                        <div class="flex justify-between text-sm font-medium">
+                          <span class="text-slate-500">MACD (12, 26, 9)</span>
+                          <div class="flex gap-2">
+                             <span id="tech-macd-line" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-12 h-5"></span>
+                             <span id="tech-macd-signal-val" class="text-slate-400 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-12 h-5"></span>
+                          </div>
+                        </div>
+                        <div class="flex justify-between text-sm font-bold">
+                           <span id="tech-macd-hist" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-14 h-4"></span>
+                            <span id="tech-macd-signal" class="text-sm font-bold flex items-center justify-center skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-full w-24 h-6"></span>
+                        </div>
+                      </div>
+                      <!-- Williams %R -->
+                      <div class="flex justify-between text-sm font-medium">
+                        <span class="text-slate-500">Williams %R</span>
+                        <span id="tech-willr" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-5"></span>
+                      </div>
+                   </div>
+                </div>
+
+                <!-- Trend Indicators -->
+                <div class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/40 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                   <h5 class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4">
+                      <i data-lucide="move-up-right" class="w-4 h-4"></i> Trend
+                   </h5>
+                   <div class="space-y-4">
+                      <div id="tech-ma-list" class="space-y-2 text-sm">
+                         <div class="flex justify-between"><span class="text-slate-500">SMA20:</span><span id="tech-sma20" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                         <div class="flex justify-between"><span class="text-slate-500">SMA50:</span><span id="tech-sma50" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                         <div class="flex justify-between"><span class="text-slate-500">SMA100:</span><span id="tech-sma100" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                         <div class="flex justify-between"><span class="text-slate-500">SMA200:</span><span id="tech-sma200" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                         <div class="flex justify-between"><span class="text-slate-500">EMA20:</span><span id="tech-ema20" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                         <div class="flex justify-between"><span class="text-slate-500">EMA50:</span><span id="tech-ema50" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                      </div>
+                      <div class="pt-3 border-t border-slate-200 dark:border-white/5">
+                         <div class="flex justify-between text-sm font-medium mb-1">
+                            <span class="text-slate-500">ADX Strength</span>
+                            <span id="tech-adx-val" class="font-bold text-indigo-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-5"></span>
+                         </div>
+                         <div class="flex items-center gap-2 mb-2">
+                           <span id="tech-adx-dmp" class="text-sm font-bold text-emerald-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-4"></span>
+                           <span class="text-slate-300">/</span>
+                           <span id="tech-adx-dmn" class="text-sm font-bold text-rose-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-4"></span>
+                         </div>
+                         <div id="tech-adx-signal" class="text-sm font-bold flex items-center justify-center skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-full w-32 h-6"></div>
+                      </div>
+                   </div>
+                </div>
+
+                <!-- Volatility -->
+                <div class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/40 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                   <h5 class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4">
+                      <i data-lucide="waves" class="w-4 h-4"></i> Volatility
+                   </h5>
+                   <div class="space-y-3 text-sm">
+                      <div class="flex justify-between"><span class="text-slate-500">BB Upper:</span><span id="tech-bb-upper" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                      <div class="flex justify-between"><span class="text-slate-500">BB Middle:</span><span id="tech-bb-middle" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                      <div class="flex justify-between"><span class="text-slate-500">BB Lower:</span><span id="tech-bb-lower" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                       <div id="tech-bb-signal" class="text-sm font-bold flex items-center justify-center skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-full w-24 h-6"></div>
+                      <div class="pt-2 border-t border-slate-200 dark:border-white/5 flex justify-between">
+                         <span class="text-slate-500">ATR:</span>
+                         <span id="tech-atr" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span>
+                      </div>
+                   </div>
+                </div>
+
+                <!-- Volume & Flow -->
+                <div class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/40 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                   <h5 class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4">
+                      <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Volume & Flow
+                   </h5>
+                   <div class="space-y-3 text-sm">
+                      <div class="flex justify-between">
+                        <span class="text-slate-500">OBV Trend:</span>
+                        <span id="tech-obv-trend" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-14 h-5"></span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-slate-500">CMF:</span>
+                        <span id="tech-cmf" class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-14 h-5 text-right"></span>
+                      </div>
+                       <div id="tech-vol-signal" class="text-sm font-bold flex items-center justify-center skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-full w-32 h-6"></div>
+                   </div>
+                </div>
+
+                <!-- Pivot Points -->
+                <div class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/40 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <h5 class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4">
+                    <i data-lucide="target" class="w-4 h-4"></i> Pivot Points
+                  </h5>
+                  <div class="space-y-2 text-sm">
+                    <div class="flex justify-between font-bold text-indigo-500 mb-1"><span class="text-slate-500 font-medium">Pivot</span><span id="tech-pivot" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Resistance 1</span><span id="tech-pivot-r1" class="text-rose-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Resistance 2</span><span id="tech-pivot-r2" class="text-rose-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Resistance 3</span><span id="tech-pivot-r3" class="text-rose-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Support 1</span><span id="tech-pivot-s1" class="text-emerald-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Support 2</span><span id="tech-pivot-s2" class="text-emerald-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Support 3</span><span id="tech-pivot-s3" class="text-emerald-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                  </div>
+                </div>
+                <!-- Fibonacci -->
+                <div class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/40 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <h5 class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4">
+                    <i data-lucide="layers" class="w-4 h-4"></i> Fibonacci
+                  </h5>
+                  <div class="space-y-2 text-sm pt-1">
+                    <div class="flex justify-between"><span class="text-slate-500">Level 0.0%</span><span id="tech-fib-0" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between text-yellow-500 font-medium"><span class="text-slate-500 font-normal">Level 23.6%</span><span id="tech-fib-236" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between text-amber-500 font-medium"><span class="text-slate-500 font-normal">Level 38.2%</span><span id="tech-fib-382" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between text-indigo-500 font-bold"><span class="text-slate-500 font-normal">Level 50.0%</span><span id="tech-fib-500" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between text-emerald-500 font-medium"><span class="text-slate-500 font-normal">Level 61.8%</span><span id="tech-fib-618" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between text-teal-500 font-medium"><span class="text-slate-500 font-normal">Level 78.6%</span><span id="tech-fib-786" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Level 100.0%</span><span id="tech-fib-100" class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5"></span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Columns: AI -->
+              <div class="lg:col-span-2 space-y-4">
+                <!-- AI Core Analysis -->
+                <div class="p-6 bg-white/40 dark:bg-slate-900/50 backdrop-blur-xl rounded-3xl border border-white/50 dark:border-white/10 shadow-2xl relative overflow-hidden">
+                  <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 pointer-events-none"></div>
+                   <div class="flex items-center gap-2 mb-4 border-b border-slate-200 dark:border-white/10 pb-3">
+                      <div class="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm border border-indigo-100 dark:border-transparent">
+                            <i data-lucide="brain-circuit" class="w-5 h-5"></i>
+                      </div>
+                      <h4 class="font-bold text-slate-800 dark:text-white text-lg">Tổng hợp từ AI</h4>
+                      <div class="flex-1 text-right flex items-center justify-end gap-2 text-xs">
+                        <div id="tech-recommendation-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all border border-transparent opacity-0"></div>
+                        <span id="tech-gauge-ma" class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg shadow-sm text-[11px] font-semibold text-slate-600 dark:text-slate-300 skeleton-shimmer text-transparent min-w-[70px] h-6"><i data-lucide="trending-up" class="w-3 h-3"></i><span class="gauge-text">MA: --</span></span>
+                        <span id="tech-gauge-osc" class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg shadow-sm text-[11px] font-semibold text-slate-600 dark:text-slate-300 skeleton-shimmer text-transparent min-w-[70px] h-6"><i data-lucide="activity" class="w-3 h-3"></i><span class="gauge-text">OSC: --</span></span>
+                        <span id="tech-gauge-summary" class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/40 dark:to-purple-900/40 border border-indigo-200 dark:border-indigo-500/30 rounded-lg shadow-sm text-[11px] font-bold text-indigo-600 dark:text-indigo-400 skeleton-shimmer text-transparent min-w-[80px] h-6"><i data-lucide="bar-chart-2" class="w-3 h-3"></i><span class="gauge-text">--</span></span>
+                      </div>
+                   </div>
+                   <div id="tech-analysis-content" class="text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed max-h-[480px] overflow-y-auto custom-scrollbar pr-2 markdown-content prose prose-sm dark:prose-invert max-w-none">
+                      <div class="flex items-center gap-2 text-slate-400 mb-2">
+                        <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
+                        <span class="text-sm">Đang tải dữ liệu phân tích...</span>
+                      </div>
+                   </div>
+                </div>
+
+                <!-- Strategy Methods -->
+                <div class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/40 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                   <h5 class="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">
+                      <i data-lucide="crosshair" class="w-4 h-4"></i> Chiến lược áp dụng
+                   </h5>
+                   <div id="tech-methods-list" class="space-y-3">
+                      <div class="h-24 bg-slate-200/50 dark:bg-slate-800/50 skeleton-shimmer rounded-2xl"></div>
+                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
       async function fetchNewsAnalysis(symbol, companyName) {
         const newsTab = document.getElementById("tab-content-news");
         if (!newsTab) return;
 
-        // Initial Setup: Render Skeletons / Containers
-        newsTab.innerHTML = `
-            <div class="space-y-5 animate-fade-in-up">
-                <!-- 1. General Assessment / Analysis Container -->
-                <div class="p-5 bg-gradient-to-br from-white/60 to-white/40 dark:from-slate-900/60 dark:to-slate-900/40 rounded-3xl border border-white/50 dark:border-white/10 shadow-xl backdrop-blur-xl transition-all duration-300 hover:shadow-2xl">
-                     <div class="flex items-center gap-2 mb-4 border-b border-slate-200 dark:border-white/10 pb-3">
-                        <div class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                             <i data-lucide="brain-circuit" class="w-4 h-4"></i>
-                        </div>
-                        <h4 class="font-bold text-slate-800 dark:text-white">Phân tích AI</h4>
-                        <div class="flex-1 text-right">
-                             <span id="news-sentiment-badge" class="inline-flex items-center gap-2 text-sm font-bold px-4 py-1.5 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shadow-[0_2px_8px_rgba(0,0,0,0.08)] ring-1 ring-white/50 dark:ring-white/5 backdrop-blur-md">
-                                 <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-slate-400"></i>
-                                 Đang phân tích...
-                             </span>
-                        </div>
-                     </div>
-
-                     <!-- Analysis Text Content (Markdown) -->
-                     <div id="news-analysis-content" class="markdown-content prose dark:prose-invert max-w-none text-sm leading-relaxed text-slate-600 dark:text-slate-300 min-h-[100px]">
-                        <div class="flex items-center gap-2 text-slate-400 animate-pulse">
-                            <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
-                            <span>Đang phân tích dữ liệu thị trường...</span>
-                        </div>
-                     </div>
-                </div>
-
-                <!-- 2. News List Container (Sources) -->
-                <div>
-                    <h4 class="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                         <i data-lucide="newspaper" class="w-4 h-4 text-slate-400"></i>
-                         Tin tức tham khảo
-                         <span id="news-count-badge" class="hidden text-xs bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full">0</span>
-                    </h4>
-
-                    <div id="news-list-container" class="space-y-3">
-                         <!-- Skeleton Items -->
-                         <div class="p-4 bg-white/30 dark:bg-slate-900/30 rounded-2xl border border-white/30 dark:border-white/5 animate-pulse">
-                            <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-3"></div>
-                            <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/4"></div>
-                         </div>
-                         <div class="p-4 bg-white/30 dark:bg-slate-900/30 rounded-2xl border border-white/30 dark:border-white/5 animate-pulse">
-                            <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-2/3 mb-3"></div>
-                            <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-                         </div>
-                         <div class="p-4 bg-white/30 dark:bg-slate-900/30 rounded-2xl border border-white/30 dark:border-white/5 animate-pulse">
-                            <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-4/5 mb-3"></div>
-                            <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/5"></div>
-                         </div>
-                    </div>
-                </div>
-            </div>
-        `;
+        // Use accurate layout as initial loading state
+        newsTab.innerHTML = renderNewsLayout();
         lucide.createIcons({ root: newsTab });
 
-        const analysisContentEl = document.getElementById(
-          "news-analysis-content",
-        );
-        const newsListContainer = document.getElementById(
-          "news-list-container",
-        );
+        const analysisContentEl = document.getElementById("news-analysis-content");
+        const newsListContainer = document.getElementById("news-list-container");
         const newsCountBadge = document.getElementById("news-count-badge");
+
         let accumulatedText = "";
 
         try {
@@ -4007,8 +4080,7 @@
             body: JSON.stringify({ symbol: symbol, company_name: companyName }),
           });
 
-          if (!response.ok)
-            throw new Error("API Connection Error: " + response.status);
+          if (!response.ok) throw new Error("API Connection Error: " + response.status);
 
           const reader = response.body.getReader();
           const decoder = new TextDecoder("utf-8");
@@ -4028,7 +4100,6 @@
               try {
                 const evt = JSON.parse(line);
                 if (evt.type === "content") {
-                  // First chunk: remove skeleton / clear loader
                   if (isFirstChunk) {
                     if (analysisContentEl) analysisContentEl.innerHTML = "";
                     isFirstChunk = false;
@@ -4037,50 +4108,82 @@
                   // Update Text
                   accumulatedText += evt.chunk;
                   if (analysisContentEl) {
-                    analysisContentEl.innerHTML =
-                      processContent(accumulatedText);
+                    analysisContentEl.innerHTML = processContentNoTickers(accumulatedText);
                   }
                 } else if (evt.type === "data") {
                   // Render News List
                   const newsList = evt.news || [];
-                  const newsCountBadge =
-                    document.getElementById("news-count-badge");
-
                   if (newsCountBadge) {
                     newsCountBadge.textContent = newsList.length;
                     newsCountBadge.classList.remove("hidden");
                   }
 
-                  const newsListContainer = document.getElementById(
-                    "news-list-container",
-                  );
                   if (newsListContainer) {
                     if (newsList.length === 0) {
                       newsListContainer.innerHTML = `<div class="text-sm text-slate-500 italic p-4">Không tìm thấy nguồn tin chi tiết.</div>`;
                     } else {
                       newsListContainer.innerHTML = newsList
-                        .map(
-                          (n) => `
-                                        <a href="${n.link}" target="_blank" class="block p-4 bg-white/40 dark:bg-slate-800/40 hover:bg-white/60 dark:hover:bg-slate-800/60 border border-white/50 dark:border-white/5 rounded-2xl transition-all group">
-                                            <h5 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 line-clamp-2">${n.title}</h5>
-                                            <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                                                <span class="font-medium bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300">${n.source}</span>
-                                                <span>•</span>
-                                                <span>${n.date}</span>
-                                            </div>
-                                        </a>
-                                    `,
-                        )
+                        .map((n) => {
+                          const isEvent = n.type && n.type !== "Tin tức" && n.type !== "Báo cáo phân tích";
+                          const isAnalysis = n.type === "Báo cáo phân tích";
+                          const icon = isEvent ? "calendar" : isAnalysis ? "file-text" : "newspaper";
+                          const iconColor = isEvent
+                            ? "text-amber-500"
+                            : isAnalysis
+                              ? "text-indigo-500"
+                              : "text-primary-500";
+                          const typeBadgeClass = isEvent
+                            ? "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
+                            : isAnalysis
+                              ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400"
+                              : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300";
+
+                          return `
+                            <a href="${
+                              n.link
+                            }" target="_blank" class="flex gap-4 p-4 bg-white/40 dark:bg-slate-800/40 hover:bg-white/60 dark:hover:bg-slate-800/60 border border-white/50 dark:border-white/5 rounded-2xl transition-all group shadow-sm hover:shadow-md">
+                                <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 flex items-center justify-center ${iconColor} shadow-inner">
+                                    <i data-lucide="${icon}" class="w-6 h-6"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h5 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 line-clamp-2 leading-snug">${
+                                      n.title
+                                    }</h5>
+                                    ${
+                                      n.description
+                                        ? `<p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mb-2 font-medium opacity-80">${n.description}</p>`
+                                        : ""
+                                    }
+                                    <div class="flex items-center flex-wrap gap-2 text-[10px]">
+                                        <span class="px-2 py-0.5 rounded font-bold uppercase tracking-wider ${typeBadgeClass}">${
+                                          n.type || "Tin tức"
+                                        }</span>
+                                        <span class="text-slate-400 dark:text-slate-500">•</span>
+                                        <span class="font-medium text-slate-500 dark:text-slate-400 italic">${
+                                          n.date
+                                        }</span>
+                                        ${
+                                          n.source
+                                            ? `<span class="text-slate-400 dark:text-slate-500">•</span><span class="text-slate-500 dark:text-slate-400">${n.source}</span>`
+                                            : ""
+                                        }
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0 self-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <i data-lucide="external-link" class="w-4 h-4 text-slate-400"></i>
+                                </div>
+                            </a>
+                          `;
+                        })
                         .join("");
+                      lucide.createIcons({ root: newsListContainer });
                     }
                   }
                 } else if (evt.type === "sentiment") {
                   const badge = document.getElementById("news-sentiment-badge");
                   if (badge) {
                     badge.textContent = evt.label;
-                    badge.classList.remove("hidden");
-
-                    // Reset classes for 3D effect
+                    // Reset and apply 3D effect classes
                     badge.className =
                       "inline-flex items-center text-sm font-bold px-4 py-1.5 rounded-full border transition-all animate-fade-in backdrop-blur-md shadow-[0_4px_12px_rgba(0,0,0,0.1)] ring-1 ring-white/40 dark:ring-white/10";
 
@@ -4181,6 +4284,767 @@
           if (analysisContentEl)
             analysisContentEl.innerHTML = `<div class="text-red-500 p-4">Lỗi: ${error.message}</div>`;
           if (newsListContainer) newsListContainer.innerHTML = "";
+        }
+      }
+
+      // --- Technical Analysis Function ---
+      async function fetchTechnicalAnalysis(symbol, companyName) {
+        const analysisTab = document.getElementById("tab-content-analysis");
+        if (!analysisTab) return;
+
+        // Use accurate layout as initial loading state
+        analysisTab.innerHTML = renderTechnicalLayout();
+        lucide.createIcons({ root: analysisTab });
+
+        const analysisContentEl = document.getElementById("tech-analysis-content");
+        const badge = document.getElementById("tech-recommendation-badge");
+
+        // Setup Tab Listeners
+        const shortTab = document.getElementById("tech-tab-short");
+        const longTab = document.getElementById("tech-tab-long");
+
+        if (shortTab && longTab) {
+          const switchTab = (timeframe) => {
+            shortTab.className =
+              "tech-timeframe-tab px-4 py-2 rounded-full text-sm font-bold transition-all text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700";
+            longTab.className =
+              "tech-timeframe-tab px-4 py-2 rounded-full text-sm font-bold transition-all text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700";
+
+            const activeBtn = timeframe === "short_term" ? shortTab : longTab;
+            activeBtn.className =
+              "tech-timeframe-tab px-4 py-2 rounded-full text-sm font-bold transition-all bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25";
+
+            if (window.techAnalysisData) {
+              const data = window.techAnalysisData[timeframe];
+              if (data) {
+                updateIndicatorsDisplay(data.indicators, data.methods);
+              }
+            }
+          };
+
+          shortTab.onclick = () => switchTab("short_term");
+          longTab.onclick = () => switchTab("long_term");
+        }
+
+        let accumulatedText = "";
+
+        try {
+          const response = await fetch("/technical-analysis", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ symbol: symbol, company_name: companyName }),
+          });
+
+          if (!response.ok) throw new Error("API Connection Error: " + response.status);
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder("utf-8");
+          let buffer = "";
+          let isFirstChunk = false;
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop();
+
+            for (const line of lines) {
+              if (!line.trim()) continue;
+              try {
+                const evt = JSON.parse(line);
+                if (evt.type === "content") {
+                  if (isFirstChunk) {
+                    if (analysisContentEl) analysisContentEl.innerHTML = "";
+                    isFirstChunk = false;
+                  }
+                  accumulatedText += evt.chunk;
+                  if (analysisContentEl) {
+                    analysisContentEl.innerHTML = processContentNoTickers(accumulatedText);
+                  }
+                } else if (evt.type === "recommendation") {
+                  // Update recommendation badge
+                  if (badge) {
+                    badge.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5 text-current"></i> ${evt.label}`;
+                    badge.classList.remove("opacity-0", "scale-95");
+                    badge.classList.add("opacity-100", "scale-100", "animate-fade-in");
+
+                    badge.classList.remove(
+                      "bg-slate-50",
+                      "dark:bg-slate-800",
+                      "text-slate-500",
+                      "dark:text-slate-400",
+                      "border-slate-200",
+                      "dark:border-slate-700",
+                    );
+
+                    const color = evt.color;
+                    if (color === "emerald" || color === "green") {
+                      badge.classList.add(
+                        "bg-gradient-to-b",
+                        "from-emerald-50",
+                        "to-emerald-100/90",
+                        "dark:from-emerald-500/10",
+                        "dark:to-emerald-500/30",
+                        "text-emerald-700",
+                        "dark:text-emerald-300",
+                        "border-emerald-200",
+                        "dark:border-emerald-500/40",
+                      );
+                    } else if (color === "rose" || color === "red") {
+                      badge.classList.add(
+                        "bg-gradient-to-b",
+                        "from-rose-50",
+                        "to-rose-100/90",
+                        "dark:from-rose-500/10",
+                        "dark:to-rose-500/30",
+                        "text-rose-700",
+                        "dark:text-rose-300",
+                        "border-rose-200",
+                        "dark:border-rose-500/40",
+                      );
+                    } else if (color === "blue") {
+                      badge.classList.add(
+                        "bg-gradient-to-b",
+                        "from-blue-50",
+                        "to-blue-100/90",
+                        "dark:from-blue-500/10",
+                        "dark:to-blue-500/30",
+                        "text-blue-700",
+                        "dark:text-blue-300",
+                        "border-blue-200",
+                        "dark:border-blue-500/40",
+                      );
+                    } else if (color === "yellow") {
+                      badge.classList.add(
+                        "bg-gradient-to-b",
+                        "from-amber-50",
+                        "to-amber-100/90",
+                        "dark:from-amber-500/10",
+                        "dark:to-amber-500/30",
+                        "text-amber-700",
+                        "dark:text-amber-300",
+                        "border-amber-200",
+                        "dark:border-amber-500/40",
+                      );
+                    }
+                    lucide.createIcons({ root: badge });
+                  }
+                } else if (evt.type === "data") {
+                  // Store data for timeframe switching
+                  window.techAnalysisData = evt;
+
+                  // Update indicator cards with data (default to short_term)
+                  const shortTerm = evt.short_term || {};
+                  const longTerm = evt.long_term || {};
+                  const indicators = evt.indicators || shortTerm.indicators || {};
+                  const gauges = evt.gauges || {};
+                  const fibonacci = evt.fibonacci || indicators.fibonacci || {};
+                  const pivotPoints = indicators.pivot_points || {};
+                  const methods = shortTerm.methods || [];
+
+                  // Helper functions
+                  const formatPrice = (p) => (p !== null && p !== undefined ? p.toLocaleString("vi-VN") : "--");
+                  const formatNum = (n, decimals = 2) => (n !== null && n !== undefined ? n.toFixed(decimals) : "--");
+
+                  // Update indicator display function
+                  const updateIndicatorsDisplay = (ind, meth) => {
+                    // RSI
+                    const rsiValue = ind.rsi;
+                    if (rsiValue !== null && rsiValue !== undefined) {
+                      removeSkeleton("tech-rsi-value");
+                      document.getElementById("tech-rsi-value").textContent = rsiValue.toFixed(1);
+                      const marker = document.getElementById("tech-rsi-marker");
+                      if (marker) marker.style.left = `calc(${rsiValue}% - 8px)`;
+                      // Remove RSI bar skeleton
+                      const rsiBarSkeleton = document.getElementById("tech-rsi-bar-skeleton");
+                      if (rsiBarSkeleton) rsiBarSkeleton.remove();
+
+                      const rsiSignal = document.getElementById("tech-rsi-signal");
+                      if (rsiSignal) {
+                        removeSkeleton("tech-rsi-signal");
+                        rsiSignal.className =
+                          "text-sm font-bold px-3 py-1 rounded-full flex items-center justify-center ml-auto";
+                        if (rsiValue < 30) {
+                          rsiSignal.textContent = "Quá bán";
+                          rsiSignal.classList.add(
+                            "bg-green-100",
+                            "text-green-700",
+                            "dark:bg-green-500/20",
+                            "dark:text-green-400",
+                          );
+                        } else if (rsiValue > 70) {
+                          rsiSignal.textContent = "Quá mua";
+                          rsiSignal.classList.add(
+                            "bg-red-100",
+                            "text-red-700",
+                            "dark:bg-red-500/20",
+                            "dark:text-red-400",
+                          );
+                        } else {
+                          rsiSignal.textContent = "Trung tính";
+                          rsiSignal.classList.add(
+                            "bg-yellow-100",
+                            "text-yellow-700",
+                            "dark:bg-yellow-500/20",
+                            "dark:text-yellow-400",
+                          );
+                        }
+                      }
+                    }
+
+                    // Stochastic
+                    const stoch = ind.stochastic || {};
+                    const stochK = document.getElementById("tech-stoch-k");
+                    const stochD = document.getElementById("tech-stoch-d");
+                    const stochSignal = document.getElementById("tech-stoch-signal");
+                    if (stochK) {
+                      removeSkeleton("tech-stoch-k");
+                      stochK.textContent = formatNum(stoch.k, 1);
+                    }
+                    if (stochD) {
+                      removeSkeleton("tech-stoch-d");
+                      stochD.textContent = formatNum(stoch.d, 1);
+                    }
+                    if (stochSignal && stoch.k !== null) {
+                      removeSkeleton("tech-stoch-signal");
+                      stochSignal.className =
+                        "text-sm font-bold px-3 py-1 rounded-full flex items-center justify-center";
+                      if (stoch.k < 20) {
+                        stochSignal.textContent = "Quá bán";
+                        stochSignal.classList.add(
+                          "bg-green-100",
+                          "text-green-700",
+                          "dark:bg-green-500/20",
+                          "dark:text-green-400",
+                        );
+                      } else if (stoch.k > 80) {
+                        stochSignal.textContent = "Quá mua";
+                        stochSignal.classList.add(
+                          "bg-red-100",
+                          "text-red-700",
+                          "dark:bg-red-500/20",
+                          "dark:text-red-400",
+                        );
+                      } else {
+                        stochSignal.textContent = "Trung tính";
+                        stochSignal.classList.add(
+                          "bg-yellow-100",
+                          "text-yellow-700",
+                          "dark:bg-yellow-500/20",
+                          "dark:text-yellow-400",
+                        );
+                      }
+                    }
+
+                    // Williams %R
+                    if (ind.willr !== undefined) {
+                      removeSkeleton("tech-willr");
+                      const willr = document.getElementById("tech-willr");
+                      if (willr) willr.textContent = formatNum(ind.willr, 1);
+                    }
+
+                    // MACD
+                    const macd = ind.macd || {};
+                    const macdLine = document.getElementById("tech-macd-line");
+                    const macdSignalVal = document.getElementById("tech-macd-signal-val");
+                    const macdHist = document.getElementById("tech-macd-hist");
+                    const macdSignal = document.getElementById("tech-macd-signal");
+                    if (macdLine) {
+                      removeSkeleton("tech-macd-line");
+                      macdLine.textContent = formatNum(macd.line);
+                    }
+                    if (macdSignalVal) {
+                      removeSkeleton("tech-macd-signal-val");
+                      macdSignalVal.textContent = formatNum(macd.signal);
+                    }
+                    if (macdHist) {
+                      removeSkeleton("tech-macd-hist");
+                      macdHist.textContent = formatNum(macd.histogram);
+                      if (macd.histogram !== null) {
+                        macdHist.classList.remove(
+                          "text-green-600",
+                          "text-red-600",
+                          "dark:text-green-400",
+                          "dark:text-red-400",
+                        );
+                        if (macd.histogram > 0) {
+                          macdHist.classList.add("text-green-600", "dark:text-green-400");
+                        } else {
+                          macdHist.classList.add("text-red-600", "dark:text-red-400");
+                        }
+                      }
+                    }
+                    if (macdSignal && macd.histogram !== null) {
+                      removeSkeleton("tech-macd-signal");
+                      macdSignal.className =
+                        "text-sm font-bold px-3 py-1 rounded-full flex items-center justify-center";
+                      if (macd.histogram > 0) {
+                        macdSignal.textContent = "Tích cực";
+                        macdSignal.classList.add(
+                          "bg-green-100",
+                          "text-green-700",
+                          "dark:bg-green-500/20",
+                          "dark:text-green-400",
+                        );
+                      } else {
+                        macdSignal.textContent = "Tiêu cực";
+                        macdSignal.classList.add(
+                          "bg-red-100",
+                          "text-red-700",
+                          "dark:bg-red-500/20",
+                          "dark:text-red-400",
+                        );
+                      }
+                    }
+
+                    // ADX
+                    const adx = ind.adx || {};
+                    const adxVal = document.getElementById("tech-adx-val");
+                    const adxDmp = document.getElementById("tech-adx-dmp");
+                    const adxDmn = document.getElementById("tech-adx-dmn");
+                    const adxSignal = document.getElementById("tech-adx-signal");
+                    if (adxVal) {
+                      removeSkeleton("tech-adx-val");
+                      adxVal.textContent = formatNum(adx.adx, 1);
+                    }
+                    if (adxDmp) {
+                      removeSkeleton("tech-adx-dmp");
+                      adxDmp.textContent = formatNum(adx.dmp, 1);
+                    }
+                    if (adxDmn) {
+                      removeSkeleton("tech-adx-dmn");
+                      adxDmn.textContent = formatNum(adx.dmn, 1);
+                    }
+                    if (adxSignal && adx.adx !== null) {
+                      removeSkeleton("tech-adx-signal");
+                      adxSignal.className = "text-sm font-bold px-3 py-1 rounded-full flex items-center justify-center";
+                      if (adx.adx > 25) {
+                        adxSignal.textContent = "Xu hướng mạnh";
+                        adxSignal.classList.add(
+                          "bg-blue-100",
+                          "text-blue-700",
+                          "dark:bg-blue-500/20",
+                          "dark:text-blue-400",
+                        );
+                      } else {
+                        adxSignal.textContent = "Đi ngang";
+                        adxSignal.classList.add(
+                          "bg-yellow-100",
+                          "text-yellow-700",
+                          "dark:bg-yellow-500/20",
+                          "dark:text-yellow-400",
+                        );
+                      }
+                    }
+
+                    // Moving Averages
+                    const maConfig = [
+                      { id: "tech-sma20", val: ind.sma20 },
+                      { id: "tech-sma50", val: ind.sma50 },
+                      { id: "tech-sma100", val: ind.sma100 },
+                      { id: "tech-sma200", val: ind.sma200 },
+                      { id: "tech-ema20", val: ind.ema20 },
+                      { id: "tech-ema50", val: ind.ema50 },
+                    ];
+
+                    maConfig.forEach((ma) => {
+                      if (ma.val !== undefined && ma.val !== null) {
+                        removeSkeleton(ma.id);
+                        const el = document.getElementById(ma.id);
+                        if (el) el.textContent = formatPrice(ma.val);
+                      }
+                    });
+
+                    // Bollinger Bands
+                    const bb = ind.bollinger_bands || {};
+                    const bbUpper = document.getElementById("tech-bb-upper");
+                    const bbMiddle = document.getElementById("tech-bb-middle");
+                    const bbLower = document.getElementById("tech-bb-lower");
+                    const bbSignal = document.getElementById("tech-bb-signal");
+                    if (bbUpper) {
+                      removeSkeleton("tech-bb-upper");
+                      bbUpper.textContent = formatPrice(bb.upper);
+                    }
+                    if (bbMiddle) {
+                      removeSkeleton("tech-bb-middle");
+                      bbMiddle.textContent = formatPrice(bb.middle);
+                    }
+                    if (bbLower) {
+                      removeSkeleton("tech-bb-lower");
+                      bbLower.textContent = formatPrice(bb.lower);
+                    }
+                    if (bbSignal && ind.current_price && bb.upper && bb.lower) {
+                      bbSignal.className = "text-sm font-bold px-3 py-1 rounded-full flex items-center justify-center";
+                      if (ind.current_price > bb.upper) {
+                        bbSignal.textContent = "Quá mua";
+                        bbSignal.classList.add("bg-red-100", "text-red-700", "dark:bg-red-500/20", "dark:text-red-400");
+                      } else if (ind.current_price < bb.lower) {
+                        bbSignal.textContent = "Quá bán";
+                        bbSignal.classList.add(
+                          "bg-green-100",
+                          "text-green-700",
+                          "dark:bg-green-500/20",
+                          "dark:text-green-400",
+                        );
+                      } else {
+                        bbSignal.textContent = "Trong biên";
+                        bbSignal.classList.add(
+                          "bg-yellow-100",
+                          "text-yellow-700",
+                          "dark:bg-yellow-500/20",
+                          "dark:text-yellow-400",
+                        );
+                      }
+                    }
+
+                    // ATR
+                    if (ind.atr !== undefined) {
+                      removeSkeleton("tech-atr");
+                      const atr = document.getElementById("tech-atr");
+                      if (atr) atr.textContent = formatPrice(ind.atr);
+                    }
+
+                    // Volume Indicators
+                    const obvTrend = document.getElementById("tech-obv-trend");
+                    const cmf = document.getElementById("tech-cmf");
+                    const volSignal = document.getElementById("tech-vol-signal");
+                    if (obvTrend) {
+                      removeSkeleton("tech-obv-trend");
+                      const trend = ind.obv_trend;
+                      obvTrend.textContent =
+                        trend === "increasing" ? "Tăng" : trend === "decreasing" ? "Giảm" : "Trung tính";
+                      obvTrend.classList.remove(
+                        "text-green-600",
+                        "text-red-600",
+                        "dark:text-green-400",
+                        "dark:text-red-400",
+                      );
+                      if (trend === "increasing") {
+                        obvTrend.classList.add("text-green-600", "dark:text-green-400");
+                      } else if (trend === "decreasing") {
+                        obvTrend.classList.add("text-red-600", "dark:text-red-400");
+                      }
+                    }
+                    if (cmf) {
+                      removeSkeleton("tech-cmf");
+                      cmf.textContent = formatNum(ind.cmf, 3);
+                    }
+                    if (volSignal && ind.obv_trend && ind.cmf !== null) {
+                      removeSkeleton("tech-vol-signal");
+                      volSignal.className = "text-sm font-bold px-3 py-1 rounded-full flex items-center justify-center";
+                      if (ind.obv_trend === "increasing" && ind.cmf > 0) {
+                        volSignal.textContent = "Dòng tiền vào";
+                        volSignal.classList.add(
+                          "bg-green-100",
+                          "text-green-700",
+                          "dark:bg-green-500/20",
+                          "dark:text-green-400",
+                        );
+                      } else if (ind.obv_trend === "decreasing" && ind.cmf < 0) {
+                        volSignal.textContent = "Dòng tiền ra";
+                        volSignal.classList.add(
+                          "bg-red-100",
+                          "text-red-700",
+                          "dark:bg-red-500/20",
+                          "dark:text-red-400",
+                        );
+                      } else {
+                        volSignal.textContent = "Trung tính";
+                        volSignal.classList.add(
+                          "bg-yellow-100",
+                          "text-yellow-700",
+                          "dark:bg-yellow-500/20",
+                          "dark:text-yellow-400",
+                        );
+                      }
+                    }
+
+                    // Pivot Points
+                    const pp = ind.pivot_points || {};
+                    const pivot = document.getElementById("tech-pivot");
+                    const pivotR1 = document.getElementById("tech-pivot-r1");
+                    const pivotR2 = document.getElementById("tech-pivot-r2");
+                    const pivotR3 = document.getElementById("tech-pivot-r3");
+                    const pivotS1 = document.getElementById("tech-pivot-s1");
+                    const pivotS2 = document.getElementById("tech-pivot-s2");
+                    const pivotS3 = document.getElementById("tech-pivot-s3");
+                    const pivotIds = ["pivot", "pivot-r1", "pivot-r2", "pivot-r3", "pivot-s1", "pivot-s2", "pivot-s3"];
+                    pivotIds.forEach((id) => removeSkeleton("tech-" + id));
+
+                    if (pivot) pivot.textContent = formatPrice(pp.pivot);
+                    if (pivotR1) pivotR1.textContent = formatPrice(pp.r1);
+                    if (pivotR2) pivotR2.textContent = formatPrice(pp.r2);
+                    if (pivotR3) pivotR3.textContent = formatPrice(pp.r3);
+                    if (pivotS1) pivotS1.textContent = formatPrice(pp.s1);
+                    if (pivotS2) pivotS2.textContent = formatPrice(pp.s2);
+                    if (pivotS3) pivotS3.textContent = formatPrice(pp.s3);
+
+                    // Fibonacci Levels
+                    const fib = ind.fibonacci || {};
+                    const fib0 = document.getElementById("tech-fib-0");
+                    const fib236 = document.getElementById("tech-fib-236");
+                    const fib382 = document.getElementById("tech-fib-382");
+                    const fib500 = document.getElementById("tech-fib-500");
+                    const fib618 = document.getElementById("tech-fib-618");
+                    const fib786 = document.getElementById("tech-fib-786");
+                    const fib100 = document.getElementById("tech-fib-100");
+                    const fibIds = ["fib-0", "fib-236", "fib-382", "fib-500", "fib-618", "fib-786", "fib-100"];
+                    fibIds.forEach((id) => removeSkeleton("tech-" + id));
+
+                    if (fib0) fib0.textContent = formatPrice(fib.level_0);
+                    if (fib236) fib236.textContent = formatPrice(fib.level_236);
+                    if (fib382) fib382.textContent = formatPrice(fib.level_382);
+                    if (fib500) fib500.textContent = formatPrice(fib.level_500);
+                    if (fib618) fib618.textContent = formatPrice(fib.level_618);
+                    if (fib786) fib786.textContent = formatPrice(fib.level_786);
+                    if (fib100) fib100.textContent = formatPrice(fib.level_100);
+
+                    // Methods List
+                    const methodsList = document.getElementById("tech-methods-list");
+                    if (methodsList) {
+                      removeSkeleton("tech-methods-list");
+                      if (meth && meth.length > 0) {
+                        methodsList.innerHTML = meth
+                          .map((m) => {
+                            const signalColor =
+                              m.signal === "Bullish" ? "emerald" : m.signal === "Bearish" ? "rose" : "amber";
+                            const signalIcon =
+                              m.signal === "Bullish"
+                                ? "trending-up"
+                                : m.signal === "Bearish"
+                                  ? "trending-down"
+                                  : "minus";
+                            return `
+                          <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+                            <div class="flex items-center justify-between mb-1">
+                              <span class="text-sm font-bold text-slate-700 dark:text-slate-200">${m.name}</span>
+                              <span class="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-${signalColor}-100 dark:bg-${signalColor}-500/20 text-${signalColor}-700 dark:text-${signalColor}-400">
+                                <i data-lucide="${signalIcon}" class="w-3 h-3"></i>
+                                ${m.signal}
+                              </span>
+                            </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">${m.category}</p>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">${m.evaluation}</p>
+                          </div>
+                        `;
+                          })
+                          .join("");
+                      }
+                      lucide.createIcons({ root: methodsList });
+                    }
+                  };
+
+                  // Initialize display with short-term data
+                  updateIndicatorsDisplay(indicators, methods);
+
+                  // Gauges
+                  const summary = gauges.summary || {};
+                  const gaugeSummary = document.getElementById("tech-gauge-summary");
+                  if (gaugeSummary) {
+                    removeSkeleton("tech-gauge-summary");
+                    gaugeSummary.innerHTML = `<i data-lucide="bar-chart-2" class="w-3 h-3"></i><span class="gauge-text">${
+                      summary.label || "--"
+                    }</span>`;
+                    lucide.createIcons({ root: gaugeSummary });
+                  }
+
+                  const gaugeMA = document.getElementById("tech-gauge-ma");
+                  if (gaugeMA) {
+                    removeSkeleton("tech-gauge-ma");
+                    gaugeMA.innerHTML = `<i data-lucide="trending-up" class="w-3 h-3"></i><span class="gauge-text">MA: ${
+                      gauges.movingAverage?.label || "--"
+                    }</span>`;
+                    lucide.createIcons({ root: gaugeMA });
+                  }
+
+                  const gaugeOsc = document.getElementById("tech-gauge-osc");
+                  if (gaugeOsc) {
+                    removeSkeleton("tech-gauge-osc");
+                    gaugeOsc.innerHTML = `<i data-lucide="activity" class="w-3 h-3"></i><span class="gauge-text">OSC: ${
+                      gauges.oscillator?.label || "--"
+                    }</span>`;
+                    lucide.createIcons({ root: gaugeOsc });
+                  }
+
+                  // Setup timeframe card switching
+                  const cardShort = document.getElementById("tech-card-short");
+                  const cardLong = document.getElementById("tech-card-long");
+
+                  if (cardShort && cardLong) {
+                    const activeShortClass =
+                      "cursor-pointer transition-all duration-300 p-4 rounded-3xl border-2 border-indigo-400/60 bg-gradient-to-br from-indigo-100 via-indigo-50 to-purple-100 dark:from-indigo-600/30 dark:via-indigo-500/20 dark:to-purple-600/20 backdrop-blur-xl shadow-[0_8px_32px_rgba(99,102,241,0.3)] scale-[1.03] z-10";
+                    const inactiveShortClass =
+                      "cursor-pointer transition-all duration-300 p-4 rounded-3xl border border-slate-200 dark:border-white/10 bg-gradient-to-br from-slate-100 via-white to-slate-50 dark:from-slate-800/60 dark:via-slate-900/40 dark:to-slate-800/40 backdrop-blur-md shadow-sm opacity-60 hover:opacity-100 hover:scale-[1.01]";
+
+                    const activeLongClass =
+                      "cursor-pointer transition-all duration-300 p-4 rounded-3xl border-2 border-emerald-400/60 bg-gradient-to-br from-emerald-100 via-emerald-50 to-teal-100 dark:from-emerald-600/30 dark:via-emerald-500/20 dark:to-teal-600/20 backdrop-blur-xl shadow-[0_8px_32px_rgba(16,185,129,0.3)] scale-[1.03] z-10";
+                    const inactiveLongClass =
+                      "cursor-pointer transition-all duration-300 p-4 rounded-3xl border border-slate-200 dark:border-white/10 bg-gradient-to-br from-slate-100 via-white to-slate-50 dark:from-slate-800/60 dark:via-slate-900/40 dark:to-slate-800/40 backdrop-blur-md shadow-sm opacity-60 hover:opacity-100 hover:scale-[1.01]";
+
+                    cardShort.onclick = () => {
+                      cardShort.className = activeShortClass;
+                      cardLong.className = inactiveLongClass;
+                      updateIndicatorsDisplay(shortTerm.indicators || indicators, shortTerm.methods || []);
+                    };
+                    cardLong.onclick = () => {
+                      cardLong.className = activeLongClass;
+                      cardShort.className = inactiveShortClass;
+                      updateIndicatorsDisplay(longTerm.indicators || {}, longTerm.methods || []);
+                    };
+                  }
+                } else if (evt.type === "analysis_summary") {
+                  // Handle the new analysis_summary event from agent
+                  const summary = evt.summary || {};
+
+                  // Update short-term summary
+                  const shortTrend = document.getElementById("tech-short-trend");
+                  const shortSignal = document.getElementById("tech-short-signal");
+                  const shortConfidence = document.getElementById("tech-short-confidence");
+                  const shortConfidenceBar = document.getElementById("tech-short-confidence-bar");
+                  const shortTrendBadge = document.getElementById("tech-short-trend-badge");
+
+                  if (summary.short_term) {
+                    removeSkeleton("tech-short-trend");
+                    removeSkeleton("tech-short-signal");
+                    removeSkeleton("tech-short-confidence");
+                    removeSkeleton("tech-short-trend-badge");
+                    if (shortTrend) shortTrend.textContent = summary.short_term.trend || "--";
+                    if (shortSignal) shortSignal.textContent = summary.short_term.signal || "--";
+                    if (shortConfidence && summary.short_term.confidence) {
+                      const conf = (summary.short_term.confidence * 100).toFixed(0);
+                      shortConfidence.textContent = `${conf}%`;
+                    }
+                    if (shortConfidenceBar && summary.short_term.confidence) {
+                      const confPercent = summary.short_term.confidence * 100;
+                      // Remove skeleton overlay
+                      const shortSkeleton = document.getElementById("tech-short-confidence-skeleton");
+                      if (shortSkeleton) shortSkeleton.remove();
+                      // Show and move pointer to position (accounting for pointer width)
+                      shortConfidenceBar.style.opacity = "1";
+                      shortConfidenceBar.style.left = `calc(${confPercent}% - 8px)`;
+                      // Color pointer based on confidence: red (0%) -> yellow (50%) -> green (100%)
+                      const hue = (confPercent / 100) * 120;
+                      shortConfidenceBar.style.background = `linear-gradient(135deg, hsl(${hue}, 85%, 65%), hsl(${hue}, 80%, 45%))`;
+                      shortConfidenceBar.style.borderColor = `hsl(${hue}, 80%, 40%)`;
+                      shortConfidenceBar.style.boxShadow = `0 2px 8px hsla(${hue}, 80%, 50%, 0.6), 0 0 0 2px hsla(${hue}, 80%, 50%, 0.2)`;
+                    }
+                    if (shortTrendBadge) {
+                      shortTrendBadge.className = "text-xs font-bold px-2 py-1 rounded-full";
+                      const sig = summary.short_term.signal?.toLowerCase() || "";
+                      if (sig.includes("mua")) {
+                        shortTrendBadge.textContent = "Mua";
+                        shortTrendBadge.classList.add(
+                          "bg-green-100",
+                          "text-green-700",
+                          "dark:bg-green-500/20",
+                          "dark:text-green-400",
+                        );
+                      } else if (sig.includes("bán") || sig.includes("phân phối")) {
+                        shortTrendBadge.textContent = "Bán";
+                        shortTrendBadge.classList.add(
+                          "bg-red-100",
+                          "text-red-700",
+                          "dark:bg-red-500/20",
+                          "dark:text-red-400",
+                        );
+                      } else {
+                        shortTrendBadge.textContent = summary.short_term.signal || "--";
+                        shortTrendBadge.classList.add(
+                          "bg-yellow-100",
+                          "text-yellow-700",
+                          "dark:bg-yellow-500/20",
+                          "dark:text-yellow-400",
+                        );
+                      }
+                    }
+                  }
+
+                  // Update long-term summary
+                  const longTrend = document.getElementById("tech-long-trend");
+                  const longSignal = document.getElementById("tech-long-signal");
+                  const longConfidence = document.getElementById("tech-long-confidence");
+                  const longConfidenceBar = document.getElementById("tech-long-confidence-bar");
+                  const longTrendBadge = document.getElementById("tech-long-trend-badge");
+
+                  if (summary.long_term) {
+                    removeSkeleton("tech-long-trend");
+                    removeSkeleton("tech-long-signal");
+                    removeSkeleton("tech-long-confidence");
+                    removeSkeleton("tech-long-trend-badge");
+                    if (longTrend) longTrend.textContent = summary.long_term.trend || "--";
+                    if (longSignal) longSignal.textContent = summary.long_term.signal || "--";
+                    if (longConfidence && summary.long_term.confidence) {
+                      const conf = (summary.long_term.confidence * 100).toFixed(0);
+                      longConfidence.textContent = `${conf}%`;
+                    }
+                    if (longConfidenceBar && summary.long_term.confidence) {
+                      const confPercent = summary.long_term.confidence * 100;
+                      // Remove skeleton overlay
+                      const longSkeleton = document.getElementById("tech-long-confidence-skeleton");
+                      if (longSkeleton) longSkeleton.remove();
+                      // Show and move pointer to position (accounting for pointer width)
+                      longConfidenceBar.style.opacity = "1";
+                      longConfidenceBar.style.left = `calc(${confPercent}% - 8px)`;
+                      // Color pointer based on confidence: red (0%) -> yellow (50%) -> green (100%)
+                      const hue = (confPercent / 100) * 120;
+                      longConfidenceBar.style.background = `linear-gradient(135deg, hsl(${hue}, 85%, 65%), hsl(${hue}, 80%, 45%))`;
+                      longConfidenceBar.style.borderColor = `hsl(${hue}, 80%, 40%)`;
+                      longConfidenceBar.style.boxShadow = `0 2px 8px hsla(${hue}, 80%, 50%, 0.6), 0 0 0 2px hsla(${hue}, 80%, 50%, 0.2)`;
+                    }
+                    if (longTrendBadge) {
+                      longTrendBadge.className = "text-xs font-bold px-2 py-1 rounded-full";
+                      const sig = summary.long_term.signal?.toLowerCase() || "";
+                      if (sig.includes("tích lũy")) {
+                        longTrendBadge.textContent = "Tích lũy";
+                        longTrendBadge.classList.add(
+                          "bg-green-100",
+                          "text-green-700",
+                          "dark:bg-green-500/20",
+                          "dark:text-green-400",
+                        );
+                      } else if (sig.includes("phân phối")) {
+                        longTrendBadge.textContent = "Phân phối";
+                        longTrendBadge.classList.add(
+                          "bg-red-100",
+                          "text-red-700",
+                          "dark:bg-red-500/20",
+                          "dark:text-red-400",
+                        );
+                      } else {
+                        longTrendBadge.textContent = summary.long_term.signal || "--";
+                        longTrendBadge.classList.add(
+                          "bg-yellow-100",
+                          "text-yellow-700",
+                          "dark:bg-yellow-500/20",
+                          "dark:text-yellow-400",
+                        );
+                      }
+                    }
+                  }
+                } else if (evt.type === "error") {
+                  console.error("Stream Error:", evt.message);
+                  if (analysisContentEl)
+                    analysisContentEl.innerHTML += `<div class="text-red-500 text-xs mt-2">⚠️ ${evt.message}</div>`;
+                }
+              } catch (parseErr) {
+                console.error("JSON Parse Error:", parseErr);
+                if (analysisContentEl)
+                  analysisContentEl.innerHTML += `<div class="text-red-500 text-xs mt-2">⚠️ ${parseErr}</div>`;
+              }
+            }
+          }
+
+          // End of stream check
+          if (isFirstChunk && !accumulatedText) {
+            if (analysisContentEl)
+              analysisContentEl.innerHTML = `<div class="text-slate-500 italic text-sm">Không có dữ liệu phân tích.</div>`;
+          }
+        } catch (error) {
+          console.error(error);
+          if (analysisContentEl)
+            analysisContentEl.innerHTML = `<div class="text-red-500 p-4">Lỗi: ${error.message}</div>`;
         }
       }
 

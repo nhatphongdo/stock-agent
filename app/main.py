@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from app.llm.gemini_client import GeminiClient
 from app.agents.trading_agent import TradingAgent
 from app.agents.news_agent import NewsAgent
+from app.agents.technical_analysis_agent import TechnicalAnalysisAgent
 from app.db.database import (
     get_all_users,
     update_user_settings,
@@ -47,7 +48,12 @@ async def lifespan(app: FastAPI):
         client = GeminiClient()
         app.state.agent = TradingAgent("StockTraderAssistant", client)
         app.state.news_agent = NewsAgent("StockNewsAssistant", client)
-        logger.info("🚀 Stock Trading Agent and News Agent initialized and ready")
+        app.state.technical_agent = TechnicalAnalysisAgent(
+            "TechnicalAnalysisAssistant", client
+        )
+        logger.info(
+            "🚀 Stock Trading Agent, News Agent, and Technical Analysis Agent initialized and ready"
+        )
     except Exception as e:
         logger.error(f"❌ Failed to initialize agent: {e}", exc_info=True)
         raise e
@@ -150,6 +156,32 @@ async def analyze_news(request: NewsRequest):
     # Use StreamingResponse
     return StreamingResponse(
         app.state.news_agent.run(request.symbol, request.company_name),
+        media_type="application/x-ndjson",
+    )
+
+
+class TechnicalAnalysisRequest(BaseModel):
+    symbol: str
+    company_name: Optional[str] = ""
+    timeframe: Optional[str] = "ONE_DAY"
+    count_back: Optional[int] = 100
+
+
+@app.post("/technical-analysis")
+async def analyze_technical(request: TechnicalAnalysisRequest):
+    """
+    Analyzes technical indicators for a given stock symbol (Streaming).
+    """
+    if not hasattr(app.state, "technical_agent"):
+        raise HTTPException(
+            status_code=503, detail="Technical Analysis Agent not initialized"
+        )
+
+    return StreamingResponse(
+        app.state.technical_agent.run(
+            request.symbol,
+            request.company_name,
+        ),
         media_type="application/x-ndjson",
     )
 

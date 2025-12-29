@@ -48,7 +48,7 @@ class NewsAgent:
                     normalized = {
                         "title": item.get("title"),
                         "date": item.get("date"),
-                        "description": item.get("eventTypeName", "Sự kiện"),
+                        "type": item.get("eventTypeName", "Sự kiện"),
                         "link": item.get("link"),
                         "source": "Vietcap",
                     }
@@ -57,12 +57,19 @@ class NewsAgent:
                     normalized = {
                         "title": item.get("title"),
                         "date": item.get("date"),
-                        "description": "Báo cáo phân tích",
+                        "type": "Báo cáo phân tích",
                         "link": item.get("link"),
                         "source": "Vietcap",
                     }
                 else:
-                    normalized = item
+                    normalized = {
+                        "title": item.get("title"),
+                        "date": item.get("date"),
+                        "type": "Tin tức",
+                        "link": item.get("link"),
+                        "source": item.get("source"),
+                        "description": item.get("description"),
+                    }
 
                 link = normalized.get("link")
                 if link and link not in seen_links:

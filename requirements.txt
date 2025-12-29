@@ -2,6 +2,7 @@ pydantic-settings
 python-dotenv
 requests
 pandas
+pandas-ta
 google-genai
 fastapi
 uvicorn
