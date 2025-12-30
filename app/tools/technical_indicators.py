@@ -73,9 +73,18 @@ def calculate_all_indicators(
             "line": _get_last_value(macd_result.iloc[:, 0]),  # MACD line
             "signal": _get_last_value(macd_result.iloc[:, 1]),  # Signal line
             "histogram": _get_last_value(macd_result.iloc[:, 2]),  # Histogram
+            "series": [
+                {"time": t.strftime("%Y-%m-%d"), "value": float(v)}
+                for t, v in macd_result.iloc[:, 0].dropna().tail(30).items()
+            ],
         }
     else:
-        indicators["macd"] = {"line": None, "signal": None, "histogram": None}
+        indicators["macd"] = {
+            "line": None,
+            "signal": None,
+            "histogram": None,
+            "series": [],
+        }
 
     # ADX - Average Directional Index (for trend strength)
     adx_result = ta.adx(df["high"], df["low"], df["close"], length=14)
@@ -93,7 +102,18 @@ def calculate_all_indicators(
     # ==========================================================================
 
     # RSI (14)
-    indicators["rsi"] = _get_last_value(ta.rsi(df["close"], length=14))
+    rsi_series = ta.rsi(df["close"], length=14)
+    indicators["rsi"] = {
+        "value": _get_last_value(rsi_series),
+        "series": (
+            [
+                {"time": t.strftime("%Y-%m-%d"), "value": float(v)}
+                for t, v in rsi_series.dropna().tail(30).items()
+            ]
+            if rsi_series is not None and not rsi_series.empty
+            else []
+        ),
+    }
 
     # Stochastic Oscillator (14, 3, 3)
     stoch_result = ta.stoch(df["high"], df["low"], df["close"], k=14, d=3, smooth_k=3)
@@ -101,9 +121,13 @@ def calculate_all_indicators(
         indicators["stochastic"] = {
             "k": _get_last_value(stoch_result.iloc[:, 0]),  # %K
             "d": _get_last_value(stoch_result.iloc[:, 1]),  # %D
+            "series": [
+                {"time": t.strftime("%Y-%m-%d"), "value": float(v)}
+                for t, v in stoch_result.iloc[:, 0].dropna().tail(30).items()
+            ],
         }
     else:
-        indicators["stochastic"] = {"k": None, "d": None}
+        indicators["stochastic"] = {"k": None, "d": None, "series": []}
 
     # Williams %R (14)
     indicators["willr"] = _get_last_value(
@@ -287,7 +311,8 @@ def generate_method_evaluations(
     timeframe_label = "ngắn hạn (1D)" if timeframe == "short_term" else "dài hạn (1W)"
 
     # 1. RSI Analysis
-    rsi = indicators.get("rsi")
+    rsi_data = indicators.get("rsi", {})
+    rsi = rsi_data.get("value")
     if rsi is not None:
         if rsi < 30:
             rsi_eval = (

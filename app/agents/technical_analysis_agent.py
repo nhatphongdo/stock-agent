@@ -6,6 +6,7 @@ Uses OHLCV data with pandas-ta library for indicator calculations.
 
 import json
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from app.llm.gemini_client import GeminiClient
 from app.tools.vietcap_tools import get_stock_ohlcv, get_company_info
 from app.tools.technical_indicators import (
@@ -50,10 +51,10 @@ class TechnicalAnalysisAgent:
         end_date = today.strftime("%Y-%m-%d")
 
         # Short-term: 1 year daily data
-        start_date_short = (today - timedelta(days=365)).strftime("%Y-%m-%d")
+        start_date_short = (today - relativedelta(years=1)).strftime("%Y-%m-%d")
 
         # Long-term: 5 years weekly data
-        start_date_long = (today - timedelta(days=365 * 5)).strftime("%Y-%m-%d")
+        start_date_long = (today - relativedelta(years=5)).strftime("%Y-%m-%d")
 
         # 1. Fetch OHLCV Data
         ohlcv_daily = get_stock_ohlcv(
@@ -178,13 +179,13 @@ class TechnicalAnalysisAgent:
                     "type": "data",
                     "short_term": {
                         "timeframe": "1D (1 năm)",
-                        "ohlcv": short_term_data.get("ohlcv_summary", []),
+                        "ohlcv": short_term_data.get("ohlcv_data", []),
                         "indicators": short_term_data.get("indicators", {}),
                         "methods": short_term_data.get("methods", []),
                     },
                     "long_term": {
                         "timeframe": "1W (5 năm)",
-                        "ohlcv": long_term_data.get("ohlcv_summary", []),
+                        "ohlcv": long_term_data.get("ohlcv_data", []),
                         "indicators": long_term_data.get("indicators", {}),
                         "methods": long_term_data.get("methods", []),
                     },
@@ -215,7 +216,7 @@ class TechnicalAnalysisAgent:
             return {
                 "indicators": {},
                 "methods": [],
-                "ohlcv_summary": [],
+                "ohlcv_data": [],
                 "error": ohlcv_result.get("error", "No data"),
             }
 
@@ -228,7 +229,7 @@ class TechnicalAnalysisAgent:
             return {
                 "indicators": {},
                 "methods": [],
-                "ohlcv_summary": [],
+                "ohlcv_data": [],
                 "error": "Empty DataFrame",
             }
 
@@ -238,13 +239,10 @@ class TechnicalAnalysisAgent:
         # Generate method evaluations
         methods = generate_method_evaluations(indicators, timeframe)
 
-        # Get last 20 OHLCV for context
-        ohlcv_summary = ohlcv_data[-20:] if len(ohlcv_data) > 20 else ohlcv_data
-
         return {
             "indicators": indicators,
             "methods": methods,
-            "ohlcv_summary": ohlcv_summary,
+            "ohlcv_data": ohlcv_data,
         }
 
     def _build_analysis_context(self, data: dict, timeframe_label: str) -> str:
@@ -296,8 +294,9 @@ class TechnicalAnalysisAgent:
         methods_signals = []
 
         # RSI
-        rsi = indicators.get("rsi")
-        if rsi:
+        rsi_data = indicators.get("rsi", {})
+        rsi = rsi_data.get("value")
+        if rsi is not None:
             if rsi < 30:
                 methods_signals.append("buy")
             elif rsi > 70:
@@ -348,10 +347,10 @@ class TechnicalAnalysisAgent:
             "oscillator": {
                 "label": (
                     "Buy"
-                    if rsi and rsi < 30
-                    else "Sell" if rsi and rsi > 70 else "Neutral"
+                    if rsi is not None and rsi < 30
+                    else "Sell" if rsi is not None and rsi > 70 else "Neutral"
                 ),
-                "value": rsi if rsi else 50,
+                "value": rsi if rsi is not None else 50,
             },
         }
 

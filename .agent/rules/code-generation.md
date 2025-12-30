@@ -10,3 +10,4 @@ trigger: always_on
 - All generated logic must be based on the fact from the current code, prompt or real documents.
 - Don't change my agent's prompt without a strong specific reason. If you need to change, classify clearly in the response what and why.
 - This is an agentic AI application, so try to give the best solution for AI agent's logic.
+- You don't need to use sub-agent browser to verify. I will check and report back. just use sub-agent if you want to retrieve information (for example: DOM, UI visulization)
