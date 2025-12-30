@@ -1192,7 +1192,13 @@
       }
 
       #resizer:hover,
-      #resizer.resizing {
+      #resizer.resizing,
+      #analysis-chart-resizer:hover,
+      #analysis-chart-resizer.resizing {
+        background-color: rgba(99, 102, 241, 0.2);
+      }
+
+      #analysis-chart-resizer.resizing div {
         background-color: #6366f1;
       }
 
@@ -2326,13 +2332,22 @@
                 ></i>
               </button>
             </div>
-            <div id="analysis-chart-wrapper" class="w-full flex flex-col gap-3 overflow-hidden">
+            <div id="analysis-chart-wrapper" class="w-full h-full flex flex-col gap-3 overflow-hidden">
               <!-- Analysis Price Chart Only -->
               <div
                 id="analysis-price-chart-container"
-                class="bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-white/10 backdrop-blur-sm p-3 h-[200px]"
+                class="bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-white/10 backdrop-blur-sm p-3 h-[400px] relative transition-none"
               >
                 <div id="analysis-candlestick-chart" style="width: 100%; height: 100%"></div>
+                <!-- Vertical Resizer Handle -->
+                <div
+                  id="analysis-chart-resizer"
+                  class="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize flex items-center justify-center hover:bg-primary-500/20 group transition-colors rounded-b-2xl z-20"
+                >
+                  <div
+                    class="w-12 h-1 bg-slate-300 dark:bg-slate-700 rounded-full group-hover:bg-primary-500/50 transition-colors"
+                  ></div>
+                </div>
               </div>
             </div>
           </div>
@@ -3170,7 +3185,7 @@
         setTimeout(() => {
           window.dispatchEvent(new Event("resize"));
           if (typeof priceChart !== "undefined" && priceChart) priceChart.timeScale().fitContent();
-          if (typeof techAnalysisChart !== "undefined" && techAnalysisChart) techAnalysisChart.timeScale().fitContent();
+          if (typeof analysisChart !== "undefined" && analysisChart) techAnalysisChart.timeScale().fitContent();
         }, 50);
       }
 
@@ -3399,6 +3414,55 @@
         document.body.style.cursor = "default";
         document.body.classList.remove("select-none");
       });
+
+      // Analysis Chart Vertical Resizer
+      const analysisChartResizer = document.getElementById("analysis-chart-resizer");
+      const analysisChartContainer = document.getElementById("analysis-price-chart-container");
+
+      let isResizingAnalysisChart = false;
+
+      if (analysisChartResizer && analysisChartContainer) {
+        analysisChartResizer.addEventListener("mousedown", (e) => {
+          isResizingAnalysisChart = true;
+          analysisChartResizer.classList.add("resizing");
+          document.body.style.cursor = "ns-resize";
+          document.body.classList.add("select-none");
+        });
+
+        document.addEventListener("mousemove", (e) => {
+          if (!isResizingAnalysisChart) return;
+
+          const rect = analysisChartContainer.getBoundingClientRect();
+          const newHeight = e.clientY - rect.top;
+
+          // Constraints: Min 200px, Max 800px
+          if (newHeight >= 200 && newHeight <= 800) {
+            analysisChartContainer.style.height = `${newHeight}px`;
+            // Call fitContent during resizing for real-time scaling
+            if (typeof analysisChart !== "undefined" && analysisChart) {
+              analysisChart.timeScale().fitContent();
+            }
+          }
+        });
+
+        document.addEventListener("mouseup", () => {
+          if (isResizingAnalysisChart) {
+            isResizingAnalysisChart = false;
+            analysisChartResizer.classList.remove("resizing");
+            document.body.style.cursor = "default";
+            document.body.classList.remove("select-none");
+
+            // Optional: Save height preference
+            localStorage.setItem("analysis-chart-height", analysisChartContainer.style.height);
+          }
+        });
+
+        // Load saved height if exists
+        const savedHeight = localStorage.getItem("analysis-chart-height");
+        if (savedHeight) {
+          analysisChartContainer.style.height = savedHeight;
+        }
+      }
 
       const themeToggle = document.getElementById("theme-toggle");
       const themeIconDark = document.getElementById("theme-icon-dark");
@@ -3781,12 +3845,14 @@
         const volumeParent = volumeCanvas.parentElement;
 
         if (candleParent) {
-          candleParent.innerHTML =
-            skeletonHTML + `<div id="candlestick-chart" class="hidden" style="width:100%;height:100%"></div>`;
+          candleParent.querySelectorAll(".chart-skeleton").forEach((el) => el.remove());
+          candleCanvas.classList.add("hidden");
+          candleCanvas.insertAdjacentHTML("beforebegin", skeletonHTML);
         }
         if (volumeParent) {
-          volumeParent.innerHTML =
-            skeletonHTML + `<div id="volume-chart" class="hidden" style="width:100%;height:100%"></div>`;
+          volumeParent.querySelectorAll(".chart-skeleton").forEach((el) => el.remove());
+          volumeCanvas.classList.add("hidden");
+          volumeCanvas.insertAdjacentHTML("beforebegin", skeletonHTML);
         }
 
         let data;
@@ -4489,8 +4555,9 @@
 
         const parent = chartContainer.parentElement;
         if (parent) {
-          parent.innerHTML =
-            skeletonHTML + `<div id="analysis-candlestick-chart" class="hidden" style="width:100%;height:100%"></div>`;
+          parent.querySelectorAll(".chart-skeleton").forEach((el) => el.remove());
+          chartContainer.classList.add("hidden");
+          chartContainer.insertAdjacentHTML("beforebegin", skeletonHTML);
         }
 
         let data;
