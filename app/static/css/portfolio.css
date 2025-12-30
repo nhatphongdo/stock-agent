@@ -1,0 +1,38 @@
+/* Portfolio Table */
+.portfolio-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.portfolio-table th,
+.portfolio-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.dark .portfolio-table th,
+.dark .portfolio-table td {
+  border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+.portfolio-table th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: #0f172a;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.dark .portfolio-table th {
+  color: #f8fafc;
+}
+
+.portfolio-table tr:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.dark .portfolio-table tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
