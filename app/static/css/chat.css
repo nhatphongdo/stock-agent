@@ -1,0 +1,153 @@
+/* Chat Styles */
+
+/* Chat Bubbles */
+.bubble-bot {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  border-radius: 20px;
+}
+
+.dark .bubble-bot {
+  background: rgba(15, 23, 42, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.3);
+}
+
+.bubble-user {
+  background: linear-gradient(
+    135deg,
+    rgba(92, 100, 235, 0.8) 0%,
+    rgba(139, 92, 246, 0.8) 100%
+  );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: white;
+  box-shadow: 0 8px 25px -5px rgba(99, 102, 241, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+}
+
+.dark .bubble-user {
+  background: linear-gradient(
+    135deg,
+    rgba(79, 70, 229, 0.8) 0%,
+    rgba(124, 58, 237, 0.8) 100%
+  );
+  box-shadow: 0 8px 30px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* User Bubble Markdown Fix */
+.user-markdown {
+  color: white !important;
+}
+
+.user-markdown p {
+  color: white !important;
+  margin-bottom: 0;
+}
+
+.user-markdown * {
+  color: white !important;
+}
+
+/* Sidebar Collapse Styles */
+#left-column {
+  transition:
+    width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    min-width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.3s ease;
+}
+
+.sidebar-collapsed #left-column {
+  width: 68px !important;
+  min-width: 68px !important;
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+  overflow: hidden !important;
+}
+
+.sidebar-collapsed #left-column .hide-on-collapse {
+  display: none !important;
+}
+
+.sidebar-collapsed #left-column textarea,
+.sidebar-collapsed #left-column #chat-container,
+.sidebar-collapsed #left-column #general-btn,
+.sidebar-collapsed #left-column label {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.sidebar-collapsed #left-column .show-on-collapse {
+  display: flex !important;
+}
+
+/* Mobile Sidebar Collapse - Collapse to Top instead of Left */
+@media (max-width: 1023px) {
+  .sidebar-collapsed #left-column {
+    width: 100% !important;
+    min-width: 100% !important;
+    height: 2.75rem !important;
+    min-height: 2.75rem !important;
+    overflow: hidden !important;
+  }
+
+  .sidebar-collapsed #left-column .show-on-collapse {
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+    align-items: flex-end !important;
+    padding-right: 0.55rem !important;
+    gap: 0 !important;
+    height: 100% !important;
+  }
+
+  /* Hide the large icon and divider on mobile collapsed */
+  .sidebar-collapsed #left-column .show-on-collapse > div:first-child,
+  .sidebar-collapsed #left-column .show-on-collapse > div.h-px {
+    display: none !important;
+  }
+
+  /* Adjust expand button for horizontal layout */
+  .sidebar-collapsed #left-column .show-on-collapse button {
+    margin-top: 0 !important;
+    padding: 0.5rem !important;
+    border-radius: 0.75rem !important;
+  }
+
+  /* Rotate chevron to point down (for expand action) - target SVG since Lucide replaces i */
+  .sidebar-collapsed #left-column .show-on-collapse button svg {
+    transform: rotate(90deg);
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+  }
+
+  /* Rotate collapse button chevron to point up on mobile - target SVG */
+  #toggle-sidebar-btn svg {
+    transform: rotate(90deg);
+  }
+
+  /* Move collapse button higher on mobile to avoid input overlap */
+  #toggle-sidebar-btn {
+    top: 0.15rem !important;
+    right: 1rem !important;
+  }
+}
+
+/* Resizer behavior when collapsed */
+.sidebar-collapsed #resizer {
+  display: none !important;
+}
+
+/* Skeleton Loading Bars */
+.skeleton-bar {
+  height: 0.85rem;
+  margin-bottom: 0.85rem;
+}
+
+.skeleton-bar:last-child {
+  margin-bottom: 0;
+}

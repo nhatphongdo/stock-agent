@@ -1,0 +1,171 @@
+<!-- Chat Component - Left Column -->
+
+<!-- Sidebar Toggle Button -->
+<button
+  id="toggle-sidebar-btn"
+  onclick="toggleSidebar()"
+  class="absolute top-4 right-4 z-50 p-2 rounded-xl bg-neutral-100/40 dark:bg-white/5 hover:bg-white/60 dark:hover:bg-white/10 backdrop-blur-md border border-slate-200/60 dark:border-white/20 shadow-lg hover:scale-105 transition-all text-slate-700 dark:text-slate-200 hide-on-collapse"
+  title="Thu gọn Chat"
+>
+  <i data-lucide="chevron-left" class="w-5 h-5 transition-transform" id="sidebar-toggle-icon"></i>
+</button>
+
+<!-- Collapsed Sidebar View -->
+<div
+  class="show-on-collapse hidden flex-col items-center pt-8 gap-6 w-full h-full bg-slate-50/20 dark:bg-slate-900/20 backdrop-blur-xl"
+>
+  <div
+    class="w-12 h-12 rounded-2xl bg-primary-600 shadow-lg flex items-center justify-center ring-4 ring-primary-500/10 mb-4"
+  >
+    <i data-lucide="bot" class="w-7 h-7 text-white"></i>
+  </div>
+  <div class="h-px w-8 bg-slate-300 dark:bg-slate-700"></div>
+  <button
+    onclick="toggleSidebar()"
+    class="p-3 rounded-2xl bg-white/40 dark:bg-white/5 hover:bg-neutral-200/60 dark:hover:bg-white/10 transition-all border border-slate-200 dark:border-white/20 shadow-lg ring-4 ring-primary-500/10"
+    title="Mở rộng Chat"
+  >
+    <i data-lucide="chevron-right" class="w-6 h-6 text-primary-600 dark:text-primary-400"></i>
+  </button>
+  <div class="flex-1"></div>
+</div>
+
+<!-- Top Segment (Input Area) -->
+<div
+  class="p-4 lg:p-8 border-b border-white/20 dark:border-white/10 bg-white/30 dark:bg-slate-950/30 backdrop-blur-2xl hide-on-collapse"
+>
+  <label
+    for="user-task"
+    class="block text-[11px] font-black text-primary-600 dark:text-primary-400 mb-3 uppercase tracking-[0.2em] px-1"
+    >Yêu cầu phân tích</label
+  >
+  <div class="relative group mb-5">
+    <textarea
+      id="user-task"
+      class="w-full h-36 p-5 pr-28 rounded-2xl border border-slate-300 dark:border-white/10 bg-white/40 dark:bg-slate-950/40 backdrop-blur-md focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all resize-none custom-scrollbar text-sm font-medium placeholder-slate-400 dark:placeholder-slate-600 shadow-inner"
+      placeholder="Ví dụ: Phân tích cổ phiếu VNM và đưa ra gợi ý chiến lược ngắn hạn..."
+    ></textarea>
+    <!-- Clear Conversation Button -->
+    <button
+      type="button"
+      onclick="clearConversation()"
+      class="absolute bottom-4 right-16 mr-1 p-3 rounded-xl transition-all transform active:scale-90 z-10 bg-gradient-to-r from-slate-100/60 to-slate-200/60 dark:from-slate-600/90 dark:to-slate-700/90 backdrop-blur-xl backdrop-saturate-150 border border-white/40 dark:border-white/20 shadow-lg shadow-slate-300/50 dark:shadow-slate-900/50 ring-1 ring-inset ring-white/20 dark:ring-white/10 hover:from-red-100/80 hover:to-red-200/80 dark:hover:from-red-700/90 dark:hover:to-red-800/90 hover:border-red-300 dark:hover:border-red-400/40 hover:shadow-xl hover:shadow-red-200/50 dark:hover:shadow-red-500/30 hover:scale-105 text-slate-600 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-300"
+      title="Xóa cuộc hội thoại"
+    >
+      <i data-lucide="trash-2" class="w-5 h-5"></i>
+    </button>
+    <!-- Send Button -->
+    <button
+      id="submit-btn"
+      class="absolute bottom-4 right-4 p-3 rounded-xl transition-all transform active:scale-90 disabled:opacity-50 disabled:cursor-not-allowed z-10 bg-gradient-to-r from-primary-500/80 to-blue-500/80 dark:from-primary-500/90 dark:to-blue-500/90 hover:from-primary-500 hover:to-blue-500 backdrop-blur-xl backdrop-saturate-150 text-white shadow-lg shadow-primary-500/30 dark:shadow-primary-500/40 border border-white/30 dark:border-white/10 ring-1 ring-inset ring-white/20 hover:shadow-xl hover:scale-105"
+      title="Gửi yêu cầu"
+    >
+      <i data-lucide="send" class="w-5 h-5"></i>
+    </button>
+  </div>
+  <button
+    id="general-btn"
+    class="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-2xl font-black transition-all border border-primary-500/30 dark:border-primary-400/30 bg-gradient-to-r from-white/50 to-slate-100/50 dark:from-slate-800/70 dark:to-slate-900/70 backdrop-blur-xl backdrop-saturate-150 text-primary-700 dark:text-white shadow-lg shadow-primary-500/20 dark:shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/30 dark:hover:shadow-primary-400/40 hover:border-primary-500/50 dark:hover:border-primary-400/40 hover:scale-[1.02] active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden group/btn ring-1 ring-inset ring-white/30 dark:ring-white/10"
+  >
+    <!-- Background shimmer & gradient overlay -->
+    <div
+      class="absolute inset-0 bg-premium-gradient opacity-[0.1] dark:opacity-[0.2] group-hover:opacity-[0.3] transition-opacity"
+    ></div>
+    <div
+      class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"
+    ></div>
+
+    <i
+      data-lucide="sparkles"
+      class="w-5 h-5 text-accent-cyan animate-pulse group-hover/btn:scale-110 transition-transform"
+    ></i>
+    <span class="tracking-tight relative z-10">Phân tích tổng quan thị trường</span>
+
+    <!-- Accent line -->
+    <div
+      class="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-primary-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+    ></div>
+  </button>
+</div>
+
+<!-- Bottom Segment (Conversation Display) -->
+<div
+  id="chat-container"
+  class="flex-1 min-h-0 overflow-y-auto px-4 pt-4 lg:px-8 lg:pt-8 custom-scrollbar bg-transparent hide-on-collapse"
+>
+  <div id="messages" class="space-y-8">
+    <!-- Default Welcome Message -->
+    <div class="flex gap-4 group">
+      <div
+        class="w-10 h-10 rounded-2xl bg-primary-600 shadow-lg shadow-primary-500/20 flex items-center justify-center flex-shrink-0 mt-1 ring-4 ring-primary-500/10"
+      >
+        <i data-lucide="bot" class="w-6 h-6 text-white"></i>
+      </div>
+      <div
+        class="flex-1 bubble-bot p-5 rounded-3xl rounded-tl-none markdown-content border border-white/20 dark:border-white/5"
+      >
+        <p class="text-[15px] font-medium leading-relaxed" id="welcome-text">
+          Xin chào! Tôi là <b>Stock Trading Assistant</b>. Hãy nhập yêu cầu phân tích để tôi có thể hỗ trợ bạn tìm kiếm
+          cơ hội đầu tư tốt nhất.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Templates -->
+<template id="loading-message-template">
+  <div
+    class="w-10 h-10 rounded-2xl bg-primary-600 shadow-lg shadow-primary-500/20 flex items-center justify-center flex-shrink-0 mt-1 ring-4 ring-primary-500/10"
+  >
+    <i data-lucide="bot" class="w-6 h-6 text-white"></i>
+  </div>
+  <div class="flex-1 bubble-bot p-5 rounded-3xl rounded-tl-none overflow-x-auto">
+    <div class="markdown-content text-[15px] prose dark:prose-invert max-w-none">
+      <div class="skeleton-bars">
+        <div class="skeleton skeleton-bar w-3/4"></div>
+        <div class="skeleton skeleton-bar w-full"></div>
+        <div class="skeleton skeleton-bar w-5/6"></div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="welcome-message-template">
+  <div class="flex gap-4 group">
+    <div
+      class="w-10 h-10 rounded-2xl bg-primary-600 shadow-lg shadow-primary-500/20 flex items-center justify-center flex-shrink-0 mt-1 ring-4 ring-primary-500/10"
+    >
+      <i data-lucide="bot" class="w-6 h-6 text-white"></i>
+    </div>
+    <div
+      class="flex-1 bubble-bot p-5 rounded-3xl rounded-tl-none markdown-content border border-slate-200 dark:border-white/5"
+    >
+      <p class="text-[15px] font-medium leading-relaxed welcome-text"></p>
+    </div>
+  </div>
+</template>
+
+<template id="user-message-template">
+  <div class="flex-1 bubble-user p-5 rounded-3xl rounded-tr-none max-w-[85%]">
+    <div class="markdown-content user-markdown text-[15px] font-medium leading-relaxed"></div>
+  </div>
+  <div
+    class="w-10 h-10 rounded-2xl bg-white dark:bg-violet-800 shadow-lg shadow-primary-500/20 flex items-center justify-center flex-shrink-0 ring-4 ring-primary-500/10 mt-1 border border-slate-100 dark:border-white/10"
+  >
+    <i data-lucide="user" class="w-6 h-6 text-primary-300"></i>
+  </div>
+</template>
+
+<template id="reasoning-template">
+  <details
+    class="reasoning-section mb-4 p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
+  >
+    <summary class="cursor-pointer font-semibold text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2">
+      <span class="icon-container flex items-center justify-center"></span>
+      <span>Quá trình suy luận</span>
+      <span class="status-container font-normal"></span>
+    </summary>
+    <div class="mt-3 text-sm text-slate-600 dark:text-slate-400 reasoning-content-body"></div>
+  </details>
+</template>
