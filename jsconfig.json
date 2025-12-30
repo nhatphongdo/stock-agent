@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "ESNext",
+    "checkJs": true,
+    "allowJs": true,
+    "baseUrl": "./"
+  },
+  "include": ["app/**/*.js", "app/**/*.html", "globals.d.ts"],
+  "exclude": ["node_modules", "venv", ".git"]
+}

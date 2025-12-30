@@ -268,12 +268,36 @@ async def get_batch_prices(symbols: str):
 @app.get("/trade-agent", response_class=HTMLResponse)
 async def get_ui():
     """
-    Serve the web UI for the stock trading agent.
+    Serve the web UI for the stock trading agent with server-side component injection.
     """
     try:
-        html_path = os.path.join(os.path.dirname(__file__), "index.html")
+        app_dir = os.path.dirname(__file__)
+        html_path = os.path.join(app_dir, "index.html")
         with open(html_path, "r", encoding="utf-8") as f:
-            return f.read()
+            html_content = f.read()
+
+        # Simple component injection system
+        # Looks for <!-- COMPONENT: component_name -->
+        import re
+
+        def inject_component(match):
+            component_name = match.group(1).strip()
+            component_path = os.path.join(
+                app_dir, "components", f"{component_name}.html"
+            )
+            try:
+                with open(component_path, "r", encoding="utf-8") as cf:
+                    return cf.read()
+            except Exception as e:
+                logger.error(f"Error reading component {component_name}: {e}")
+                return f"<!-- ERROR LOADING COMPONENT: {component_name} -->"
+
+        # Replace all component markers
+        html_content = re.sub(
+            r"<!--\s*COMPONENT:\s*(\w+)\s*-->", inject_component, html_content
+        )
+
+        return html_content
     except Exception as e:
         logger.error(f"Error reading index.html: {e}")
         raise HTTPException(

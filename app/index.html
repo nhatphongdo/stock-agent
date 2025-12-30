@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trade Agent - Professional Stock Assistant</title>
     <link rel="icon" type="image/svg+xml" href="/static/logo.svg" />
+    <link rel="stylesheet" href="/static/css/share.css" />
+    <link rel="stylesheet" href="/static/css/settings.css" />
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -13,6 +15,8 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <!-- Lightweight Charts (TradingView) for Stock Charts - v4 for stable API -->
     <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="/static/js/utils.js"></script>
+    <script src="/static/js/settings.js"></script>
     <script>
       tailwind.config = {
         darkMode: "class",
@@ -96,23 +100,6 @@
       .dark .bubble-user {
         background: linear-gradient(135deg, rgba(79, 70, 229, 0.8) 0%, rgba(124, 58, 237, 0.8) 100%);
         box-shadow: 0 8px 30px -5px rgba(0, 0, 0, 0.2);
-      }
-
-      .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-      }
-
-      .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-      }
-
-      .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #e2e8f0;
-        border-radius: 10px;
-      }
-
-      .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #334155;
       }
 
       .markdown-content h1 {
@@ -510,301 +497,6 @@
         color: #94a3b8;
       }
 
-      /* User Avatar & Menu */
-      .user-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: var(--primary-500, #6366f1);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 0.85rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
-        border: 2px solid white;
-      }
-
-      .dark .user-avatar {
-        border-color: #1e293b;
-      }
-
-      .user-avatar:hover {
-        transform: scale(1.05);
-        box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
-      }
-
-      .user-menu {
-        position: absolute;
-        top: 70px;
-        right: 2rem;
-        width: 240px;
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(30px) saturate(1.5);
-        -webkit-backdrop-filter: blur(30px) saturate(1.5);
-        border: 1px solid rgba(255, 255, 255, 0.6);
-        border-radius: 24px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-        padding: 0.75rem;
-        z-index: 1000;
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(-10px);
-        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      }
-
-      .dark .user-menu {
-        background: rgba(15, 23, 42, 0.9);
-        border-color: rgba(255, 255, 255, 0.2);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-      }
-
-      .user-menu.show {
-        opacity: 1;
-        visibility: visible;
-        transform: translateY(0);
-      }
-
-      .menu-item {
-        padding: 0.75rem 1rem;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        color: #1e293b;
-        font-weight: 600;
-        font-size: 0.9rem;
-      }
-
-      .dark .menu-item {
-        color: #cbd5e1;
-      }
-
-      .menu-item:hover {
-        background: rgba(99, 102, 241, 0.1);
-        color: #6366f1;
-      }
-
-      .menu-divider {
-        height: 1px;
-        background: rgba(0, 0, 0, 0.05);
-        margin: 0.5rem 0;
-      }
-
-      .dark .menu-divider {
-        background: rgba(255, 255, 255, 0.05);
-      }
-
-      .user-switch-item {
-        padding: 0.5rem 1rem;
-        font-size: 0.75rem;
-        color: #64748b;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        font-weight: 800;
-      }
-
-      /* Modal Styling */
-      .modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(15, 23, 42, 0.4);
-        backdrop-filter: blur(8px);
-        z-index: 2000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s ease;
-      }
-
-      .modal-overlay.show {
-        opacity: 1;
-        visibility: visible;
-      }
-
-      .settings-modal {
-        width: 95vw;
-        max-width: 500px;
-        max-height: 95vh;
-        background: rgba(255, 255, 255, 0.5);
-        backdrop-filter: blur(40px);
-        -webkit-backdrop-filter: blur(40px);
-        border: 1px solid rgba(255, 255, 255, 0.6);
-        border-radius: 36px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
-        padding: 1.5rem;
-        transform: scale(0.9);
-        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        overflow: hidden;
-      }
-
-      @media (min-width: 1024px) {
-        .settings-modal {
-          padding: 2.5rem;
-        }
-      }
-
-      .dark .settings-modal {
-        background: rgba(15, 23, 42, 0.25);
-        border-color: rgba(255, 255, 255, 0.18);
-        box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
-      }
-
-      .modal-overlay.show .settings-modal {
-        transform: scale(1);
-      }
-
-      /* Blacklist Tag Styling */
-      .blacklist-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-top: 0.75rem;
-      }
-
-      .blacklist-tag {
-        padding: 0.5rem 0.75rem;
-        background: rgba(99, 102, 241, 0.15);
-        color: #4f46e5;
-        border-radius: 12px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        border: 1px solid rgba(99, 102, 241, 0.35);
-        transition: all 0.2s ease;
-      }
-
-      .dark .blacklist-tag {
-        background: rgba(99, 102, 241, 0.1);
-        color: #6366f1;
-        border: 1px solid rgba(99, 102, 241, 0.2);
-      }
-
-      .blacklist-tag:hover {
-        background: rgba(99, 102, 241, 0.25);
-      }
-
-      .dark .blacklist-tag:hover {
-        background: rgba(99, 102, 241, 0.2);
-      }
-
-      .whitelist-tag {
-        border-color: rgb(4, 120, 87) !important;
-        background: rgba(16, 185, 129, 0.2) !important;
-      }
-
-      .whitelist-tag span:first-child {
-        color: rgb(4, 120, 87);
-      }
-
-      .dark .whitelist-tag {
-        border-color: rgb(16, 185, 129) !important;
-        background: rgba(16, 185, 129, 0.1) !important;
-      }
-
-      .dark .whitelist-tag span:first-child {
-        color: rgb(16, 185, 129);
-      }
-
-      .whitelist-tag:hover {
-        background: rgba(16, 185, 129, 0.35) !important;
-      }
-
-      .dark .whitelist-tag:hover {
-        background: rgba(16, 185, 129, 0.2) !important;
-      }
-
-      .whitelist-remove {
-        background: rgba(16, 185, 129, 0.3) !important;
-      }
-
-      .whitelist-remove i,
-      .whitelist-remove svg {
-        color: rgb(4, 120, 87);
-        stroke: rgb(4, 120, 87);
-      }
-
-      .dark .whitelist-remove {
-        background: rgba(16, 185, 129, 0.2) !important;
-      }
-
-      .dark .whitelist-remove i,
-      .dark .whitelist-remove svg {
-        color: rgb(16, 185, 129);
-        stroke: rgb(16, 185, 129);
-      }
-
-      .remove-tag {
-        cursor: pointer;
-        width: 16px;
-        height: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 4px;
-        background: rgba(99, 102, 241, 0.2);
-        transition: all 0.2s ease;
-      }
-
-      .remove-tag:hover {
-        background: #ef4444 !important;
-        color: white;
-      }
-
-      .remove-tag:hover i,
-      .remove-tag:hover svg {
-        color: white !important;
-        stroke: white !important;
-      }
-
-      /* Portfolio Modal Styling */
-      .portfolio-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 1rem;
-      }
-
-      .portfolio-table th,
-      .portfolio-table td {
-        padding: 0.75rem;
-        text-align: left;
-        border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-      }
-
-      .dark .portfolio-table th,
-      .dark .portfolio-table td {
-        border-bottom: 2px solid rgba(255, 255, 255, 0.15);
-      }
-
-      .portfolio-table th {
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        color: #0f172a;
-        font-weight: 800;
-        letter-spacing: 0.05em;
-      }
-
-      .dark .portfolio-table th {
-        color: #f8fafc;
-      }
-
-      .portfolio-table tr:hover {
-        background: rgba(0, 0, 0, 0.02);
-      }
-
-      .dark .portfolio-table tr:hover {
-        background: rgba(255, 255, 255, 0.02);
-      }
-
       .sidebar-tab-btn {
         color: #64748b;
         background: transparent;
@@ -822,17 +514,6 @@
 
       .dark .sidebar-tab-btn.active {
         color: #ffffff !important;
-      }
-
-      /* Shimmer Animation */
-      @keyframes shimmer-pill {
-        0% {
-          transform: translateX(-150%) skewX(-25deg);
-        }
-
-        100% {
-          transform: translateX(250%) skewX(-25deg);
-        }
       }
 
       #tab-indicator {
@@ -1019,29 +700,6 @@
         /* Make sure there's space for the % symbol */
       }
 
-      /* Skeleton Loading */
-      .skeleton {
-        background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-        background-size: 200% 100%;
-        animation: skeleton-loading 1.8s infinite ease-in-out;
-        border-radius: 6px;
-      }
-
-      .dark .skeleton {
-        background: linear-gradient(90deg, #0f172a 25%, #1e293b 50%, #0f172a 75%);
-        background-size: 200% 100%;
-      }
-
-      @keyframes skeleton-loading {
-        0% {
-          background-position: 150% 0;
-        }
-
-        100% {
-          background-position: -150% 0;
-        }
-      }
-
       .skeleton-bar {
         height: 0.85rem;
         margin-bottom: 0.85rem;
@@ -1049,42 +707,6 @@
 
       .skeleton-bar:last-child {
         margin-bottom: 0;
-      }
-
-      /* Skeleton Shimmer - reusable shimmer effect */
-      .skeleton-shimmer {
-        position: relative;
-        overflow: hidden;
-        background: #e2e8f0;
-      }
-
-      .dark .skeleton-shimmer {
-        background: #334155;
-      }
-
-      .skeleton-shimmer::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
-        animation: shimmer 1.5s infinite;
-      }
-
-      .dark .skeleton-shimmer::after {
-        background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
-      }
-
-      @keyframes shimmer {
-        0% {
-          transform: translateX(-100%);
-        }
-
-        100% {
-          transform: translateX(100%);
-        }
       }
 
       /* Indicator Tooltip Styles */
@@ -1127,59 +749,6 @@
       /* Hide the inline tooltip-content, we use global tooltip instead */
       .indicator-tooltip .tooltip-content {
         display: none !important;
-      }
-
-      /* Global Tooltip Container */
-      #global-tooltip {
-        position: fixed;
-        display: none;
-        min-width: 220px;
-        max-width: 300px;
-        padding: 10px 12px;
-        background: #1e293b;
-        color: #f1f5f9;
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 1.5;
-        border-radius: 10px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-        z-index: 999999;
-        text-align: left;
-        white-space: normal;
-        pointer-events: none;
-      }
-
-      #global-tooltip::before {
-        content: "";
-        position: absolute;
-        bottom: 100%; /* Default: at top, pointing UP */
-        left: 20px;
-        border-width: 6px;
-        border-style: solid;
-        border-color: transparent transparent #1e293b transparent;
-      }
-
-      #global-tooltip.arrow-down::before {
-        bottom: auto;
-        top: 100%;
-        border-color: #1e293b transparent transparent transparent;
-      }
-
-      .dark #global-tooltip {
-        background: #334155;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-      }
-
-      .dark #global-tooltip::before {
-        border-color: transparent transparent #334155 transparent;
-      }
-
-      .dark #global-tooltip.arrow-down::before {
-        border-color: #334155 transparent transparent transparent;
-      }
-
-      #global-tooltip.show {
-        display: block;
       }
 
       /* Resizer Styles */
@@ -1309,7 +878,7 @@
           <div class="p-3 mb-2 flex items-center gap-3">
             <div
               id="menu-avatar"
-              class="w-10 h-10 rounded-full bg-primary-500 text-white flex items-center justify-center font-bold"
+              class="w-10 h-10 rounded-full bg-primary-500 text-white flex items-center justify-center font-bold flex-shrink-0"
             >
               ??
             </div>
@@ -1338,148 +907,7 @@
       </div>
     </header>
 
-    <!-- Settings Modal -->
-    <div id="settings-overlay" class="modal-overlay">
-      <div class="settings-modal">
-        <div class="flex items-center justify-between mb-8">
-          <div>
-            <h2 class="text-2xl font-black bg-clip-text text-transparent bg-premium-gradient tracking-tight">
-              Thiết lập cá nhân
-            </h2>
-            <p class="text-xs text-slate-600 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">
-              Cấu hình tham số phân tích
-            </p>
-          </div>
-          <button
-            onclick="closeSettings()"
-            class="w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-colors"
-          >
-            <i data-lucide="x" class="w-5 h-5"></i>
-          </button>
-        </div>
-
-        <div class="space-y-6">
-          <!-- Blacklist -->
-          <div>
-            <label
-              class="block text-[11px] font-black text-primary-600 dark:text-primary-400 mb-3 uppercase tracking-[0.2em] px-1"
-              >Danh sách đen (Blacklist)</label
-            >
-            <div class="relative">
-              <input
-                type="text"
-                id="blacklist-input"
-                class="w-full p-4 pr-12 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all text-sm"
-                placeholder="Nhập tên ngành hoặc cổ phiếu rồi ấn Enter"
-              />
-              <i data-lucide="plus" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
-            </div>
-            <div id="blacklist-tags-container" class="blacklist-tags">
-              <!-- Tags will be rendered here -->
-            </div>
-          </div>
-
-          <!-- Whitelist (Priority prefetch) -->
-          <div>
-            <label
-              class="block text-[11px] font-black text-emerald-600 dark:text-emerald-400 mb-3 uppercase tracking-[0.2em] px-1"
-              >Danh sách ưu tiên (Whitelist)
-              <span class="text-slate-600 dark:text-slate-400 font-normal lowercase tracking-normal"
-                >- max 30 mã</span
-              ></label
-            >
-            <div class="relative">
-              <input
-                type="text"
-                id="whitelist-input"
-                class="w-full p-4 pr-12 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all text-sm font-bold uppercase"
-                placeholder="Nhập mã cổ phiếu (VD: FPT)"
-              />
-              <i data-lucide="search" class="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-400 w-4 h-4"></i>
-              <div
-                id="whitelist-suggestions"
-                class="hidden absolute left-0 right-0 top-full mt-2 z-50 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg max-h-48 overflow-y-auto"
-              >
-                <!-- Suggestions will be rendered here -->
-              </div>
-            </div>
-            <div id="whitelist-tags-container" class="blacklist-tags">
-              <!-- Tags will be rendered here -->
-            </div>
-          </div>
-
-          <!-- Return Rate -->
-          <div>
-            <label
-              class="block text-[11px] font-black text-primary-600 dark:text-primary-400 mb-3 uppercase tracking-[0.2em] px-1"
-              >Tỷ suất lợi nhuận tối thiểu (%)</label
-            >
-            <div class="relative">
-              <input
-                type="number"
-                id="return-rate-input"
-                step="0.1"
-                class="w-full p-4 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-primary-500 dark:focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all text-sm font-bold"
-                placeholder="Ví dụ: 6.0"
-              />
-              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">%</span>
-            </div>
-          </div>
-
-          <!-- Dividend Rate -->
-          <div>
-            <label
-              class="block text-[11px] font-black text-amber-600 dark:text-amber-400 mb-3 uppercase tracking-[0.2em] px-1"
-              >Tỷ lệ cổ tức tối thiểu (%)</label
-            >
-            <div class="relative">
-              <input
-                type="number"
-                id="dividend-rate-input"
-                step="0.1"
-                class="w-full p-4 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-amber-500 dark:focus:border-amber-400 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm font-bold"
-                placeholder="Ví dụ: 3.0"
-              />
-              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">%</span>
-            </div>
-          </div>
-
-          <!-- Profit Rate -->
-          <div>
-            <label
-              class="block text-[11px] font-black text-teal-600 dark:text-teal-400 mb-3 uppercase tracking-[0.2em] px-1"
-              >Tỷ lệ chốt lời kỳ vọng (%)</label
-            >
-            <div class="relative">
-              <input
-                type="number"
-                id="profit-rate-input"
-                step="0.1"
-                class="w-full p-4 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-4 focus:ring-teal-500/10 outline-none transition-all text-sm font-bold"
-                placeholder="Ví dụ: 15.0"
-              />
-              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">%</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex gap-3 mt-10">
-          <button
-            onclick="closeSettings()"
-            class="flex-1 py-4 px-6 rounded-2xl font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
-          >
-            Hủy
-          </button>
-          <button
-            onclick="saveSettings()"
-            id="save-settings-btn"
-            class="flex-1 py-4 px-6 rounded-2xl font-bold bg-premium-gradient text-white shadow-lg shadow-primary-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
-          >
-            Lưu thay đổi
-          </button>
-        </div>
-      </div>
-    </div>
+    <!-- COMPONENT: settings -->
 
     <!-- Portfolio Modal -->
     <div id="portfolio-overlay" class="modal-overlay">
@@ -4993,29 +4421,6 @@
       const menuUserName = document.getElementById("menu-user-name");
       const menuUserEmail = document.getElementById("menu-user-email");
 
-      const settingsOverlay = document.getElementById("settings-overlay");
-      const blacklistInput = document.getElementById("blacklist-input");
-      const blacklistTagsContainer = document.getElementById("blacklist-tags-container");
-      const returnRateInput = document.getElementById("return-rate-input");
-      const dividendRateInput = document.getElementById("dividend-rate-input");
-      const profitRateInput = document.getElementById("profit-rate-input");
-      const saveSettingsBtn = document.getElementById("save-settings-btn");
-
-      // Whitelist elements
-      const whitelistInput = document.getElementById("whitelist-input");
-      const whitelistTagsContainer = document.getElementById("whitelist-tags-container");
-      const whitelistSuggestions = document.getElementById("whitelist-suggestions");
-
-      let tempBlacklist = [];
-      let tempWhitelist = [];
-
-      function getInitials(name) {
-        if (!name) return "??";
-        const parts = name.split(" ");
-        if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-      }
-
       async function fetchUsers() {
         try {
           const response = await fetch("/users");
@@ -5037,6 +4442,10 @@
         currentUser = user;
         localStorage.setItem("lastUserId", user.id);
 
+        if (typeof getInitials !== "function") {
+          console.error("getInitials not found!");
+          return;
+        }
         const initials = getInitials(user.full_name);
         userAvatarBtn.innerText = initials;
         menuAvatar.innerText = initials;
@@ -5053,216 +4462,13 @@
         userMenu.classList.remove("show");
       }
 
-      function openSettings() {
-        if (!currentUser) return;
-
-        userMenu.classList.remove("show");
-        settingsOverlay.classList.add("show");
-
-        tempBlacklist = [...currentUser.black_list];
-        tempWhitelist = [...(currentUser.white_list || [])];
-        returnRateInput.value = currentUser.return_rate || 0;
-        dividendRateInput.value = currentUser.dividend_rate || 0;
-        profitRateInput.value = currentUser.profit_rate || 0;
-        renderBlacklistTags();
-        renderWhitelistTags();
-        lucide.createIcons({ root: settingsOverlay });
-      }
-
-      function closeSettings() {
-        settingsOverlay.classList.remove("show");
-      }
-
-      function renderBlacklistTags() {
-        blacklistTagsContainer.innerHTML = "";
-        tempBlacklist.forEach((item, index) => {
-          const tag = document.createElement("div");
-          tag.className = "blacklist-tag";
-          tag.innerHTML = `
-                          <span>${item}</span>
-                          <span class="remove-tag" onclick="removeBlacklistItem(${index})">
-                              <i data-lucide="x" class="w-3 h-3"></i>
-                          </span>
-                      `;
-          blacklistTagsContainer.appendChild(tag);
-        });
-        lucide.createIcons({ root: blacklistTagsContainer });
-      }
-
-      function addBlacklistItem(text) {
-        const val = text.trim();
-        if (val && !tempBlacklist.includes(val)) {
-          tempBlacklist.push(val);
-          renderBlacklistTags();
-        }
-        blacklistInput.value = "";
-      }
-
-      function removeBlacklistItem(index) {
-        tempBlacklist.splice(index, 1);
-        renderBlacklistTags();
-      }
-
-      // --- Whitelist Functions ---
-      function renderWhitelistTags() {
-        whitelistTagsContainer.innerHTML = "";
-        tempWhitelist.forEach((item, index) => {
-          const tag = document.createElement("div");
-          tag.className = "blacklist-tag whitelist-tag";
-          tag.innerHTML = `
-                <span style="font-weight: 600;">${item}</span>
-                <span class="remove-tag whitelist-remove" onclick="removeWhitelistItem(${index})">
-                  <i data-lucide="x" class="w-3 h-3"></i>
-                </span>
-              `;
-
-          whitelistTagsContainer.appendChild(tag);
-        });
-        lucide.createIcons({ root: whitelistTagsContainer });
-      }
-
-      function addWhitelistItem(ticker) {
-        const val = ticker.trim().toUpperCase();
-        if (val && !tempWhitelist.includes(val) && tempWhitelist.length < 30) {
-          // Validate against symbolsMap (filtered for valid stocks only)
-          if (Object.keys(symbolsMap).length === 0 || symbolsMap[val]) {
-            tempWhitelist.push(val);
-            renderWhitelistTags();
-          }
-        }
-        whitelistInput.value = "";
-        whitelistSuggestions.classList.add("hidden");
-      }
-
-      function removeWhitelistItem(index) {
-        tempWhitelist.splice(index, 1);
-        renderWhitelistTags();
-      }
-
-      function sharedSetupSymbolAutocomplete(inputEl, suggestionsEl, onSelect) {
-        if (!inputEl || !suggestionsEl) return;
-
-        inputEl.addEventListener("input", () => {
-          const query = inputEl.value.trim().toUpperCase();
-          if (!query || query.length < 1) {
-            suggestionsEl.classList.add("hidden");
-            return;
-          }
-
-          // Use symbolsMap (filtered for valid stocks only)
-          const matches = Object.entries(symbolsMap)
-            .filter(([symbol, info]) => {
-              const name = typeof info === "object" ? info.name : info;
-              return symbol.includes(query) || (name && name.toLowerCase().includes(query.toLowerCase()));
-            })
-            .slice(0, 10);
-
-          if (matches.length === 0) {
-            suggestionsEl.classList.add("hidden");
-            return;
-          }
-
-          suggestionsEl.innerHTML = matches
-            .map(([symbol, info]) => {
-              const name = typeof info === "object" ? info.name : info;
-              return `
-                <div class="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex justify-between items-center" data-symbol="${symbol}">
-                  <span class="font-bold text-emerald-600 dark:text-emerald-400">${symbol}</span>
-                  <span class="text-xs text-slate-500 truncate ml-2">${name || ""}</span>
-                </div>
-              `;
-            })
-            .join("");
-
-          // Add click handlers for suggestions
-          suggestionsEl.querySelectorAll("[data-symbol]").forEach((item) => {
-            item.addEventListener("click", () => {
-              const symbol = item.getAttribute("data-symbol");
-              onSelect(symbol);
-              suggestionsEl.classList.add("hidden");
-            });
-          });
-
-          suggestionsEl.classList.remove("hidden");
-        });
-
-        inputEl.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") {
-            const query = inputEl.value.trim().toUpperCase();
-            if (query) {
-              onSelect(query);
-              suggestionsEl.classList.add("hidden");
-            }
-          }
-        });
-
-        // Hide suggestions when clicking outside
-        document.addEventListener("click", (e) => {
-          if (!inputEl.contains(e.target) && !suggestionsEl.contains(e.target)) {
-            suggestionsEl.classList.add("hidden");
-          }
-        });
-      }
-
-      function setupWhitelistAutocomplete() {
-        sharedSetupSymbolAutocomplete(whitelistInput, whitelistSuggestions, (symbol) => {
-          addWhitelistItem(symbol);
-        });
-      }
-
       function setupPortfolioSymbolAutocomplete() {
         const portfolioSymbolSuggestions = document.getElementById("portfolio-symbol-suggestions");
-        sharedSetupSymbolAutocomplete(newStockSymbol, portfolioSymbolSuggestions, (symbol) => {
-          newStockSymbol.value = symbol;
-          newStockPrice.focus();
-        });
-      }
-
-      async function saveSettings() {
-        if (!currentUser) return;
-
-        const originalText = saveSettingsBtn.innerText;
-        saveSettingsBtn.innerText = "Đang lưu...";
-        saveSettingsBtn.disabled = true;
-
-        try {
-          const response = await fetch(`/users/${currentUser.id}/settings`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              black_list: tempBlacklist,
-              white_list: tempWhitelist,
-              return_rate: parseFloat(returnRateInput.value) || 0,
-              dividend_rate: parseFloat(dividendRateInput.value) || 0,
-              profit_rate: parseFloat(profitRateInput.value) || 0,
-            }),
+        if (typeof sharedSetupSymbolAutocomplete === "function") {
+          sharedSetupSymbolAutocomplete(newStockSymbol, portfolioSymbolSuggestions, (symbol) => {
+            newStockSymbol.value = symbol;
+            newStockPrice.focus();
           });
-
-          if (response.ok) {
-            const updatedUser = await response.json();
-
-            // Update current user and sync with users array
-            currentUser.black_list = updatedUser.black_list;
-            currentUser.white_list = updatedUser.white_list;
-            currentUser.return_rate = updatedUser.return_rate;
-            currentUser.dividend_rate = updatedUser.dividend_rate;
-            currentUser.profit_rate = updatedUser.profit_rate;
-
-            const userIdx = users.findIndex((u) => u.id === currentUser.id);
-            if (userIdx !== -1) users[userIdx] = { ...currentUser };
-
-            closeSettings();
-          } else {
-            const errorData = await response.json().catch(() => ({}));
-            console.error("Save failed:", response.status, errorData);
-            alert(`Lỗi khi lưu thiết lập: ${response.status} ${errorData.detail || ""}`);
-          }
-        } catch (error) {
-          console.error("Network or unexpected error:", error);
-          alert("Lỗi kết nối máy chủ hoặc lỗi bất ngờ. Vui lòng kiểm tra console.");
-        } finally {
-          saveSettingsBtn.innerText = originalText;
-          saveSettingsBtn.disabled = false;
         }
       }
 
@@ -5432,22 +4638,11 @@
 
       userMenu.onclick = (e) => e.stopPropagation();
 
-      blacklistInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          addBlacklistItem(blacklistInput.value);
-        }
-      });
-
       // Initialize Lucide for the menu
       lucide.createIcons({ root: userMenu });
-      lucide.createIcons({ root: settingsOverlay });
 
       // Fetch users on load
       fetchUsers();
-
-      // Setup whitelist autocomplete
-      setupWhitelistAutocomplete();
 
       // Setup portfolio symbol autocomplete
       setupPortfolioSymbolAutocomplete();
