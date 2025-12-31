@@ -72,7 +72,11 @@ declare const marked: {
 
 // Lucide icons library
 declare const lucide: {
-  createIcons: () => void;
+  createIcons: (options?: {
+    icons?: Record<string, unknown>;
+    attrs?: Record<string, string>;
+    root?: Element;
+  }) => void;
 };
 
 declare function selectStock(symbol: string): void;

@@ -375,133 +375,7 @@
 
         <!-- COMPONENT: chart -->
 
-        <!-- Related News Tab -->
-        <div
-          id="tab-content-news"
-          class="hidden h-full w-full tab-content-item px-4 pt-4 pb-4 lg:px-8 lg:pb-8 overflow-hidden z-10 flex flex-col"
-        >
-          <div
-            id="news-tab-content-empty"
-            class="flex-1 bg-white/20 dark:bg-slate-900/20 rounded-3xl border border-slate-400 dark:border-white/20 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center border-dashed min-h-full"
-          >
-            <div
-              class="w-20 h-20 bg-gradient-to-br from-orange-500/20 to-red-500/20 dark:from-orange-500/10 dark:to-red-500/10 rounded-3xl flex items-center justify-center mb-6 text-orange-500"
-            >
-              <i data-lucide="newspaper" class="w-10 h-10"></i>
-            </div>
-            <h4 class="text-lg font-bold text-slate-700 dark:text-slate-300 mb-3">Tin tức liên quan</h4>
-            <p class="text-sm text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed">
-              Tổng hợp tin tức mới nhất về cổ phiếu được chọn từ các nguồn uy tín, giúp bạn cập nhật thông tin thị
-              trường nhanh chóng.
-            </p>
-            <div class="mt-6 px-4 py-2 bg-orange-50 dark:bg-orange-900/20 rounded-xl">
-              <p class="text-xs text-orange-600 dark:text-orange-400 font-medium">
-                📰 Chọn mã cổ phiếu để xem tin tức liên quan
-              </p>
-            </div>
-          </div>
-          <div
-            id="news-tab-content-container"
-            class="space-y-5 animate-fade-in-up p-1 hidden flex-1 min-h-0 overflow-y-auto custom-scrollbar"
-          >
-            <!-- AI Analysis Container -->
-            <div
-              class="p-5 bg-gradient-to-br from-white/60 to-white/40 dark:from-slate-900/60 dark:to-slate-900/40 rounded-3xl border border-slate-200 dark:border-white/10 shadow-xl backdrop-blur-xl"
-            >
-              <div class="flex items-center gap-3 mb-4 border-b border-slate-200 dark:border-white/10 pb-3">
-                <div
-                  class="w-8 h-8 rounded-full bg-indigo-600/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400"
-                >
-                  <i data-lucide="brain-circuit" class="w-4 h-4"></i>
-                </div>
-                <h4 class="font-bold text-slate-800 dark:text-white text-sm">Tổng hợp & Nhận định AI</h4>
-                <div class="flex-1 flex justify-end">
-                  <div
-                    id="news-sentiment-badge"
-                    class="h-7 w-24 bg-slate-200/50 dark:bg-slate-800/50 rounded-full skeleton-shimmer text-transparent border border-transparent"
-                  ></div>
-                </div>
-              </div>
-              <div
-                id="news-analysis-content"
-                class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed min-h-[100px] markdown-content prose-sm dark:prose-invert max-w-none"
-              >
-                <div class="flex items-center gap-2 text-slate-400 mb-2">
-                  <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
-                  <span class="text-sm">Đang phân tích tin tức và sự kiện...</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- News List Section -->
-            <div class="space-y-4">
-              <div class="flex items-center justify-between">
-                <h4 class="font-bold text-slate-800 dark:text-white text-sm flex items-center gap-2">
-                  <i data-lucide="list-filter" class="w-4 h-4 text-primary-500"></i>
-                  Luồng tin chi tiết
-                  <span
-                    id="news-count-badge"
-                    class="hidden px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold rounded-md border border-slate-200 dark:border-slate-700 shadow-sm ml-1"
-                    >0</span
-                  >
-                </h4>
-              </div>
-              <div id="news-list-container" class="grid grid-cols-1 gap-3">
-                <div
-                  class="flex gap-4 p-4 bg-white/30 dark:bg-slate-900/30 rounded-2xl border border-slate-200 dark:border-white/5"
-                >
-                  <div
-                    class="flex-shrink-0 w-12 h-12 rounded-xl bg-slate-200/50 dark:bg-slate-800/50 skeleton-shimmer"
-                  ></div>
-                  <div class="flex-1 space-y-2.5">
-                    <div class="h-4 bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-3/4 skeleton-shimmer"></div>
-                    <div
-                      class="h-3 bg-slate-200/50 dark:bg-slate-800/40 rounded-md w-full opacity-60 skeleton-shimmer"
-                    ></div>
-                    <div class="flex gap-2 pt-1">
-                      <div class="h-3 bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 skeleton-shimmer"></div>
-                      <div class="h-3 bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-24 skeleton-shimmer"></div>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  class="flex gap-4 p-4 bg-white/30 dark:bg-slate-900/30 rounded-2xl border border-slate-200 dark:border-white/5"
-                >
-                  <div
-                    class="flex-shrink-0 w-12 h-12 rounded-xl bg-slate-200/50 dark:bg-slate-800/50 skeleton-shimmer"
-                  ></div>
-                  <div class="flex-1 space-y-2.5">
-                    <div class="h-4 bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-3/4 skeleton-shimmer"></div>
-                    <div
-                      class="h-3 bg-slate-200/50 dark:bg-slate-800/40 rounded-md w-full opacity-60 skeleton-shimmer"
-                    ></div>
-                    <div class="flex gap-2 pt-1">
-                      <div class="h-3 bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 skeleton-shimmer"></div>
-                      <div class="h-3 bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-24 skeleton-shimmer"></div>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  class="flex gap-4 p-4 bg-white/30 dark:bg-slate-900/30 rounded-2xl border border-slate-200 dark:border-white/5"
-                >
-                  <div
-                    class="flex-shrink-0 w-12 h-12 rounded-xl bg-slate-200/50 dark:bg-slate-800/50 skeleton-shimmer"
-                  ></div>
-                  <div class="flex-1 space-y-2.5">
-                    <div class="h-4 bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-3/4 skeleton-shimmer"></div>
-                    <div
-                      class="h-3 bg-slate-200/50 dark:bg-slate-800/40 rounded-md w-full opacity-60 skeleton-shimmer"
-                    ></div>
-                    <div class="flex gap-2 pt-1">
-                      <div class="h-3 bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 skeleton-shimmer"></div>
-                      <div class="h-3 bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-24 skeleton-shimmer"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- COMPONENT: news -->
 
         <!-- Deep Analysis Tab -->
         <div
@@ -1462,6 +1336,7 @@
     <script src="/static/js/portfolio.js"></script>
     <script src="/static/js/chat.js"></script>
     <script src="/static/js/chart.js"></script>
+    <script src="/static/js/news.js"></script>
     <script>
       let currentTabId = "chart";
       function switchTab(tabId) {
@@ -1509,9 +1384,8 @@
         }
 
         // Trigger news analysis if switching to news tab and it hasn't been loaded for current stock
-        if (tabId === "news" && selectedStock && selectedStock !== lastFetchedNewsSymbol) {
-          fetchNewsAnalysis(selectedStock, selectedStockCompanyName);
-          lastFetchedNewsSymbol = selectedStock;
+        if (tabId === "news" && selectedStock) {
+          triggerNewsAnalysis(selectedStock, selectedStockCompanyName);
         }
 
         // Trigger technical analysis if switching to analysis tab
@@ -1687,7 +1561,6 @@
 
       let selectedStock = null;
       let selectedStockCompanyName = null;
-      let lastFetchedNewsSymbol = null;
       let lastFetchedTechnicalSymbol = null;
 
       // Analysis chart instances (separate from main chart)
@@ -1842,7 +1715,7 @@
         const stockInfo = getStockInfo(symbol);
         const companyName = stockInfo.name;
         selectedStockCompanyName = companyName;
-        lastFetchedNewsSymbol = null;
+        resetNewsState();
         lastFetchedTechnicalSymbol = null;
 
         const exchange = stockInfo.exchange;
@@ -1876,238 +1749,13 @@
 
         // Trigger news analysis if currently on news tab
         if (currentTabId === "news") {
-          fetchNewsAnalysis(symbol, companyName);
-          lastFetchedNewsSymbol = symbol;
+          triggerNewsAnalysis(symbol, companyName);
         }
 
         // Trigger technical analysis if currently on analysis tab
         if (currentTabId === "analysis") {
           fetchTechnicalAnalysis(symbol, companyName);
           lastFetchedTechnicalSymbol = symbol;
-        }
-      }
-
-      async function fetchNewsAnalysis(symbol, companyName) {
-        document.getElementById("news-tab-content-empty").classList.add("hidden");
-        document.getElementById("news-tab-content-container").classList.remove("hidden");
-
-        const analysisContentEl = document.getElementById("news-analysis-content");
-        const newsListContainer = document.getElementById("news-list-container");
-        const newsCountBadge = document.getElementById("news-count-badge");
-
-        let accumulatedText = "";
-
-        try {
-          const response = await fetch("/news-analysis", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ symbol: symbol, company_name: companyName }),
-          });
-
-          if (!response.ok) throw new Error("API Connection Error: " + response.status);
-
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder("utf-8");
-          let buffer = "";
-          let isFirstChunk = true;
-
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split("\n");
-            buffer = lines.pop();
-
-            for (const line of lines) {
-              if (!line.trim()) continue;
-              try {
-                const evt = JSON.parse(line);
-                if (evt.type === "content") {
-                  if (isFirstChunk) {
-                    if (analysisContentEl) analysisContentEl.innerHTML = "";
-                    isFirstChunk = false;
-                  }
-
-                  // Update Text
-                  accumulatedText += evt.chunk;
-                  if (analysisContentEl) {
-                    analysisContentEl.innerHTML = processContentNoTickers(accumulatedText);
-                  }
-                } else if (evt.type === "data") {
-                  // Render News List
-                  const newsList = evt.news || [];
-                  if (newsCountBadge) {
-                    newsCountBadge.textContent = newsList.length;
-                    newsCountBadge.classList.remove("hidden");
-                  }
-
-                  if (newsListContainer) {
-                    if (newsList.length === 0) {
-                      newsListContainer.innerHTML = `<div class="text-sm text-slate-500 italic p-4">Không tìm thấy nguồn tin chi tiết.</div>`;
-                    } else {
-                      newsListContainer.innerHTML = newsList
-                        .map((n) => {
-                          const isEvent = n.type && n.type !== "Tin tức" && n.type !== "Báo cáo phân tích";
-                          const isAnalysis = n.type === "Báo cáo phân tích";
-                          const icon = isEvent ? "calendar" : isAnalysis ? "file-text" : "newspaper";
-                          const iconColor = isEvent
-                            ? "text-amber-500"
-                            : isAnalysis
-                              ? "text-indigo-500"
-                              : "text-primary-500";
-                          const typeBadgeClass = isEvent
-                            ? "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
-                            : isAnalysis
-                              ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400"
-                              : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300";
-
-                          return `
-                            <a href="${
-                              n.link
-                            }" target="_blank" class="flex gap-4 p-4 bg-white/40 dark:bg-slate-800/40 hover:bg-white/60 dark:hover:bg-slate-800/60 border border-slate-200 dark:border-white/5 rounded-2xl transition-all group shadow-sm hover:shadow-md">
-                                <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 flex items-center justify-center ${iconColor} shadow-inner">
-                                    <i data-lucide="${icon}" class="w-6 h-6"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <h5 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 line-clamp-2 leading-snug">${
-                                      n.title
-                                    }</h5>
-                                    ${
-                                      n.description
-                                        ? `<p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mb-2 font-medium opacity-80">${n.description}</p>`
-                                        : ""
-                                    }
-                                    <div class="flex items-center flex-wrap gap-2 text-[10px]">
-                                        <span class="px-2 py-0.5 rounded font-bold uppercase tracking-wider ${typeBadgeClass}">${
-                                          n.type || "Tin tức"
-                                        }</span>
-                                        <span class="text-slate-400 dark:text-slate-500">•</span>
-                                        <span class="font-medium text-slate-500 dark:text-slate-400 italic">${
-                                          n.date
-                                        }</span>
-                                        ${
-                                          n.source
-                                            ? `<span class="text-slate-400 dark:text-slate-500">•</span><span class="text-slate-500 dark:text-slate-400">${n.source}</span>`
-                                            : ""
-                                        }
-                                    </div>
-                                </div>
-                                <div class="flex-shrink-0 self-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <i data-lucide="external-link" class="w-4 h-4 text-slate-400"></i>
-                                </div>
-                            </a>
-                          `;
-                        })
-                        .join("");
-                      lucide.createIcons({ root: newsListContainer });
-                    }
-                  }
-                } else if (evt.type === "sentiment") {
-                  const badge = document.getElementById("news-sentiment-badge");
-                  if (badge) {
-                    badge.textContent = evt.label;
-                    // Reset and apply 3D effect classes
-                    badge.className =
-                      "inline-flex items-center text-sm font-bold px-4 py-1.5 rounded-full border border-slate-200 transition-all animate-fade-in backdrop-blur-md shadow-[0_4px_12px_rgba(0,0,0,0.1)] ring-1 ring-white/40 dark:ring-white/10";
-
-                    const color = evt.color || "gray";
-                    if (color === "green") {
-                      badge.classList.add(
-                        "bg-gradient-to-b",
-                        "from-emerald-50",
-                        "to-emerald-100/90",
-                        "dark:from-emerald-500/10",
-                        "dark:to-emerald-500/30",
-                        "text-emerald-700",
-                        "dark:text-emerald-300",
-                        "border-emerald-200",
-                        "dark:border-emerald-500/40",
-                      );
-                    } else if (color === "red") {
-                      badge.classList.add(
-                        "bg-gradient-to-b",
-                        "from-rose-50",
-                        "to-rose-100/90",
-                        "dark:from-rose-500/10",
-                        "dark:to-rose-500/30",
-                        "text-rose-700",
-                        "dark:text-rose-300",
-                        "border-rose-200",
-                        "dark:border-rose-500/40",
-                      );
-                    } else if (color === "yellow") {
-                      badge.classList.add(
-                        "bg-gradient-to-b",
-                        "from-amber-50",
-                        "to-amber-100/90",
-                        "dark:from-amber-500/10",
-                        "dark:to-amber-500/30",
-                        "text-amber-800",
-                        "dark:text-amber-300",
-                        "border-amber-200",
-                        "dark:border-amber-500/40",
-                      );
-                    } else if (color === "orange") {
-                      badge.classList.add(
-                        "bg-gradient-to-b",
-                        "from-orange-50",
-                        "to-orange-100/90",
-                        "dark:from-orange-500/10",
-                        "dark:to-orange-500/30",
-                        "text-orange-700",
-                        "dark:text-orange-300",
-                        "border-orange-200",
-                        "dark:border-orange-500/40",
-                      );
-                    } else if (color === "blue") {
-                      badge.classList.add(
-                        "bg-gradient-to-b",
-                        "from-blue-50",
-                        "to-blue-100/90",
-                        "dark:from-blue-500/10",
-                        "dark:to-blue-500/30",
-                        "text-blue-700",
-                        "dark:text-blue-300",
-                        "border-blue-200",
-                        "dark:border-blue-500/40",
-                      );
-                    } else {
-                      badge.classList.add(
-                        "bg-gradient-to-b",
-                        "from-slate-50",
-                        "to-slate-100/90",
-                        "dark:from-slate-800/40",
-                        "dark:to-slate-800/80",
-                        "text-slate-700",
-                        "dark:text-slate-300",
-                        "border-slate-200",
-                        "dark:border-slate-600",
-                      );
-                    }
-                  }
-                } else if (evt.type === "error") {
-                  console.error("Stream Error:", evt.message);
-                  if (analysisContentEl)
-                    analysisContentEl.innerHTML += `<div class="text-red-500 text-xs mt-2">⚠️ ${evt.message}</div>`;
-                  isFirstChunk = false;
-                }
-              } catch (parseErr) {
-                console.error("JSON Parse Error:", parseErr);
-              }
-            }
-          }
-
-          // End of stream check
-          if (isFirstChunk && !accumulatedText) {
-            if (analysisContentEl)
-              analysisContentEl.innerHTML = `<div class="text-slate-500 italic text-sm">Không có dữ liệu phân tích.</div>`;
-          }
-        } catch (error) {
-          console.error(error);
-          if (analysisContentEl)
-            analysisContentEl.innerHTML = `<div class="text-red-500 p-4">Lỗi: ${error.message}</div>`;
-          if (newsListContainer) newsListContainer.innerHTML = "";
         }
       }
 
