@@ -21,7 +21,7 @@
     </div>
   </div>
   <!-- Timeframe Selector Cards (inside tab) -->
-  <div id="analysis-content-timeframe" class="hidden w-full z-30">
+  <div id="analysis-content-timeframe" template="analysis-content-timeframe-template" class="hidden w-full z-30">
     <div class="w-full animate-fade-in-up">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-1">
         <!-- Short Term Summary -->
@@ -40,7 +40,7 @@
             </div>
             <span
               id="tech-short-trend-badge"
-              class="h-6 w-16 bg-slate-200/50 dark:bg-slate-800/50 rounded-full skeleton-shimmer text-transparent border border-transparent"
+              class="h-6 w-16 bg-slate-200/50 dark:bg-slate-800/50 rounded-full skeleton-shimmer text-transparent border border-transparent text-center"
             ></span>
           </div>
           <div class="flex flex-wrap gap-x-8 gap-y-3">
@@ -111,7 +111,7 @@
             </div>
             <span
               id="tech-long-trend-badge"
-              class="h-6 w-16 bg-slate-200/50 dark:bg-slate-800/50 rounded-full skeleton-shimmer text-transparent border border-transparent"
+              class="h-6 w-16 bg-slate-200/50 dark:bg-slate-800/50 rounded-full skeleton-shimmer text-transparent border border-transparent text-center"
             ></span>
           </div>
           <div class="flex flex-wrap gap-x-8 gap-y-3">
@@ -170,7 +170,7 @@
     </div>
   </div>
   <!-- Collapsible Analysis Chart Area -->
-  <div id="analysis-chart-collapsible" class="hidden w-full mb-4 p-1">
+  <div id="analysis-chart-collapsible" template="analysis-chart-collapsible-template" class="hidden w-full mb-4 p-1">
     <div class="flex items-center justify-between mb-2">
       <h5
         class="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2"
@@ -210,6 +210,7 @@
   </div>
   <div
     id="analysis-tab-content-container"
+    template="analysis-tab-content-container-template"
     class="hidden space-y-5 animate-fade-in-up p-1 flex-1 min-h-0 overflow-y-auto custom-scrollbar"
   >
     <!-- Main Indicators Grid -->

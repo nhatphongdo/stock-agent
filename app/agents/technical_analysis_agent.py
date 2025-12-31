@@ -48,7 +48,7 @@ class TechnicalAnalysisAgent:
         """
         # Calculate date ranges
         today = datetime.now()
-        end_date = today.strftime("%Y-%m-%d")
+        end_date = (today + relativedelta(days=1)).strftime("%Y-%m-%d")
 
         # Short-term: 1 year daily data
         start_date_short = (today - relativedelta(years=1)).strftime("%Y-%m-%d")
@@ -179,22 +179,18 @@ class TechnicalAnalysisAgent:
                     "type": "data",
                     "short_term": {
                         "timeframe": "1D (1 năm)",
-                        "ohlcv": short_term_data.get("ohlcv_data", []),
+                        "ohlcv": short_term_data.get("ohlcv", []),
                         "indicators": short_term_data.get("indicators", {}),
                         "methods": short_term_data.get("methods", []),
+                        "gauges": short_term_data.get("gauges", {}),
                     },
                     "long_term": {
                         "timeframe": "1W (5 năm)",
-                        "ohlcv": long_term_data.get("ohlcv_data", []),
+                        "ohlcv": long_term_data.get("ohlcv", []),
                         "indicators": long_term_data.get("indicators", {}),
                         "methods": long_term_data.get("methods", []),
+                        "gauges": long_term_data.get("gauges", {}),
                     },
-                    # Legacy format for UI compatibility
-                    "indicators": short_term_data.get("indicators", {}),
-                    "gauges": self._build_gauges(short_term_data.get("indicators", {})),
-                    "fibonacci": short_term_data.get("indicators", {}).get(
-                        "fibonacci", {}
-                    ),
                 }
             ) + "\n"
 
@@ -216,7 +212,7 @@ class TechnicalAnalysisAgent:
             return {
                 "indicators": {},
                 "methods": [],
-                "ohlcv_data": [],
+                "ohlcv": [],
                 "error": ohlcv_result.get("error", "No data"),
             }
 
@@ -229,7 +225,7 @@ class TechnicalAnalysisAgent:
             return {
                 "indicators": {},
                 "methods": [],
-                "ohlcv_data": [],
+                "ohlcv": [],
                 "error": "Empty DataFrame",
             }
 
@@ -242,7 +238,8 @@ class TechnicalAnalysisAgent:
         return {
             "indicators": indicators,
             "methods": methods,
-            "ohlcv_data": ohlcv_data,
+            "gauges": self._build_gauges(indicators),
+            "ohlcv": ohlcv_data,
         }
 
     def _build_analysis_context(self, data: dict, timeframe_label: str) -> str:

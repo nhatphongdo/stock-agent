@@ -9,6 +9,9 @@ from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from bs4 import BeautifulSoup
+import re
+import time
 
 from app.llm.gemini_client import GeminiClient
 from app.agents.trading_agent import TradingAgent
@@ -194,8 +197,6 @@ SYMBOLS_CACHE_TTL: int = 3600  # 1 hour in seconds
 
 def is_symbols_cache_valid() -> bool:
     """Check if the symbols cache is still valid based on TTL."""
-    import time
-
     if not _symbols_cache:
         return False
     return (time.time() - _symbols_cache_timestamp) < SYMBOLS_CACHE_TTL
@@ -207,8 +208,6 @@ async def get_symbols():
     Returns a dictionary mapping stock symbols to company names.
     Results are cached in memory with TTL for performance.
     """
-    import time
-
     global _symbols_cache, _symbols_cache_timestamp
 
     if not is_symbols_cache_valid():
@@ -278,10 +277,8 @@ async def get_ui():
 
         # Simple component injection system
         # Looks for <!-- COMPONENT: component_name -->
-        import re
 
-        def inject_component(match):
-            component_name = match.group(1).strip()
+        def get_component_content(component_name):
             component_path = os.path.join(
                 app_dir, "components", f"{component_name}.html"
             )
@@ -292,7 +289,27 @@ async def get_ui():
                 logger.error(f"Error reading component {component_name}: {e}")
                 return f"<!-- ERROR LOADING COMPONENT: {component_name} -->"
 
-        # Replace all component markers
+        def inject_component(match):
+            component_name = match.group(1).strip()
+            component_content = get_component_content(component_name)
+
+            # Use BeautifulSoup to handle template attributes: <tag template="name">...</tag>
+            soup = BeautifulSoup(component_content, "html.parser")
+            for tag in soup.find_all(attrs={"template": True}):
+                template_name = tag["template"]
+                # Create the template tag
+                template_tag = soup.new_tag("template", id=template_name)
+                # Parse the content to allow nested tags within the template
+                template_tag.extend(tag.contents)
+
+                # Append after the original component content
+                component_content = (
+                    f"{component_content}\n{str(template_tag.prettify())}"
+                )
+
+            return component_content
+
+        # 1. Replace all comment component markers: <!-- COMPONENT: component_name -->
         html_content = re.sub(
             r"<!--\s*COMPONENT:\s*([\w-]+)\s*-->", inject_component, html_content
         )

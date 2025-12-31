@@ -10,6 +10,7 @@ let lastFetchedTechnicalSymbol = null;
  */
 function resetAnalysisState() {
   lastFetchedTechnicalSymbol = null;
+  clearAnalysisDisplay();
 }
 
 /**
@@ -54,8 +55,6 @@ function handleAnalysisTabSwitch(symbol, companyName) {
 // Analysis chart instances (separate from main chart)
 let analysisChart = null;
 let analysisCandleSeries = null;
-let currentAnalysisTimeframe = "short_term"; // "short_term" or "long_term"
-let techAnalysisData = null;
 
 // Sparkline charts storage
 let sparklineCharts = {};
@@ -83,6 +82,7 @@ function toggleAnalysisChart() {
         : "rotate(0deg)";
     }
   }
+  refreshAnalysisChart();
 }
 
 /**
@@ -150,7 +150,7 @@ function initAnalysisChartResizer() {
  * @param {string} symbol - Stock symbol
  * @param {string} analysisTimeframe - "short_term" or "long_term"
  */
-async function renderAnalysisChart(symbol, analysisTimeframe) {
+async function renderAnalysisChart(ohlcv_data) {
   const chartContainer = document.getElementById("analysis-candlestick-chart");
   if (!chartContainer) return;
 
@@ -160,85 +160,6 @@ async function renderAnalysisChart(symbol, analysisTimeframe) {
     analysisChart = null;
   }
   analysisCandleSeries = null;
-  currentAnalysisTimeframe = analysisTimeframe;
-
-  // Set timeframe and interval based on analysis type
-  const timeframe = analysisTimeframe === "short_term" ? "1Y" : "5Y";
-  const interval = analysisTimeframe === "short_term" ? "1D" : "1W";
-
-  // Calculate date range
-  const end = new Date();
-  const start = new Date();
-  if (timeframe === "1Y") {
-    start.setFullYear(start.getFullYear() - 1);
-  } else {
-    start.setFullYear(start.getFullYear() - 5);
-  }
-
-  const formatDate = (d) => d.toISOString().split("T")[0];
-  const startStr = formatDate(start);
-  const endStr = formatDate(end);
-
-  // Show skeleton
-  const parent = chartContainer.parentElement;
-  if (parent) {
-    parent.querySelectorAll(".chart-skeleton").forEach((el) => el.remove());
-    chartContainer.classList.add("hidden");
-
-    const template = /** @type {HTMLTemplateElement} */ (
-      document.getElementById("analysis-chart-skeleton-template")
-    );
-    if (template) {
-      const clone = /** @type {DocumentFragment} */ (
-        template.content.cloneNode(true)
-      );
-      const barsContainer = clone.querySelector(".flex-1.flex.items-end.gap-1");
-
-      if (barsContainer) {
-        barsContainer.innerHTML = Array(20)
-          .fill(0)
-          .map(
-            () =>
-              `<div class="flex-1 skeleton-shimmer rounded" style="height: ${
-                30 + Math.random() * 60
-              }%"></div>`,
-          )
-          .join("");
-      }
-      chartContainer.insertAdjacentElement("beforebegin", clone.children[0]);
-    }
-  }
-
-  let data;
-  try {
-    const response = await fetch(
-      `/chart/${symbol}?start=${startStr}&end=${endStr}&interval=${interval}`,
-    );
-    if (response.ok) {
-      const result = await response.json();
-      data = result.data.map((d) => ({
-        x: new Date(d.time),
-        o: d.open,
-        h: d.high,
-        l: d.low,
-        c: d.close,
-      }));
-    } else {
-      throw new Error("API error");
-    }
-  } catch (err) {
-    console.error("Analysis chart API error:", err);
-    if (parent) {
-      const template = /** @type {HTMLTemplateElement} */ (
-        document.getElementById("analysis-chart-error-template")
-      );
-      if (template) {
-        parent.innerHTML = "";
-        parent.appendChild(template.content.cloneNode(true));
-      }
-    }
-    return;
-  }
 
   // Remove skeleton and show chart
   const parentUpdate = document.getElementById(
@@ -289,14 +210,6 @@ async function renderAnalysisChart(symbol, analysisTimeframe) {
     timeScale: { ...theme.timeScale, timeVisible: false },
   });
 
-  const chartData = data.map((d) => ({
-    time: Math.floor(d.x.getTime() / 1000),
-    open: d.o,
-    high: d.h,
-    low: d.l,
-    close: d.c,
-  }));
-
   analysisCandleSeries = analysisChart.addCandlestickSeries({
     upColor: CONFIG.COLORS.UP,
     downColor: CONFIG.COLORS.DOWN,
@@ -305,7 +218,7 @@ async function renderAnalysisChart(symbol, analysisTimeframe) {
     wickUpColor: CONFIG.COLORS.UP,
     wickDownColor: CONFIG.COLORS.DOWN,
   });
-  analysisCandleSeries.setData(chartData);
+  analysisCandleSeries.setData(ohlcv_data);
 
   setTimeout(() => {
     window.dispatchEvent(new Event("resize"));
@@ -505,38 +418,8 @@ async function fetchTechnicalAnalysis(symbol, companyName) {
     .getElementById("analysis-chart-collapsible")
     .classList.remove("hidden");
 
-  // Initialize analysis chart with default short_term timeframe
-  renderAnalysisChart(symbol, "short_term");
-
   const analysisContentEl = document.getElementById("tech-analysis-content");
   const badge = document.getElementById("tech-recommendation-badge");
-
-  // Setup Tab Listeners
-  const shortTab = document.getElementById("tech-tab-short");
-  const longTab = document.getElementById("tech-tab-long");
-
-  if (shortTab && longTab) {
-    const switchTimeframeTab = (timeframe) => {
-      shortTab.className =
-        "tech-timeframe-tab px-4 py-2 rounded-full text-sm font-bold transition-all text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700";
-      longTab.className =
-        "tech-timeframe-tab px-4 py-2 rounded-full text-sm font-bold transition-all text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700";
-
-      const activeBtn = timeframe === "short_term" ? shortTab : longTab;
-      activeBtn.className =
-        "tech-timeframe-tab px-4 py-2 rounded-full text-sm font-bold transition-all bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25";
-
-      if (techAnalysisData) {
-        const data = techAnalysisData[timeframe];
-        if (data) {
-          updateIndicatorsDisplay(data.indicators, data.methods);
-        }
-      }
-    };
-
-    shortTab.onclick = () => switchTimeframeTab("short_term");
-    longTab.onclick = () => switchTimeframeTab("long_term");
-  }
 
   let accumulatedText = "";
 
@@ -650,87 +533,16 @@ async function fetchTechnicalAnalysis(symbol, companyName) {
               lucide.createIcons({ root: badge });
             }
           } else if (evt.type === "data") {
-            // Store data for timeframe switching
-            techAnalysisData = evt;
-
             // Update indicator cards with data (default to short_term)
             const shortTerm = evt.short_term || {};
             const longTerm = evt.long_term || {};
-            const indicators = evt.indicators || shortTerm.indicators || {};
-            const gauges = evt.gauges || {};
-            const methods = shortTerm.methods || [];
-
-            // Update Analysis Chart
-            if (evt.ohlcv_data) {
-              renderAnalysisChart(evt.ohlcv_data, indicators.pivot_points);
-            }
-
-            // Draw Sparklines
-            if (indicators.rsi && indicators.rsi.series) {
-              drawSparkline(
-                "tech-rsi-sparkline",
-                indicators.rsi.series,
-                "rgba(99, 102, 241, 1)",
-              );
-            } else if (indicators.rsi_series) {
-              drawSparkline(
-                "tech-rsi-sparkline",
-                indicators.rsi_series,
-                "rgba(99, 102, 241, 1)",
-              );
-            } else {
-              removeSkeleton("tech-rsi-sparkline");
-            }
-            if (indicators.stochastic && indicators.stochastic.series) {
-              drawSparkline(
-                "tech-stoch-sparkline",
-                indicators.stochastic.series,
-                "rgba(16, 185, 129, 1)",
-              );
-            } else {
-              removeSkeleton("tech-stoch-sparkline");
-            }
-            if (indicators.macd && indicators.macd.series) {
-              drawSparkline(
-                "tech-macd-sparkline",
-                indicators.macd.series,
-                "rgba(139, 92, 246, 1)",
-              );
-            } else {
-              removeSkeleton("tech-macd-sparkline");
-            }
 
             // Initialize display with short-term data
-            updateIndicatorsDisplay(indicators, methods);
-
-            // Gauges
-            const summary = gauges.summary || {};
-            const gaugeSummary = document.getElementById("tech-gauge-summary");
-            if (gaugeSummary) {
-              removeSkeleton("tech-gauge-summary");
-              gaugeSummary.innerHTML = `<i data-lucide="bar-chart-2" class="w-3 h-3"></i><span class="gauge-text">${
-                summary.label || "--"
-              }</span>`;
-              lucide.createIcons({ root: gaugeSummary });
-            }
-
-            const gaugeMA = document.getElementById("tech-gauge-ma");
-            if (gaugeMA) {
-              removeSkeleton("tech-gauge-ma");
-              gaugeMA.innerHTML = `<i data-lucide="trending-up" class="w-3 h-3"></i><span class="gauge-text">MA: ${
-                gauges.movingAverage?.label || "--"
-              }</span>`;
-              lucide.createIcons({ root: gaugeMA });
-            }
-
-            const gaugeOsc = document.getElementById("tech-gauge-osc");
-            if (gaugeOsc) {
-              removeSkeleton("tech-gauge-osc");
-              gaugeOsc.innerHTML = `<i data-lucide="activity" class="w-3 h-3"></i><span class="gauge-text">OSC: ${
-                gauges.oscillator?.label || "--"
-              }</span>`;
-              lucide.createIcons({ root: gaugeOsc });
-            }
+            const indicators = shortTerm.indicators || {};
+            const methods = shortTerm.methods || [];
+            const gauges = shortTerm.gauges || {};
+            const ohlcv = shortTerm.ohlcv || [];
+            updateIndicatorsDisplay(indicators, methods, gauges, ohlcv);
 
             // Setup timeframe card switching
             const cardShort = document.getElementById("tech-card-short");
@@ -751,11 +563,11 @@ async function fetchTechnicalAnalysis(symbol, companyName) {
                 cardShort.className = activeShortClass;
                 cardLong.className = inactiveLongClass;
                 updateIndicatorsDisplay(
-                  shortTerm.indicators || indicators,
+                  shortTerm.indicators || {},
                   shortTerm.methods || [],
+                  shortTerm.gauges || {},
+                  shortTerm.ohlcv || [],
                 );
-                if (typeof selectedStock !== "undefined" && selectedStock)
-                  renderAnalysisChart(selectedStock, "short_term");
               };
               cardLong.onclick = () => {
                 cardLong.className = activeLongClass;
@@ -763,9 +575,9 @@ async function fetchTechnicalAnalysis(symbol, companyName) {
                 updateIndicatorsDisplay(
                   longTerm.indicators || {},
                   longTerm.methods || [],
+                  longTerm.gauges || {},
+                  longTerm.ohlcv || [],
                 );
-                if (typeof selectedStock !== "undefined" && selectedStock)
-                  renderAnalysisChart(selectedStock, "long_term");
               };
             }
           } else if (evt.type === "analysis_summary") {
@@ -820,8 +632,10 @@ function formatNum(n, decimals = 2) {
  * Update indicators display with data
  * @param {Object} ind - Indicators data
  * @param {Array} meth - Methods array
+ * @param {Object} gauges - Gauges data
+ * @param {Array} ohlcv_data - OHLCV data
  */
-function updateIndicatorsDisplay(ind, meth) {
+function updateIndicatorsDisplay(ind, meth, gauges, ohlcv_data) {
   // RSI
   const rsiData = ind.rsi || {};
   const rsiValue = typeof rsiData === "object" ? rsiData.value : rsiData;
@@ -1264,6 +1078,59 @@ function updateIndicatorsDisplay(ind, meth) {
     }
     lucide.createIcons({ root: methodsList });
   }
+
+  // Draw Sparklines
+  if (rsiData.series) {
+    drawSparkline(
+      "tech-rsi-sparkline",
+      rsiData.series,
+      "rgba(99, 102, 241, 1)",
+    );
+  } else {
+    removeSkeleton("tech-rsi-sparkline");
+  }
+  if (stoch.series) {
+    drawSparkline(
+      "tech-stoch-sparkline",
+      stoch.series,
+      "rgba(16, 185, 129, 1)",
+    );
+  } else {
+    removeSkeleton("tech-stoch-sparkline");
+  }
+  if (macd.series) {
+    drawSparkline("tech-macd-sparkline", macd.series, "rgba(139, 92, 246, 1)");
+  } else {
+    removeSkeleton("tech-macd-sparkline");
+  }
+
+  // Gauges
+  const summary = gauges.summary || {};
+  const gaugeSummary = document.getElementById("tech-gauge-summary");
+  if (gaugeSummary) {
+    removeSkeleton("tech-gauge-summary");
+    gaugeSummary.querySelector(".gauge-text").textContent =
+      summary.label || "--";
+  }
+
+  const gaugeMA = document.getElementById("tech-gauge-ma");
+  if (gaugeMA) {
+    removeSkeleton("tech-gauge-ma");
+    gaugeMA.querySelector(".gauge-text").textContent =
+      "MA: " + (gauges.movingAverage?.label || "--");
+  }
+
+  const gaugeOsc = document.getElementById("tech-gauge-osc");
+  if (gaugeOsc) {
+    removeSkeleton("tech-gauge-osc");
+    gaugeOsc.querySelector(".gauge-text").textContent =
+      "OSC: " + (gauges.oscillator?.label || "--");
+  }
+
+  // Chart
+  if (ohlcv_data) {
+    renderAnalysisChart(ohlcv_data);
+  }
 }
 
 /**
@@ -1306,7 +1173,8 @@ function handleAnalysisSummary(summary) {
       shortConfidenceBar.style.boxShadow = `0 2px 8px hsla(${hue}, 80%, 50%, 0.6), 0 0 0 2px hsla(${hue}, 80%, 50%, 0.2)`;
     }
     if (shortTrendBadge) {
-      shortTrendBadge.className = "text-xs font-bold px-2 py-1 rounded-full";
+      shortTrendBadge.className =
+        "text-xs font-bold px-2 py-1 rounded-full text-center";
       const sig = summary.short_term.signal?.toLowerCase() || "";
       if (sig.includes("mua")) {
         shortTrendBadge.textContent = "Mua";
@@ -1368,7 +1236,8 @@ function handleAnalysisSummary(summary) {
       longConfidenceBar.style.boxShadow = `0 2px 8px hsla(${hue}, 80%, 50%, 0.6), 0 0 0 2px hsla(${hue}, 80%, 50%, 0.2)`;
     }
     if (longTrendBadge) {
-      longTrendBadge.className = "text-xs font-bold px-2 py-1 rounded-full";
+      longTrendBadge.className =
+        "text-xs font-bold px-2 py-1 rounded-full text-center";
       const sig = summary.long_term.signal?.toLowerCase() || "";
       if (sig.includes("tích lũy")) {
         longTrendBadge.textContent = "Tích lũy";
@@ -1397,4 +1266,100 @@ function handleAnalysisSummary(summary) {
       }
     }
   }
+}
+
+/**
+ * Clear technical analysis display (called when resetting stock selection)
+ */
+function clearAnalysisDisplay() {
+  let template = /** @type {HTMLTemplateElement} */ (
+    document.getElementById("analysis-content-timeframe-template")
+  );
+
+  if (template) {
+    const clone = /** @type {DocumentFragment} */ (
+      template.content.cloneNode(true)
+    );
+    const analysisContentTimeframeEl = document.getElementById(
+      "analysis-content-timeframe",
+    );
+    if (analysisContentTimeframeEl) {
+      analysisContentTimeframeEl.innerHTML = "";
+      analysisContentTimeframeEl.appendChild(clone);
+      lucide.createIcons({ root: analysisContentTimeframeEl });
+    }
+  }
+
+  template = /** @type {HTMLTemplateElement} */ (
+    document.getElementById("analysis-chart-collapsible-template")
+  );
+
+  if (template) {
+    const clone = /** @type {DocumentFragment} */ (
+      template.content.cloneNode(true)
+    );
+    const analysisChartCollapsibleEl = document.getElementById(
+      "analysis-chart-collapsible",
+    );
+    if (analysisChartCollapsibleEl) {
+      analysisChartCollapsibleEl.innerHTML = "";
+      analysisChartCollapsibleEl.appendChild(clone);
+      lucide.createIcons({ root: analysisChartCollapsibleEl });
+    }
+  }
+
+  template = /** @type {HTMLTemplateElement} */ (
+    document.getElementById("analysis-tab-content-container-template")
+  );
+
+  if (template) {
+    const clone = /** @type {DocumentFragment} */ (
+      template.content.cloneNode(true)
+    );
+    const analysisTabContentContainerEl = document.getElementById(
+      "analysis-tab-content-container",
+    );
+    if (analysisTabContentContainerEl) {
+      analysisTabContentContainerEl.innerHTML = "";
+      analysisTabContentContainerEl.appendChild(clone);
+      lucide.createIcons({ root: analysisTabContentContainerEl });
+    }
+  }
+
+  // Show chart's skeleton
+  const chartContainer = document.getElementById("analysis-candlestick-chart");
+  if (chartContainer) {
+    const parent = chartContainer.parentElement;
+    if (parent) {
+      parent.querySelectorAll(".chart-skeleton").forEach((el) => el.remove());
+      chartContainer.classList.add("hidden");
+
+      const template = /** @type {HTMLTemplateElement} */ (
+        document.getElementById("analysis-chart-skeleton-template")
+      );
+      if (template) {
+        const clone = /** @type {DocumentFragment} */ (
+          template.content.cloneNode(true)
+        );
+        const barsContainer = clone.querySelector(
+          ".flex-1.flex.items-end.gap-1",
+        );
+
+        if (barsContainer) {
+          barsContainer.innerHTML = Array(20)
+            .fill(0)
+            .map(
+              () =>
+                `<div class="flex-1 skeleton-shimmer rounded" style="height: ${
+                  30 + Math.random() * 60
+                }%"></div>`,
+            )
+            .join("");
+        }
+        chartContainer.insertAdjacentElement("beforebegin", clone.children[0]);
+      }
+    }
+  }
+
+  initAnalysisChartResizer();
 }

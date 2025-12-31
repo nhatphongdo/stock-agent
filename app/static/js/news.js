@@ -10,6 +10,7 @@ let lastFetchedNewsSymbol = null;
  */
 function resetNewsState() {
   lastFetchedNewsSymbol = null;
+  clearNewsDisplay();
 }
 
 /**
@@ -312,6 +313,21 @@ function renderSentimentBadge(evt) {
  * Clear news display (called when resetting stock selection)
  */
 function clearNewsDisplay() {
-  const newsListContainer = document.getElementById("news-list-container");
-  if (newsListContainer) newsListContainer.innerHTML = "";
+  const template = /** @type {HTMLTemplateElement} */ (
+    document.getElementById("news-tab-content-container-template")
+  );
+
+  if (template) {
+    const clone = /** @type {DocumentFragment} */ (
+      template.content.cloneNode(true)
+    );
+    const newsTabContentEl = document.getElementById(
+      "news-tab-content-container",
+    );
+    if (newsTabContentEl) {
+      newsTabContentEl.innerHTML = "";
+      newsTabContentEl.appendChild(clone);
+      lucide.createIcons({ root: newsTabContentEl });
+    }
+  }
 }
