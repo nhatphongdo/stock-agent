@@ -27,7 +27,7 @@ interface ITimeScaleApi {
 }
 
 interface ICrosshairMoveParam {
-  time?: number;
+  time?: number | string;
   point?: { x: number; y: number };
   logical?: number;
   seriesData: Map<ISeriesApi, unknown>;
@@ -37,6 +37,7 @@ interface IChartApi {
   addCandlestickSeries: (options?: unknown) => ISeriesApi;
   addHistogramSeries: (options?: unknown) => ISeriesApi;
   addLineSeries: (options?: unknown) => ISeriesApi;
+  addAreaSeries: (options?: unknown) => ISeriesApi;
   timeScale: () => ITimeScaleApi;
   subscribeCrosshairMove: (
     handler: (param: ICrosshairMoveParam) => void,
@@ -79,4 +80,5 @@ declare const lucide: {
   }) => void;
 };
 
+declare let selectedStock: string;
 declare function selectStock(symbol: string): void;

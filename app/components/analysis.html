@@ -1,0 +1,954 @@
+<!-- Deep Analysis Tab -->
+<div
+  id="tab-content-analysis"
+  class="hidden h-full w-full tab-content-item px-4 pt-4 pb-4 lg:px-8 lg:pb-8 overflow-hidden z-10 flex flex-col"
+>
+  <div
+    id="analysis-tab-content-empty"
+    class="flex-1 bg-white/20 dark:bg-slate-900/20 rounded-3xl border border-slate-400 dark:border-white/20 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center border-dashed min-h-full"
+  >
+    <div
+      class="w-20 h-20 bg-gradient-to-br from-cyan-500/20 to-teal-500/20 dark:from-cyan-500/10 dark:to-teal-500/10 rounded-3xl flex items-center justify-center mb-6 text-cyan-500"
+    >
+      <i data-lucide="microscope" class="w-10 h-10"></i>
+    </div>
+    <h4 class="text-lg font-bold text-slate-700 dark:text-slate-300 mb-3">Phân tích chuyên sâu</h4>
+    <p class="text-sm text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed">
+      Báo cáo phân tích đa chiều về doanh nghiệp, bao gồm định giá, dự báo xu hướng và đánh giá rủi ro do AI tổng hợp.
+    </p>
+    <div class="mt-6 px-4 py-2 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl">
+      <p class="text-xs text-cyan-600 dark:text-cyan-400 font-medium">🔬 Chọn mã cổ phiếu để xem phân tích chi tiết</p>
+    </div>
+  </div>
+  <!-- Timeframe Selector Cards (inside tab) -->
+  <div id="analysis-content-timeframe" class="hidden w-full z-30">
+    <div class="w-full animate-fade-in-up">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-1">
+        <!-- Short Term Summary -->
+        <div
+          id="tech-card-short"
+          class="cursor-pointer transition-all duration-300 p-4 rounded-3xl border-2 border-indigo-400/60 bg-gradient-to-br from-indigo-100 via-indigo-50 to-purple-100 dark:from-indigo-600/30 dark:via-indigo-500/20 dark:to-purple-600/20 backdrop-blur-xl shadow-[0_8px_32px_rgba(99,102,241,0.3)] scale-[1.03]"
+        >
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <div
+                class="w-8 h-8 rounded-full bg-white dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200 dark:border-transparent"
+              >
+                <i data-lucide="zap" class="w-4 h-4"></i>
+              </div>
+              <span class="text-base font-bold text-slate-700 dark:text-indigo-200">Xu hướng ngắn hạn trong 1 năm</span>
+            </div>
+            <span
+              id="tech-short-trend-badge"
+              class="h-6 w-16 bg-slate-200/50 dark:bg-slate-800/50 rounded-full skeleton-shimmer text-transparent border border-transparent"
+            ></span>
+          </div>
+          <div class="flex flex-wrap gap-x-8 gap-y-3">
+            <div class="min-w-0">
+              <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold mb-0.5">
+                Xu hướng
+              </p>
+              <p
+                id="tech-short-trend"
+                class="text-base font-bold text-slate-700 dark:text-indigo-100 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-[4rem] h-6 whitespace-nowrap"
+              ></p>
+            </div>
+            <div class="min-w-0">
+              <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold mb-0.5">
+                Tín hiệu
+              </p>
+              <p
+                id="tech-short-signal"
+                class="text-base font-bold text-slate-700 dark:text-indigo-100 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-[4rem] h-6 whitespace-nowrap"
+              ></p>
+            </div>
+            <div class="col-span-2">
+              <div class="flex justify-between items-center gap-2 mb-1.5">
+                <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold">Độ tin cậy</p>
+                <span
+                  id="tech-short-confidence"
+                  class="text-xs font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-4"
+                ></span>
+              </div>
+              <div id="tech-short-confidence-container" class="relative h-3 w-full rounded-full overflow-visible">
+                <!-- Skeleton overlay -->
+                <div
+                  id="tech-short-confidence-skeleton"
+                  class="absolute inset-0 bg-slate-300/90 dark:bg-slate-600/90 rounded-full skeleton-shimmer z-20"
+                ></div>
+                <!-- Gradient bar -->
+                <div
+                  class="absolute inset-0 rounded-full"
+                  style="background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #22c55e 100%)"
+                ></div>
+                <div
+                  id="tech-short-confidence-bar"
+                  class="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full shadow-lg z-10 transition-all duration-1000 opacity-0"
+                  style="
+                    left: 0%;
+                    background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+                    border: 3px solid #ef4444;
+                    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+                  "
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Long Term Summary -->
+        <div
+          id="tech-card-long"
+          class="cursor-pointer transition-all duration-300 p-4 rounded-3xl border border-slate-200 dark:border-white/10 bg-gradient-to-br from-slate-100 via-white to-slate-50 dark:from-slate-800/60 dark:via-slate-900/40 dark:to-slate-800/40 backdrop-blur-md shadow-sm opacity-60 hover:opacity-100 hover:scale-[1.01]"
+        >
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <div
+                class="w-8 h-8 rounded-full bg-white dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200 dark:border-transparent"
+              >
+                <i data-lucide="anchor" class="w-4 h-4"></i>
+              </div>
+              <span class="text-base font-bold text-slate-700 dark:text-emerald-200">Xu hướng dài hạn trong 5 năm</span>
+            </div>
+            <span
+              id="tech-long-trend-badge"
+              class="h-6 w-16 bg-slate-200/50 dark:bg-slate-800/50 rounded-full skeleton-shimmer text-transparent border border-transparent"
+            ></span>
+          </div>
+          <div class="flex flex-wrap gap-x-8 gap-y-3">
+            <div class="min-w-0">
+              <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold mb-0.5">
+                Xu hướng
+              </p>
+              <p
+                id="tech-long-trend"
+                class="text-base font-bold text-slate-700 dark:text-emerald-100 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-[4rem] h-6 whitespace-nowrap"
+              ></p>
+            </div>
+            <div class="min-w-0">
+              <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold mb-0.5">
+                Tín hiệu
+              </p>
+              <p
+                id="tech-long-signal"
+                class="text-base font-bold text-slate-700 dark:text-emerald-100 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-[4rem] h-6 whitespace-nowrap"
+              ></p>
+            </div>
+            <div class="col-span-2">
+              <div class="flex justify-between items-center gap-2 mb-1.5">
+                <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold">Độ tin cậy</p>
+                <span
+                  id="tech-long-confidence"
+                  class="text-xs font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-4"
+                ></span>
+              </div>
+              <div id="tech-long-confidence-container" class="relative h-3 w-full rounded-full overflow-visible">
+                <!-- Skeleton overlay -->
+                <div
+                  id="tech-long-confidence-skeleton"
+                  class="absolute inset-0 bg-slate-300/90 dark:bg-slate-600/90 rounded-full skeleton-shimmer z-20"
+                ></div>
+                <!-- Gradient bar -->
+                <div
+                  class="absolute inset-0 rounded-full"
+                  style="background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #22c55e 100%)"
+                ></div>
+                <div
+                  id="tech-long-confidence-bar"
+                  class="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full shadow-lg z-10 transition-all duration-1000 opacity-0"
+                  style="
+                    left: 0%;
+                    background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+                    border: 3px solid #ef4444;
+                    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+                  "
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Collapsible Analysis Chart Area -->
+  <div id="analysis-chart-collapsible" class="hidden w-full mb-4 p-1">
+    <div class="flex items-center justify-between mb-2">
+      <h5
+        class="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2"
+      >
+        <i data-lucide="line-chart" class="w-4 h-4 text-primary-500"></i> Diễn biến giá
+      </h5>
+      <button
+        onclick="toggleAnalysisChart()"
+        class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all text-slate-400 hover:text-primary-500"
+        title="Thu gọn/Mở rộng biểu đồ"
+      >
+        <i
+          data-lucide="chevron-up"
+          class="w-4 h-4 transition-transform duration-300"
+          id="analysis-chart-toggle-icon"
+        ></i>
+      </button>
+    </div>
+    <div id="analysis-chart-wrapper" class="w-full h-full flex flex-col gap-3 overflow-hidden">
+      <!-- Analysis Price Chart Only -->
+      <div
+        id="analysis-price-chart-container"
+        class="bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-white/10 backdrop-blur-sm p-3 h-[400px] relative transition-none"
+      >
+        <div id="analysis-candlestick-chart" style="width: 100%; height: 100%"></div>
+        <!-- Vertical Resizer Handle -->
+        <div
+          id="analysis-chart-resizer"
+          class="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize flex items-center justify-center hover:bg-primary-500/20 group transition-colors rounded-b-2xl z-20"
+        >
+          <div
+            class="w-12 h-1 bg-slate-300 dark:bg-slate-700 rounded-full group-hover:bg-primary-500/50 transition-colors"
+          ></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    id="analysis-tab-content-container"
+    class="hidden space-y-5 animate-fade-in-up p-1 flex-1 min-h-0 overflow-y-auto custom-scrollbar"
+  >
+    <!-- Main Indicators Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <!-- Left Column: Primary Indicators -->
+      <div class="space-y-4">
+        <!-- Momentum Box -->
+        <div
+          class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300"
+        >
+          <h5
+            class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4"
+          >
+            <i data-lucide="gauge" class="w-4 h-4"></i> Động lượng
+            <span class="indicator-tooltip"
+              ><span class="tooltip-icon"><i data-lucide="info"></i></span
+              ><span class="tooltip-content"
+                >Nhóm chỉ báo đo lường tốc độ và sức mạnh biến động giá, giúp xác định điểm quá mua/quá bán và đảo chiều
+                xu hướng</span
+              ></span
+            >
+          </h5>
+          <div class="space-y-4">
+            <!-- RSI -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-sm font-medium">
+                <span class="text-slate-500 indicator-tooltip"
+                  >RSI (14)<span class="tooltip-icon"><i data-lucide="info"></i></span
+                  ><span class="tooltip-content"
+                    >Relative Strength Index - Chỉ số Sức mạnh Tương đối. Đo lường tốc độ thay đổi giá. RSI &lt; 30 =
+                    Quá bán (có thể tăng), RSI &gt; 70 = Quá mua (có thể giảm)</span
+                  ></span
+                >
+                <span
+                  id="tech-rsi-value"
+                  class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-5 indicator-tooltip"
+                  ><span class="tooltip-content">Chỉ số RSI hiện tại. > 70: Quá mua, < 30: Quá bán</span></span
+                >
+              </div>
+              <!-- RSI Bar with clear zones -->
+              <div id="tech-rsi-bar-container" class="relative mt-2 mb-4">
+                <!-- Skeleton overlay -->
+                <div
+                  id="tech-rsi-bar-skeleton"
+                  class="absolute inset-0 bg-slate-100 dark:bg-slate-900 rounded-lg skeleton-shimmer z-20"
+                ></div>
+                <!-- Labels -->
+                <div class="flex justify-between text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-1">
+                  <span>0</span>
+                  <span class="ml-[25%]">30</span>
+                  <span class="ml-auto mr-[25%]">70</span>
+                  <span>100</span>
+                </div>
+                <!-- Bar -->
+                <div class="relative h-3 w-full mt-2">
+                  <!-- Background Bar with Overflow Hidden for Corners -->
+                  <div class="absolute inset-0 rounded-full overflow-hidden shadow-inner">
+                    <!-- Oversold zone (0-30) - Green -->
+                    <div
+                      class="absolute inset-y-0 left-0 w-[30%] bg-gradient-to-r from-green-400 to-green-300 dark:from-green-600 dark:to-green-500"
+                    ></div>
+                    <!-- Neutral zone (30-70) - Amber/Yellow -->
+                    <div
+                      class="absolute inset-y-0 left-[30%] w-[40%] bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-300 dark:from-amber-600/60 dark:via-yellow-500/50 dark:to-amber-600/60"
+                    ></div>
+                    <!-- Overbought zone (70-100) - Red -->
+                    <div
+                      class="absolute inset-y-0 right-0 w-[30%] bg-gradient-to-r from-red-300 to-red-400 dark:from-red-500 dark:to-red-600"
+                    ></div>
+                    <!-- Zone separators -->
+                    <div class="absolute inset-y-0 left-[30%] w-0.5 bg-white/60 dark:bg-white/20"></div>
+                    <div class="absolute inset-y-0 left-[70%] w-0.5 bg-white/60 dark:bg-white/20"></div>
+                  </div>
+                  <!-- Marker (Outside the bar's overflow-hidden container) -->
+                  <div
+                    id="tech-rsi-marker"
+                    class="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white dark:bg-slate-200 rounded-full border-2 border-slate-700 dark:border-slate-900 shadow-lg z-10 transition-all duration-500"
+                    style="left: calc(50% - 8px)"
+                  ></div>
+                </div>
+                <!-- Zone labels -->
+                <div class="flex justify-between text-[9px] font-semibold mt-1">
+                  <span class="text-green-600 dark:text-green-400 w-[30%] text-center">Quá bán</span>
+                  <span class="text-yellow-600 dark:text-yellow-400 w-[40%] text-center">Trung tính</span>
+                  <span class="text-red-600 dark:text-red-400 w-[30%] text-center">Quá mua</span>
+                </div>
+              </div>
+              <div
+                id="tech-rsi-sparkline"
+                class="mini-sparkline h-[60px] skeleton-shimmer bg-slate-200/50 dark:bg-slate-800/40 rounded-xl"
+              ></div>
+              <div
+                id="tech-rsi-signal"
+                class="text-sm font-bold flex items-center justify-center skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-full w-24 h-6 ml-auto"
+              ></div>
+            </div>
+            <!-- Stochastic -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-sm font-medium flex-wrap gap-1">
+                <span class="text-slate-500 indicator-tooltip"
+                  >Stochastic<span class="tooltip-icon"><i data-lucide="info"></i></span
+                  ><span class="tooltip-content"
+                    >Stochastic Oscillator - So sánh giá đóng cửa với phạm vi giá trong 14 phiên. K &lt; 20 = Quá bán, K
+                    &gt; 80 = Quá mua. Giao cắt K/D báo hiệu đảo chiều</span
+                  ></span
+                >
+                <div class="flex gap-2">
+                  <span
+                    id="tech-stoch-k"
+                    class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-10 h-5 indicator-tooltip"
+                    ><span class="tooltip-content"
+                      >Đường %K (nhanh) của Stochastic. > 80: Quá mua, < 20: Quá bán</span
+                    ></span
+                  >
+                  <span
+                    id="tech-stoch-d"
+                    class="text-slate-400 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-10 h-5 ml-1 indicator-tooltip"
+                    ><span class="tooltip-content"
+                      >Đường %D (chậm) của Stochastic. Thường dùng làm đường tín hiệu</span
+                    ></span
+                  >
+                </div>
+              </div>
+              <div
+                id="tech-stoch-signal"
+                class="text-sm font-bold flex items-center justify-center skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-full w-24 h-6"
+              ></div>
+              <div
+                id="tech-stoch-sparkline"
+                class="mini-sparkline h-[60px] skeleton-shimmer bg-slate-200/50 dark:bg-slate-800/40 rounded-xl"
+              ></div>
+            </div>
+            <!-- MACD -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-sm font-medium flex-wrap gap-1">
+                <span class="text-slate-500 indicator-tooltip"
+                  >MACD (12, 26, 9)<span class="tooltip-icon"><i data-lucide="info"></i></span
+                  ><span class="tooltip-content"
+                    >Moving Average Convergence Divergence - Đo động lượng xu hướng. Histogram dương = xu hướng tăng
+                    mạnh, âm = xu hướng giảm. Giao cắt MACD/Signal báo hiệu mua/bán</span
+                  ></span
+                >
+                <div class="flex gap-2">
+                  <span
+                    id="tech-macd-line"
+                    class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-10 h-5 indicator-tooltip"
+                    ><span class="tooltip-content">Giá trị đường MACD (12-26). MACD > 0: Xu hướng tăng</span></span
+                  >
+                  <span
+                    id="tech-macd-signal-val"
+                    class="text-slate-400 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-10 h-5 ml-1 indicator-tooltip"
+                    ><span class="tooltip-content"
+                      >Giá trị đường Tín hiệu (Signal 9). Giao cắt với MACD báo hiệu mua/bán</span
+                    ></span
+                  >
+                </div>
+              </div>
+              <div class="flex justify-between text-sm font-bold">
+                <span
+                  id="tech-macd-hist"
+                  class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-14 h-4 indicator-tooltip"
+                  ><span class="tooltip-content"
+                    >Độ chênh lệch giữa MACD và Signal. Histogram cao = động lượng mạnh</span
+                  ></span
+                >
+                <span
+                  id="tech-macd-signal"
+                  class="text-sm font-bold flex items-center justify-center skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-full w-24 h-6"
+                ></span>
+              </div>
+              <div
+                id="tech-macd-sparkline"
+                class="mini-sparkline h-[60px] skeleton-shimmer bg-slate-200/50 dark:bg-slate-800/40 rounded-xl"
+              ></div>
+            </div>
+            <!-- Williams %R -->
+            <div class="flex justify-between text-sm font-medium">
+              <span class="text-slate-500 indicator-tooltip"
+                >Williams %R<span class="tooltip-icon"><i data-lucide="info"></i></span
+                ><span class="tooltip-content"
+                  >Williams Percent Range - Đo vị trí giá trong phạm vi cao/thấp. Giá trị từ -100 đến 0. &lt; -80 = Quá
+                  bán, &gt; -20 = Quá mua</span
+                ></span
+              >
+              <span
+                id="tech-willr"
+                class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-5 indicator-tooltip"
+                ><span class="tooltip-content"
+                  >Vị trí giá hiện tại trong phạm vi cao/thấp. < -80: Quá bán, > -20: Quá mua</span
+                ></span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Trend Indicators -->
+        <div
+          class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300"
+        >
+          <h5
+            class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4"
+          >
+            <i data-lucide="move-up-right" class="w-4 h-4"></i> Xu hướng
+            <span class="indicator-tooltip"
+              ><span class="tooltip-icon"><i data-lucide="info"></i></span
+              ><span class="tooltip-content"
+                >Nhóm chỉ báo xác định chiều hướng và sức mạnh xu hướng giá, bao gồm đường trung bình động (MA) và
+                ADX</span
+              ></span
+            >
+          </h5>
+          <div class="space-y-4">
+            <div id="tech-ma-list" class="space-y-2 text-sm">
+              <div class="flex justify-between">
+                <span class="text-slate-500 indicator-tooltip"
+                  >SMA20:<span class="tooltip-icon"><i data-lucide="info"></i></span
+                  ><span class="tooltip-content"
+                    >Simple Moving Average 20 - Trung bình giá đóng cửa 20 phiên gần nhất. Dùng để xác định xu hướng
+                    ngắn hạn</span
+                  ></span
+                ><span
+                  id="tech-sma20"
+                  class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                  ><span class="tooltip-content"
+                    >Đường trung bình động đơn giản 20 phiên. Dùng cho xu hướng ngắn hạn</span
+                  ></span
+                >
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500 indicator-tooltip"
+                  >SMA50:<span class="tooltip-icon"><i data-lucide="info"></i></span
+                  ><span class="tooltip-content"
+                    >Simple Moving Average 50 - Trung bình giá đóng cửa 50 phiên. Dùng để xác định xu hướng trung
+                    hạn</span
+                  ></span
+                ><span
+                  id="tech-sma50"
+                  class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                  ><span class="tooltip-content"
+                    >Đường trung bình động đơn giản 50 phiên. Dùng cho xu hướng trung hạn</span
+                  ></span
+                >
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500 indicator-tooltip"
+                  >SMA100:<span class="tooltip-icon"><i data-lucide="info"></i></span
+                  ><span class="tooltip-content"
+                    >Simple Moving Average 100 - Trung bình giá 100 phiên. Hỗ trợ/kháng cự quan trọng cho xu hướng
+                    trung-dài hạn</span
+                  ></span
+                ><span
+                  id="tech-sma100"
+                  class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                  ><span class="tooltip-content"
+                    >Đường trung bình động đơn giản 100 phiên. Hỗ trợ/kháng cự trung hạn</span
+                  ></span
+                >
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500 indicator-tooltip"
+                  >SMA200:<span class="tooltip-icon"><i data-lucide="info"></i></span
+                  ><span class="tooltip-content"
+                    >Simple Moving Average 200 - Trung bình giá 200 phiên. Chỉ báo quan trọng nhất cho xu hướng dài
+                    hạn</span
+                  ></span
+                ><span
+                  id="tech-sma200"
+                  class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                  ><span class="tooltip-content"
+                    >Đường trung bình động đơn giản 200 phiên. Chỉ báo xu thế dài hạn cực kỳ quan trọng</span
+                  ></span
+                >
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500 indicator-tooltip"
+                  >EMA20:<span class="tooltip-icon"><i data-lucide="info"></i></span
+                  ><span class="tooltip-content"
+                    >Exponential Moving Average 20 - Trung bình lũy thừa 20 phiên. Nhạy hơn SMA, phản ánh nhanh biến
+                    động giá</span
+                  ></span
+                ><span
+                  id="tech-ema20"
+                  class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                  ><span class="tooltip-content"
+                    >Đường trung bình động lũy thừa 20 phiên. Nhạy bén hơn SMA với các biến động giá gần đây</span
+                  ></span
+                >
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500 indicator-tooltip"
+                  >EMA50:<span class="tooltip-icon"><i data-lucide="info"></i></span
+                  ><span class="tooltip-content"
+                    >Exponential Moving Average 50 - Trung bình lũy thừa 50 phiên. Kết hợp độ nhạy và xu hướng trung
+                    hạn</span
+                  ></span
+                ><span
+                  id="tech-ema50"
+                  class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                  ><span class="tooltip-content"
+                    >Đường trung bình động lũy thừa 50 phiên. Cân bằng giữa độ nhạy và xu hướng trung hạn</span
+                  ></span
+                >
+              </div>
+            </div>
+            <div class="pt-3 border-t border-slate-200 dark:border-white/5">
+              <div class="flex justify-between text-sm font-medium mb-1">
+                <span class="text-slate-500 indicator-tooltip"
+                  >ADX<span class="tooltip-icon"><i data-lucide="info"></i></span
+                  ><span class="tooltip-content"
+                    >Average Directional Index - Chỉ số Định hướng Trung bình. Đo sức mạnh xu hướng. ADX &gt; 25 = xu
+                    hướng mạnh, &lt; 20 = đi ngang. +DI/-DI xác định chiều tăng/giảm</span
+                  ></span
+                >
+                <span
+                  id="tech-adx-val"
+                  class="font-bold text-indigo-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-5 indicator-tooltip"
+                  ><span class="tooltip-content"
+                    >Chỉ số ADX đo sức mạnh của xu hướng. > 25: Xu hướng mạnh, < 20: Không rõ xu hướng</span
+                  ></span
+                >
+              </div>
+              <div class="flex items-center gap-2 mb-2">
+                <span
+                  id="tech-adx-dmp"
+                  class="text-sm font-bold text-emerald-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-4 indicator-tooltip"
+                  ><span class="tooltip-content"
+                    >Directional Movement Positive (+DI). Khi nằm trên -DI báo hiệu áp lực tăng giá</span
+                  ></span
+                >
+                <span class="text-slate-300">/</span>
+                <span
+                  id="tech-adx-dmn"
+                  class="text-sm font-bold text-rose-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-4 indicator-tooltip"
+                  ><span class="tooltip-content"
+                    >Directional Movement Negative (-DI). Khi nằm trên +DI báo hiệu áp lực giảm giá</span
+                  ></span
+                >
+              </div>
+              <div
+                id="tech-adx-signal"
+                class="text-sm font-bold flex items-center justify-center skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-full w-32 h-6"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Volatility -->
+        <div
+          class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300"
+        >
+          <h5
+            class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4"
+          >
+            <i data-lucide="waves" class="w-4 h-4"></i> Biến động
+            <span class="indicator-tooltip"
+              ><span class="tooltip-icon"><i data-lucide="info"></i></span
+              ><span class="tooltip-content"
+                >Nhóm chỉ báo đo lường mức độ dao động giá, giúp xác định ngưỡng hỗ trợ/kháng cự và đánh giá rủi
+                ro</span
+              ></span
+            >
+          </h5>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between">
+              <span class="text-slate-500 indicator-tooltip"
+                >BB Trên:<span class="tooltip-icon"><i data-lucide="info"></i></span
+                ><span class="tooltip-content"
+                  >Bollinger Band Upper - Dải Bollinger trên. Giá chạm BB trên thường cho thấy quá mua, có thể điều
+                  chỉnh</span
+                ></span
+              ><span
+                id="tech-bb-upper"
+                class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                ><span class="tooltip-content"
+                  >Dải Bollinger trên. Giá vượt qua dải này thường báo hiệu trạng thái quá mua</span
+                ></span
+              >
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500 indicator-tooltip"
+                >BB Giữa:<span class="tooltip-icon"><i data-lucide="info"></i></span
+                ><span class="tooltip-content"
+                  >Bollinger Band Middle - Đường trung bình 20 phiên, là mức hỗ trợ/kháng cự động của dải
+                  Bollinger</span
+                ></span
+              ><span
+                id="tech-bb-middle"
+                class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                ><span class="tooltip-content"
+                  >Đường trung tâm dải Bollinger (SMA 20). Đóng vai trò là mức cân bằng động</span
+                ></span
+              >
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500 indicator-tooltip"
+                >BB Dưới:<span class="tooltip-icon"><i data-lucide="info"></i></span
+                ><span class="tooltip-content"
+                  >Bollinger Band Lower - Dải Bollinger dưới. Giá chạm BB dưới thường cho thấy quá bán, có thể hồi
+                  phục</span
+                ></span
+              ><span
+                id="tech-bb-lower"
+                class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                ><span class="tooltip-content"
+                  >Dải Bollinger dưới. Giá rơi dưới dải này thường báo hiệu trạng thái quá bán</span
+                ></span
+              >
+            </div>
+            <div
+              id="tech-bb-signal"
+              class="text-sm font-bold flex items-center justify-center skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-full w-24 h-6"
+            ></div>
+            <div class="pt-2 border-t border-slate-200 dark:border-white/5 flex justify-between">
+              <span class="text-slate-500 indicator-tooltip"
+                >ATR:<span class="tooltip-icon"><i data-lucide="info"></i></span
+                ><span class="tooltip-content"
+                  >Average True Range - Phạm vi Thực Trung bình. Đo biên độ dao động giá trung bình. ATR cao = biến động
+                  mạnh</span
+                ></span
+              >
+              <span
+                id="tech-atr"
+                class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                ><span class="tooltip-content"
+                  >Average True Range đo lường mức độ biến động tuyệt đối của giá. ATR cao = rủi ro cao</span
+                ></span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Khối lượng & Dòng tiền -->
+        <div
+          class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300"
+        >
+          <h5
+            class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4"
+          >
+            <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Khối lượng & Dòng tiền
+            <span class="indicator-tooltip"
+              ><span class="tooltip-icon"><i data-lucide="info"></i></span
+              ><span class="tooltip-content"
+                >Nhóm chỉ báo phân tích khối lượng giao dịch và dòng tiền, giúp xác nhận xu hướng</span
+              ></span
+            >
+          </h5>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between">
+              <span class="text-slate-500 indicator-tooltip"
+                >OBV:<span class="tooltip-icon"><i data-lucide="info"></i></span
+                ><span class="tooltip-content"
+                  >On-Balance Volume - Khối lượng Cân bằng. Tăng = dòng tiền vào, Giảm = dòng tiền ra. Xác nhận sức mạnh
+                  xu hướng</span
+                ></span
+              >
+              <span
+                id="tech-obv-trend"
+                class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-14 h-5 indicator-tooltip"
+                ><span class="tooltip-content"
+                  >Xu hướng của On-Balance Volume. OBV tăng xác nhận sự tích lũy của dòng tiền</span
+                ></span
+              >
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500 indicator-tooltip"
+                >CMF:<span class="tooltip-icon"><i data-lucide="info"></i></span
+                ><span class="tooltip-content"
+                  >Chaikin Money Flow - Dòng tiền Chaikin. CMF > 0 = áp lực mua, CMF < 0 = áp lực bán</span
+                ></span
+              >
+              <span
+                id="tech-cmf"
+                class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-14 h-5 text-right indicator-tooltip"
+                ><span class="tooltip-content"
+                  >Chaikin Money Flow đo lường lực mua/bán tích lũy. CMF > 0: Dòng tiền đang vào</span
+                ></span
+              >
+            </div>
+            <div
+              id="tech-vol-signal"
+              class="text-sm font-bold flex items-center justify-center skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-full w-32 h-6"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Pivot Points -->
+        <div
+          class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300"
+        >
+          <h5
+            class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4"
+          >
+            <i data-lucide="target" class="w-4 h-4"></i> Điểm Pivot
+            <span class="indicator-tooltip"
+              ><span class="tooltip-icon"><i data-lucide="info"></i></span
+              ><span class="tooltip-content"
+                >Các mức giá quan trậng tính từ giá Cao/Thấp/Đóng cửa phiên trước. Hỗ trợ (S) và Kháng cự (R) là các mức
+                giá tiềm năng đảo chiều</span
+              ></span
+            >
+          </h5>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between font-bold text-indigo-500 mb-1">
+              <span class="text-slate-500 font-medium">Pivot</span
+              ><span
+                id="tech-pivot"
+                class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                ><span class="tooltip-content"
+                  >Điểm xoay trung tâm. Là giá trị trung bình của Cao, Thấp và Đóng cửa phiên trước</span
+                ></span
+              >
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Kháng cự 1</span
+              ><span
+                id="tech-pivot-r1"
+                class="text-rose-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                ><span class="tooltip-content">Mức kháng cự 1. Vùng giá phe bán thường trực chờ</span></span
+              >
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Kháng cự 2</span
+              ><span
+                id="tech-pivot-r2"
+                class="text-rose-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                ><span class="tooltip-content">Mức kháng cự 2. Vùng giá mục tiêu nếu vượt qua R1</span></span
+              >
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Kháng cự 3</span
+              ><span
+                id="tech-pivot-r3"
+                class="text-rose-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                ><span class="tooltip-content">Mức kháng cự 3. Ngưỡng kháng cự mạnh nhất trong ngày</span></span
+              >
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Hỗ trợ 1</span
+              ><span
+                id="tech-pivot-s1"
+                class="text-emerald-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                ><span class="tooltip-content">Mức hỗ trợ 1. Vùng giá phe mua thường trực chờ</span></span
+              >
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Hỗ trợ 2</span
+              ><span
+                id="tech-pivot-s2"
+                class="text-emerald-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                ><span class="tooltip-content">Mức hỗ trợ 2. Vùng giá mục tiêu nếu xuyên thủng S1</span></span
+              >
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Hỗ trợ 3</span
+              ><span
+                id="tech-pivot-s3"
+                class="text-emerald-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                ><span class="tooltip-content">Mức hỗ trợ 3. Ngưỡng hỗ trợ mạnh nhất trong ngày</span></span
+              >
+            </div>
+          </div>
+        </div>
+        <!-- Fibonacci -->
+        <div
+          class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300"
+        >
+          <h5
+            class="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4"
+          >
+            <i data-lucide="layers" class="w-4 h-4"></i> Fibonacci
+            <span class="indicator-tooltip"
+              ><span class="tooltip-icon"><i data-lucide="info"></i></span
+              ><span class="tooltip-content"
+                >Các mức tỉ lệ Fibonacci (0%, 23.6%, 38.2%, 50%, 61.8%, 78.6%, 100%) dựa trên biên độ giá. Thường dùng
+                để xác định mức hồi/điều chỉnh</span
+              ></span
+            >
+          </h5>
+          <div class="space-y-2 text-sm pt-1">
+            <div class="flex justify-between">
+              <span class="text-slate-500">Mức 0.0%</span
+              ><span
+                id="tech-fib-0"
+                class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                ><span class="tooltip-content">Mức thấp nhất trong phạm vi xu hướng đang xét</span></span
+              >
+            </div>
+            <div class="flex justify-between text-yellow-500 font-medium">
+              <span class="text-slate-500 font-normal">Mức 23.6%</span
+              ><span
+                id="tech-fib-236"
+                class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                ><span class="tooltip-content">Ngưỡng hồi quy Fibonacci 23.6%. Mức điều chỉnh nông</span></span
+              >
+            </div>
+            <div class="flex justify-between text-amber-500 font-medium">
+              <span class="text-slate-500 font-normal">Mức 38.2%</span
+              ><span
+                id="tech-fib-382"
+                class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                ><span class="tooltip-content"
+                  >Ngưỡng hồi quy Fibonacci 38.2%. Mức hỗ trợ/kháng cự thường gặp</span
+                ></span
+              >
+            </div>
+            <div class="flex justify-between text-indigo-500 font-bold">
+              <span class="text-slate-500 font-normal">Mức 50.0%</span
+              ><span
+                id="tech-fib-500"
+                class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                ><span class="tooltip-content"
+                  >Mức 50.0%. Không phải tỉ lệ Fib nhưng là ngưỡng tâm lý quan trọng</span
+                ></span
+              >
+            </div>
+            <div class="flex justify-between text-emerald-500 font-medium">
+              <span class="text-slate-500 font-normal">Mức 61.8%</span
+              ><span
+                id="tech-fib-618"
+                class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                ><span class="tooltip-content"
+                  >Tỉ lệ Vàng (Golden Ratio). Ngưỡng quan trọng để xác định xu hướng còn tiếp diễn hay không</span
+                ></span
+              >
+            </div>
+            <div class="flex justify-between text-teal-500 font-medium">
+              <span class="text-slate-500 font-normal">Mức 78.6%</span
+              ><span
+                id="tech-fib-786"
+                class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                ><span class="tooltip-content">Ngưỡng hồi quy Fibonacci 78.6%. Mức điều chỉnh sâu</span></span
+              >
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Mức 100.0%</span
+              ><span
+                id="tech-fib-100"
+                class="skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-16 h-5 indicator-tooltip"
+                ><span class="tooltip-content">Mức cao nhất trong phạm vi xu hướng đang xét</span></span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Columns: AI -->
+      <div class="lg:col-span-2 space-y-4">
+        <!-- AI Core Analysis -->
+        <div
+          class="p-6 bg-white/40 dark:bg-slate-900/50 backdrop-blur-xl rounded-3xl border border-white/50 dark:border-white/10 shadow-2xl relative overflow-hidden"
+        >
+          <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 pointer-events-none"></div>
+          <div class="flex items-center gap-2 mb-4 border-b border-slate-200 dark:border-white/10 pb-3">
+            <div
+              class="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm border border-indigo-100 dark:border-transparent"
+            >
+              <i data-lucide="brain-circuit" class="w-5 h-5"></i>
+            </div>
+            <h4 class="font-bold text-slate-800 dark:text-white text-lg">Tổng hợp từ AI</h4>
+            <div class="flex-1 text-right flex items-center justify-end gap-2 text-xs flex-wrap">
+              <div
+                id="tech-recommendation-badge"
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all border border-transparent opacity-0"
+              ></div>
+              <span
+                id="tech-gauge-ma"
+                class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg shadow-sm text-[11px] font-semibold text-slate-600 dark:text-slate-300 skeleton-shimmer text-transparent min-w-[70px] h-6 indicator-tooltip"
+                ><span class="tooltip-content">Điểm tổng hợp từ các chỉ báo xu hướng (MA)</span
+                ><i data-lucide="trending-up" class="w-3 h-3"></i><span class="gauge-text">MA: --</span></span
+              >
+              <span
+                id="tech-gauge-osc"
+                class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg shadow-sm text-[11px] font-semibold text-slate-600 dark:text-slate-300 skeleton-shimmer text-transparent min-w-[70px] h-6 indicator-tooltip"
+                ><span class="tooltip-content">Điểm tổng hợp từ các chỉ báo động lượng (RSI, Stochastic...)</span
+                ><i data-lucide="activity" class="w-3 h-3"></i><span class="gauge-text">OSC: --</span></span
+              >
+              <span
+                id="tech-gauge-summary"
+                class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/40 dark:to-purple-900/40 border border-indigo-200 dark:border-indigo-500/30 rounded-lg shadow-sm text-[11px] font-bold text-indigo-600 dark:text-indigo-400 skeleton-shimmer text-transparent min-w-[80px] h-6 indicator-tooltip"
+                ><span class="tooltip-content">Khuyến nghị tổng hợp từ sự kết hợp của tất cả các chỉ báo</span
+                ><i data-lucide="bar-chart-2" class="w-3 h-3"></i><span class="gauge-text">--</span></span
+              >
+            </div>
+          </div>
+          <div
+            id="tech-analysis-content"
+            class="text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed max-h-[480px] overflow-y-auto custom-scrollbar pr-2 markdown-content prose prose-sm dark:prose-invert max-w-none"
+          >
+            <div class="flex items-center gap-2 text-slate-400 mb-2">
+              <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
+              <span class="text-sm">Đang tải dữ liệu phân tích...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Strategy Methods -->
+        <div
+          class="p-5 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-white/10 shadow-lg hover:shadow-xl transition-shadow duration-300"
+        >
+          <h5
+            class="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3"
+          >
+            <i data-lucide="crosshair" class="w-4 h-4"></i> Chiến lược áp dụng
+          </h5>
+          <div id="tech-methods-list" class="space-y-3">
+            <div class="h-24 bg-slate-200/50 dark:bg-slate-800/50 skeleton-shimmer rounded-2xl"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Templates -->
+<template id="analysis-chart-skeleton-template">
+  <div class="h-full w-full flex flex-col gap-2 p-2 chart-skeleton">
+    <div class="flex-1 flex items-end gap-1">
+      <!-- Bars will be generated by JS -->
+    </div>
+    <div class="h-2 skeleton-shimmer rounded w-full"></div>
+  </div>
+</template>
+
+<template id="analysis-chart-error-template">
+  <div class="flex items-center justify-center h-full text-center p-4">
+    <p class="text-sm text-slate-500 dark:text-slate-400">Không thể tải biểu đồ</p>
+  </div>
+</template>
+
+<template id="analysis-method-item-template">
+  <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+    <div class="flex items-center justify-between mb-1">
+      <span class="method-name text-sm font-bold text-slate-700 dark:text-slate-200"></span>
+      <span class="method-signal-badge inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full">
+        <i class="method-icon w-3 h-3"></i>
+        <span class="method-signal-text"></span>
+      </span>
+    </div>
+    <p class="method-category text-xs text-slate-500 dark:text-slate-400 mb-1"></p>
+    <p class="method-evaluation text-xs text-slate-600 dark:text-slate-300"></p>
+  </div>
+</template>

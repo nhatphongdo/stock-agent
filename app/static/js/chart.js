@@ -7,6 +7,14 @@ let indicatorSeries = []; // Array to hold indicator line series
 let indicatorValues = {}; // Store raw indicator values mapping time -> {key: value}
 let currentChartSymbol = null;
 
+// Refresh charts by fitting content to time scale
+function refreshCharts() {
+  if (typeof priceChart !== "undefined" && priceChart)
+    priceChart.timeScale().fitContent();
+  if (typeof volumeChart !== "undefined" && volumeChart)
+    volumeChart.timeScale().fitContent();
+}
+
 // Calculate Moving Average
 function calculateMA(data, period) {
   return data.map((_, i, arr) => {
@@ -109,6 +117,15 @@ function calculateVolumeSMA(data, period = 20) {
     const slice = arr.slice(i - period + 1, i + 1);
     return slice.reduce((sum, d) => sum + d.v, 0) / period;
   });
+}
+
+// Trigger chart display and initialization
+function triggerChartDisplay(symbol) {
+  document.getElementById("chart-tab-content-empty").classList.add("hidden");
+  document
+    .getElementById("chart-tab-content-container")
+    .classList.remove("hidden");
+  initAdvancedChart(symbol);
 }
 
 // Initialize Advanced Chart
