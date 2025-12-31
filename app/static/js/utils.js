@@ -59,6 +59,50 @@ Object.freeze(CONFIG.COLORS);
 Object.freeze(CONFIG.TIMEFRAME_DAYS);
 Object.freeze(CONFIG.UI);
 
+// --- Valid Stock Symbols (fetched from backend) ---
+let symbolsMap = {}; // symbol -> {name, exchange}
+const VALID_EXCHANGES = ["HOSE", "HNX", "UPCOM", "HSX", "VN30", "HNX30"];
+
+async function fetchValidSymbols() {
+  try {
+    const response = await fetch("/symbols");
+    if (response.ok) {
+      const data = await response.json();
+      // Filter to cache only valid stocks
+      symbolsMap = {};
+      for (const [symbol, info] of Object.entries(data.symbols || {})) {
+        const exchange = (info?.exchange || "HOSE").toUpperCase();
+        if (
+          VALID_EXCHANGES.includes(exchange) &&
+          ["STOCK", "ETF"].includes(info.type)
+        ) {
+          symbolsMap[symbol] = info;
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Failed to fetch stock symbols:", error);
+  }
+}
+
+// Helper to get stock info
+function getStockInfo(symbol) {
+  const info = symbolsMap[symbol];
+  if (info && typeof info === "object") {
+    return {
+      name: info.name || symbol,
+      exchange: info.exchange || "HOSE",
+    };
+  }
+  // Fallback for old format (string)
+  return { name: info || symbol, exchange: "HOSE" };
+}
+
+// Fetch symbols on page load
+document.addEventListener("DOMContentLoaded", () => {
+  fetchValidSymbols();
+});
+
 /**
  * Sets up symbol autocomplete for an input element.
  * @param {HTMLInputElement | null} inputEl - The input element.
