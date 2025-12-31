@@ -294,7 +294,7 @@ async def get_ui():
 
         # Replace all component markers
         html_content = re.sub(
-            r"<!--\s*COMPONENT:\s*(\w+)\s*-->", inject_component, html_content
+            r"<!--\s*COMPONENT:\s*([\w-]+)\s*-->", inject_component, html_content
         )
 
         return html_content

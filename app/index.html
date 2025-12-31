@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/static/css/settings.css" />
     <link rel="stylesheet" href="/static/css/portfolio.css" />
     <link rel="stylesheet" href="/static/css/chat.css" />
+    <link rel="stylesheet" href="/static/css/user.css" />
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -286,37 +287,7 @@
         </button>
         <div id="user-avatar-btn" class="user-avatar">??</div>
 
-        <!-- User Menu Popup -->
-        <div id="user-menu" class="user-menu">
-          <div class="p-3 mb-2 flex items-center gap-3">
-            <div
-              id="menu-avatar"
-              class="w-10 h-10 rounded-full bg-primary-500 text-white flex items-center justify-center font-bold flex-shrink-0"
-            >
-              ??
-            </div>
-            <div>
-              <div id="menu-user-name" class="font-bold text-slate-900 dark:text-white leading-tight">User Name</div>
-              <div id="menu-user-email" class="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                email@example.com
-              </div>
-            </div>
-          </div>
-          <div class="menu-divider"></div>
-          <div class="menu-item" onclick="openSettings()">
-            <i data-lucide="settings" class="w-4 h-4"></i>
-            <span>Thiết lập</span>
-          </div>
-          <div class="menu-item" onclick="openPortfolio()">
-            <i data-lucide="layout-list" class="w-4 h-4"></i>
-            <span>Danh mục cổ phiếu</span>
-          </div>
-          <div class="menu-divider"></div>
-          <div class="user-switch-item">Đổi người dùng</div>
-          <div id="user-list-container">
-            <!-- Dynamic user list -->
-          </div>
-        </div>
+        <!-- COMPONENT: user-menu -->
       </div>
     </header>
 
@@ -1714,6 +1685,7 @@
     </main>
 
     <script src="/static/js/utils.js"></script>
+    <script src="/static/js/user.js"></script>
     <script src="/static/js/settings.js"></script>
     <script src="/static/js/portfolio.js"></script>
     <script src="/static/js/chat.js"></script>
@@ -3050,118 +3022,6 @@
           fetchTechnicalAnalysis(symbol, companyName);
           lastFetchedTechnicalSymbol = symbol;
         }
-      }
-
-      // --- User management logic ---
-      let users = [];
-      let currentUser = null;
-
-      const userAvatarBtn = document.getElementById("user-avatar-btn");
-      const userMenu = document.getElementById("user-menu");
-      const userListContainer = document.getElementById("user-list-container");
-      const menuAvatar = document.getElementById("menu-avatar");
-      const menuUserName = document.getElementById("menu-user-name");
-      const menuUserEmail = document.getElementById("menu-user-email");
-
-      async function fetchUsers() {
-        try {
-          const response = await fetch("/users");
-          users = await response.json();
-
-          if (users.length > 0) {
-            // Load saved user or first user
-            const savedUserId = localStorage.getItem("lastUserId");
-            const user = users.find((u) => u.id == savedUserId) || users[0];
-            selectUser(user);
-          }
-          renderUserList();
-        } catch (error) {
-          console.error("Error fetching users:", error);
-        }
-      }
-
-      function selectUser(user) {
-        currentUser = user;
-        localStorage.setItem("lastUserId", user.id);
-
-        if (typeof getInitials !== "function") {
-          console.error("getInitials not found!");
-          return;
-        }
-        const initials = getInitials(user.full_name);
-        userAvatarBtn.innerText = initials;
-        menuAvatar.innerText = initials;
-        menuUserName.innerText = user.full_name;
-        menuUserEmail.innerText = user.email;
-
-        // Update welcome message
-        const welcomeText = document.getElementById("welcome-text");
-        if (welcomeText) {
-          welcomeText.innerHTML = `Xin chào <b>${user.full_name}</b>! Tôi là <b>Stock Trading Assistant</b>. Hãy nhập yêu cầu phân tích để tôi có thể hỗ trợ bạn tìm kiếm cơ hội đầu tư tốt nhất.`;
-        }
-
-        // Hide menu
-        userMenu.classList.remove("show");
-      }
-
-      function renderUserList() {
-        userListContainer.innerHTML = "";
-        users.forEach((user) => {
-          const item = document.createElement("div");
-          item.className = "menu-item";
-          item.innerHTML = `
-                          <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center text-xs font-bold">
-                              ${getInitials(user.full_name)}
-                          </div>
-                          <span>${user.full_name}</span>
-                      `;
-          item.onclick = () => selectUser(user);
-          userListContainer.appendChild(item);
-        });
-      }
-
-      userAvatarBtn.onclick = (e) => {
-        e.stopPropagation();
-        userMenu.classList.toggle("show");
-      };
-
-      window.onclick = () => {
-        userMenu.classList.remove("show");
-      };
-
-      userMenu.onclick = (e) => e.stopPropagation();
-
-      // Initialize Lucide for the menu
-      lucide.createIcons({ root: userMenu });
-
-      // Fetch users on load
-      fetchUsers();
-
-      function removeSkeleton(elementId) {
-        const el = document.getElementById(elementId);
-        if (el) {
-          el.classList.remove(
-            "skeleton-shimmer",
-            "text-transparent",
-            "bg-slate-200/50",
-            "dark:bg-slate-800/50",
-            "bg-slate-200/50",
-            "dark:bg-slate-800/40",
-          );
-        }
-      }
-
-      // Helper to update value while preserving tooltip-content
-      function updateValueWithTooltip(elementId, value) {
-        const el = document.getElementById(elementId);
-        if (!el) return;
-
-        // Find and preserve tooltip-content
-        const tooltipContent = el.querySelector(".tooltip-content");
-        const tooltipHTML = tooltipContent ? tooltipContent.outerHTML : "";
-
-        // Create a text node for the value
-        el.innerHTML = value + tooltipHTML;
       }
 
       async function fetchNewsAnalysis(symbol, companyName) {

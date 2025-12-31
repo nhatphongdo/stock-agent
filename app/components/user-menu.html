@@ -1,0 +1,39 @@
+<!-- User Menu Popup -->
+<div id="user-menu" class="user-menu">
+  <div class="p-3 mb-2 flex items-center gap-3">
+    <div
+      id="menu-avatar"
+      class="w-10 h-10 rounded-full bg-primary-500 text-white flex items-center justify-center font-bold flex-shrink-0"
+    >
+      ??
+    </div>
+    <div>
+      <div id="menu-user-name" class="font-bold text-slate-900 dark:text-white leading-tight">User Name</div>
+      <div id="menu-user-email" class="text-xs text-slate-600 dark:text-slate-400 font-medium">email@example.com</div>
+    </div>
+  </div>
+  <div class="menu-divider"></div>
+  <div class="menu-item" onclick="openSettings()">
+    <i data-lucide="settings" class="w-4 h-4"></i>
+    <span>Thiết lập</span>
+  </div>
+  <div class="menu-item" onclick="openPortfolio()">
+    <i data-lucide="layout-list" class="w-4 h-4"></i>
+    <span>Danh mục cổ phiếu</span>
+  </div>
+  <div class="menu-divider"></div>
+  <div class="user-switch-item">Đổi người dùng</div>
+  <div id="user-list-container">
+    <!-- Dynamic user list -->
+  </div>
+</div>
+
+<!-- Template for user list item -->
+<template id="user-list-item-template">
+  <div class="menu-item">
+    <div
+      class="user-initials w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center text-xs font-bold"
+    ></div>
+    <span class="user-name"></span>
+  </div>
+</template>

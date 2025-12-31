@@ -149,6 +149,41 @@ function getInitials(name) {
 }
 
 /**
+ * Removes skeleton loading classes from an element.
+ * @param {string} elementId - The ID of the element to remove skeleton from.
+ */
+function removeSkeleton(elementId) {
+  const el = document.getElementById(elementId);
+  if (el) {
+    el.classList.remove(
+      "skeleton-shimmer",
+      "text-transparent",
+      "bg-slate-200/50",
+      "dark:bg-slate-800/50",
+      "bg-slate-200/50",
+      "dark:bg-slate-800/40",
+    );
+  }
+}
+
+/**
+ * Updates an element's value while preserving its tooltip-content child.
+ * @param {string} elementId - The ID of the element to update.
+ * @param {string} value - The new value to set.
+ */
+function updateValueWithTooltip(elementId, value) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+
+  // Find and preserve tooltip-content
+  const tooltipContent = el.querySelector(".tooltip-content");
+  const tooltipHTML = tooltipContent ? tooltipContent.outerHTML : "";
+
+  // Create a text node for the value
+  el.innerHTML = value + tooltipHTML;
+}
+
+/**
  * Process markdown content with optional stock ticker highlighting.
  * @param {string} text - The text to process.
  * @param {boolean} highlightTickers - Whether to wrap stock symbols in clickable spans (default: true).
