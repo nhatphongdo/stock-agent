@@ -251,6 +251,123 @@ function initAnalysisIndicatorDropdown() {
       });
     }
   });
+
+  // Initialize expand button
+  initAnalysisChartExpandButton();
+}
+
+// Flag to track if analysis chart expand button has been initialized
+let analysisChartExpandInitialized = false;
+
+// Initialize analysis chart expand/fullscreen button
+function initAnalysisChartExpandButton() {
+  // Skip if already initialized
+  if (analysisChartExpandInitialized) return;
+
+  const expandBtn = document.getElementById("analysis-chart-expand-btn");
+  const chartCollapsible = document.getElementById(
+    "analysis-chart-collapsible",
+  );
+  const chartWrapper = document.getElementById("analysis-chart-wrapper");
+  const chartToggleIcon = document.getElementById("analysis-chart-toggle-icon");
+
+  if (!expandBtn || !chartCollapsible || !chartWrapper) return;
+
+  // Mark as initialized
+  analysisChartExpandInitialized = true;
+
+  // Placeholder for restoring position
+  const placeholderComment = document.createComment(
+    "analysis-chart-placeholder",
+  );
+
+  let wasCollapsed = false;
+
+  const toggleFullscreen = () => {
+    const isFullscreen = chartCollapsible.classList.toggle("chart-fullscreen");
+    const icon = document.getElementById("analysis-chart-expand-icon");
+
+    if (isFullscreen) {
+      // Store collapsed state and force expand
+      wasCollapsed = chartWrapper.classList.contains("collapsed");
+      if (wasCollapsed) {
+        chartWrapper.classList.remove("collapsed");
+        if (chartToggleIcon) chartToggleIcon.style.transform = "rotate(0deg)";
+      }
+
+      // Enter Fullscreen: Move to body
+      expandBtn.title = "Thu nhỏ biểu đồ";
+      // Ensure specific styling for fullscreen button state
+      expandBtn.classList.add(
+        "text-primary-500",
+        "bg-white",
+        "dark:bg-slate-800",
+        "shadow-md",
+      );
+      expandBtn.classList.remove("text-slate-400");
+
+      if (icon) {
+        icon.setAttribute("data-lucide", "minimize-2");
+        lucide.createIcons();
+      }
+
+      // Insert placeholder and move element to body
+      // We move the entire collapsible block, so the button travels with it.
+      chartCollapsible.parentNode?.insertBefore(
+        placeholderComment,
+        chartCollapsible,
+      );
+      document.body.appendChild(chartCollapsible);
+    } else {
+      // Exit Fullscreen
+      expandBtn.title = "Mở rộng biểu đồ";
+      expandBtn.classList.remove(
+        "text-primary-500",
+        "bg-white",
+        "dark:bg-slate-800",
+        "shadow-md",
+      );
+      expandBtn.classList.add("text-slate-400");
+
+      if (icon) {
+        icon.setAttribute("data-lucide", "maximize-2");
+        lucide.createIcons();
+      }
+
+      // Move back to placeholder
+      if (placeholderComment.parentNode) {
+        placeholderComment.parentNode.insertBefore(
+          chartCollapsible,
+          placeholderComment,
+        );
+        placeholderComment.remove();
+      }
+
+      // Restore collapsed state
+      if (wasCollapsed) {
+        chartWrapper.classList.add("collapsed");
+        if (chartToggleIcon) chartToggleIcon.style.transform = "rotate(180deg)";
+      }
+    }
+
+    // Trigger resize
+    setTimeout(() => {
+      window.dispatchEvent(new Event("resize"));
+      refreshAnalysisChart();
+    }, 100);
+  };
+
+  expandBtn.addEventListener("click", toggleFullscreen);
+
+  // Handle Escape key
+  document.addEventListener("keydown", (e) => {
+    if (
+      e.key === "Escape" &&
+      chartCollapsible.classList.contains("chart-fullscreen")
+    ) {
+      toggleFullscreen();
+    }
+  });
 }
 
 // Helper to check if analysis indicator is enabled

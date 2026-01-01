@@ -148,6 +148,81 @@ function initIndicatorDropdown() {
   });
 }
 
+// Flag to track if expand button has been initialized
+let chartExpandInitialized = false;
+
+// Initialize chart expand/fullscreen button
+function initChartExpandButton() {
+  // Skip if already initialized
+  if (chartExpandInitialized) return;
+
+  const expandBtn = document.getElementById("chart-expand-btn");
+  const chartTabContent = document.getElementById("tab-content-chart");
+
+  if (!expandBtn || !chartTabContent) return;
+
+  // Mark as initialized
+  chartExpandInitialized = true;
+
+  // Placeholder for restoring position
+  const placeholderComment = document.createComment("chart-placeholder");
+
+  const toggleFullscreen = () => {
+    const isFullscreen = chartTabContent.classList.toggle("chart-fullscreen");
+    const icon = document.getElementById("chart-expand-icon");
+
+    if (isFullscreen) {
+      // Enter Fullscreen: Move to body
+      expandBtn.title = "Thu nhỏ biểu đồ";
+      if (icon) {
+        icon.setAttribute("data-lucide", "minimize-2");
+        lucide.createIcons();
+      }
+
+      // Insert placeholder and move element to body
+      chartTabContent.parentNode?.insertBefore(
+        placeholderComment,
+        chartTabContent,
+      );
+      document.body.appendChild(chartTabContent);
+    } else {
+      // Exit Fullscreen: Move back to original position
+      expandBtn.title = "Mở rộng biểu đồ";
+      if (icon) {
+        icon.setAttribute("data-lucide", "maximize-2");
+        lucide.createIcons();
+      }
+
+      // Move back to placeholder
+      if (placeholderComment.parentNode) {
+        placeholderComment.parentNode.insertBefore(
+          chartTabContent,
+          placeholderComment,
+        );
+        placeholderComment.remove();
+      }
+    }
+
+    // Trigger resize for charts after layout change
+    setTimeout(() => {
+      window.dispatchEvent(new Event("resize"));
+      refreshCharts();
+    }, 100);
+  };
+
+  expandBtn.addEventListener("click", toggleFullscreen);
+
+  // Handle Escape key to exit fullscreen
+  document.addEventListener("keydown", (e) => {
+    if (
+      e.key === "Escape" &&
+      chartTabContent.classList.contains("chart-fullscreen")
+    ) {
+      toggleFullscreen();
+    }
+  });
+}
+
 // Trigger chart display and initialization
 function triggerChartDisplay(symbol) {
   document.getElementById("chart-tab-content-empty").classList.add("hidden");
@@ -155,8 +230,9 @@ function triggerChartDisplay(symbol) {
     .getElementById("chart-tab-content-container")
     .classList.remove("hidden");
 
-  // Initialize dropdown after container is visible
+  // Initialize dropdown and expand button after container is visible
   initIndicatorDropdown();
+  initChartExpandButton();
 
   initAdvancedChart(symbol);
 }
