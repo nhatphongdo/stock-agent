@@ -372,11 +372,13 @@
     </main>
 
     <script src="/static/js/utils.js"></script>
+    <script src="/static/js/indicator.js"></script>
     <script src="/static/js/user.js"></script>
     <script src="/static/js/settings.js"></script>
     <script src="/static/js/portfolio.js"></script>
     <script src="/static/js/chat.js"></script>
     <script src="/static/js/stock-header.js"></script>
+    <script src="/static/js/chart-utils.js"></script>
     <script src="/static/js/chart.js"></script>
     <script src="/static/js/news.js"></script>
     <script src="/static/js/analysis.js"></script>
@@ -482,7 +484,7 @@
           window.dispatchEvent(new Event("resize"));
           refreshCharts();
           refreshAnalysisChart();
-        }, 50);
+        }, 500);
       }
 
       // Initialize Lucide Icons

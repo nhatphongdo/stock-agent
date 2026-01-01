@@ -6,6 +6,85 @@ let indicatorSeries = []; // Array to hold indicator line series
 let indicatorValues = {}; // Store raw indicator values mapping time -> {key: value}
 let currentChartSymbol = null;
 
+// Indicator Configuration Registry
+const INDICATOR_CONFIG = {
+  // Moving Averages (overlay on price, pane 0)
+  ma: { id: "indicator-ma", label: "SMA(20)", color: "#3b82f6", pane: 0 },
+  ema: { id: "indicator-ema", label: "EMA(9)", color: "#f97316", pane: 0 },
+  wma: { id: "indicator-wma", label: "WMA(20)", color: "#06b6d4", pane: 0 },
+  vwap: { id: "indicator-vwap", label: "VWAP", color: "#8b5cf6", pane: 0 },
+
+  // Bands/Channels (overlay on price, pane 0)
+  bb: { id: "indicator-bb", label: "BB", color: "#a855f7", pane: 0 },
+  atr: { id: "indicator-atr", label: "ATR(14)", color: "#ec4899", pane: 0 },
+
+  // Oscillators (scaled to price range, pane 0)
+  rsi: { id: "indicator-rsi", label: "RSI(14)", color: "#f59e0b", pane: 0 },
+  macd: {
+    id: "indicator-macd",
+    label: "MACD",
+    colors: { line: "#3b82f6", signal: "#ef4444" },
+    pane: 0,
+  },
+  stoch: {
+    id: "indicator-stoch",
+    label: "Stoch",
+    colors: { k: "#10b981", d: "#ef4444" },
+    pane: 0,
+  },
+  williams: {
+    id: "indicator-williams",
+    label: "WillR",
+    color: "#06b6d4",
+    pane: 0,
+  },
+  cci: { id: "indicator-cci", label: "CCI(20)", color: "#8b5cf6", pane: 0 },
+  roc: { id: "indicator-roc", label: "ROC(10)", color: "#f97316", pane: 0 },
+
+  // Trend (scaled to price range, pane 0)
+  adx: {
+    id: "indicator-adx",
+    label: "ADX(14)",
+    colors: { adx: "#22c55e", plusDI: "#3b82f6", minusDI: "#ef4444" },
+    pane: 0,
+  },
+
+  // Volume (in volume pane, pane 1)
+  volSma: {
+    id: "indicator-vol-sma",
+    label: "Vol SMA(20)",
+    color: "#8b5cf6",
+    pane: 1,
+  },
+  obv: { id: "indicator-obv", label: "OBV", color: "#06b6d4", pane: 1 },
+  mfi: { id: "indicator-mfi", label: "MFI(14)", color: "#f59e0b", pane: 1 },
+  cmf: { id: "indicator-cmf", label: "CMF(20)", color: "#ec4899", pane: 1 },
+};
+
+// All indicator checkbox IDs
+const ALL_INDICATOR_IDS = [
+  "indicator-ma",
+  "indicator-ema",
+  "indicator-wma",
+  "indicator-vwap",
+  "indicator-bb",
+  "indicator-atr",
+  "indicator-rsi",
+  "indicator-macd",
+  "indicator-stoch",
+  "indicator-williams",
+  "indicator-cci",
+  "indicator-roc",
+  "indicator-adx",
+  "indicator-vol-sma",
+  "indicator-obv",
+  "indicator-mfi",
+  "indicator-cmf",
+];
+
+// Flag to track if dropdown has been initialized after becoming visible
+let indicatorDropdownInitialized = false;
+
 // Refresh charts by fitting content to time scale
 function refreshCharts() {
   if (typeof priceChart !== "undefined" && priceChart) {
@@ -16,107 +95,56 @@ function refreshCharts() {
   }
 }
 
-// Calculate Moving Average
-function calculateMA(data, period) {
-  return data.map((_, i, arr) => {
-    if (i < period - 1) return null;
-    const slice = arr.slice(i - period + 1, i + 1);
-    return slice.reduce((sum, d) => sum + d.c, 0) / period;
+// Initialize indicator dropdown toggle
+function initIndicatorDropdown() {
+  // Skip if already initialized
+  if (indicatorDropdownInitialized) return;
+
+  const trigger = document.getElementById("indicator-dropdown-trigger");
+  const panel = document.getElementById("indicator-dropdown-panel");
+  const chevron = document.getElementById("indicator-chevron");
+
+  if (!trigger || !panel) return;
+
+  // Mark as initialized
+  indicatorDropdownInitialized = true;
+
+  // Toggle dropdown on button click
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = !panel.classList.contains("hidden");
+    panel.classList.toggle("hidden");
+    chevron?.classList.toggle("rotate-180", !isOpen);
   });
-}
 
-// Calculate EMA
-function calculateEMA(data, period) {
-  const k = 2 / (period + 1);
-  const ema = [data[0].c];
-  for (let i = 1; i < data.length; i++) {
-    ema.push(data[i].c * k + ema[i - 1] * (1 - k));
-  }
-  return ema;
-}
-
-// Calculate Bollinger Bands
-function calculateBB(data, period = 20, stdDev = 2) {
-  const ma = calculateMA(data, period);
-  return ma.map((mean, i) => {
-    if (mean === null) return { upper: null, middle: null, lower: null };
-    const slice = data.slice(Math.max(0, i - period + 1), i + 1);
-    const variance =
-      slice.reduce((sum, d) => sum + Math.pow(d.c - mean, 2), 0) / period;
-    const std = Math.sqrt(variance);
-    return {
-      upper: mean + stdDev * std,
-      middle: mean,
-      lower: mean - stdDev * std,
-    };
-  });
-}
-
-// Calculate RSI (Relative Strength Index)
-function calculateRSI(data, period = 14) {
-  const changes = data.map((d, i) => (i === 0 ? 0 : d.c - data[i - 1].c));
-  const gains = changes.map((c) => (c > 0 ? c : 0));
-  const losses = changes.map((c) => (c < 0 ? -c : 0));
-
-  let avgGain = gains.slice(1, period + 1).reduce((a, b) => a + b, 0) / period;
-  let avgLoss = losses.slice(1, period + 1).reduce((a, b) => a + b, 0) / period;
-
-  return data.map((_, i) => {
-    if (i < period) return null;
-    if (i === period) {
-      return avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+  // Close dropdown when clicking outside
+  document.addEventListener("click", (e) => {
+    const target = /** @type {Node} */ (e.target);
+    if (!panel.contains(target) && !trigger.contains(target)) {
+      panel.classList.add("hidden");
+      chevron?.classList.remove("rotate-180");
     }
-    avgGain = (avgGain * (period - 1) + gains[i]) / period;
-    avgLoss = (avgLoss * (period - 1) + losses[i]) / period;
-    return avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
   });
-}
 
-// Calculate MACD (Moving Average Convergence Divergence)
-function calculateMACD(data, fast = 12, slow = 26, signal = 9) {
-  const emaFast = calculateEMA(data, fast);
-  const emaSlow = calculateEMA(data, slow);
-  const macdLine = emaFast.map((f, i) =>
-    i < slow - 1 ? null : f - emaSlow[i],
-  );
+  // Update badge count when any indicator checkbox changes
+  const updateBadge = () => {
+    const badge = document.getElementById("indicator-count-badge");
+    const count = ALL_INDICATOR_IDS.filter((id) => {
+      const el = /** @type {HTMLInputElement | null} */ (
+        document.getElementById(id)
+      );
+      return el?.checked;
+    }).length;
 
-  // Calculate signal line (EMA of MACD line)
-  const validMacd = macdLine.filter((v) => v !== null);
-  const k = 2 / (signal + 1);
-  const signalLine = [];
-  let signalEma = validMacd[0];
-
-  let validIndex = 0;
-  for (let i = 0; i < macdLine.length; i++) {
-    if (macdLine[i] === null) {
-      signalLine.push(null);
-    } else {
-      if (validIndex === 0) {
-        signalLine.push(signalEma);
-      } else if (validIndex < signal) {
-        signalEma = (macdLine[i] + signalEma * validIndex) / (validIndex + 1);
-        signalLine.push(null);
-      } else {
-        signalEma = macdLine[i] * k + signalEma * (1 - k);
-        signalLine.push(signalEma);
-      }
-      validIndex++;
+    if (badge) {
+      badge.textContent = count.toString();
+      badge.classList.toggle("hidden", count === 0);
     }
-  }
+  };
 
-  const histogram = macdLine.map((m, i) =>
-    m === null || signalLine[i] === null ? null : m - signalLine[i],
-  );
-
-  return { macdLine, signalLine, histogram };
-}
-
-// Calculate Volume SMA
-function calculateVolumeSMA(data, period = 20) {
-  return data.map((_, i, arr) => {
-    if (i < period - 1) return null;
-    const slice = arr.slice(i - period + 1, i + 1);
-    return slice.reduce((sum, d) => sum + d.v, 0) / period;
+  // Add change listeners to all indicator checkboxes
+  ALL_INDICATOR_IDS.forEach((id) => {
+    document.getElementById(id)?.addEventListener("change", updateBadge);
   });
 }
 
@@ -126,6 +154,10 @@ function triggerChartDisplay(symbol) {
   document
     .getElementById("chart-tab-content-container")
     .classList.remove("hidden");
+
+  // Initialize dropdown after container is visible
+  initIndicatorDropdown();
+
   initAdvancedChart(symbol);
 }
 
@@ -166,14 +198,9 @@ function initAdvancedChart(symbol) {
       )?.value || "1D",
     );
   });
-  [
-    "indicator-ma",
-    "indicator-ema",
-    "indicator-bb",
-    "indicator-rsi",
-    "indicator-macd",
-    "indicator-vol-sma",
-  ].forEach((id) => {
+
+  // Add event listeners for all indicator checkboxes
+  ALL_INDICATOR_IDS.forEach((id) => {
     document.getElementById(id)?.addEventListener("change", () => {
       renderAdvancedChart(
         currentChartSymbol,
@@ -186,6 +213,14 @@ function initAdvancedChart(symbol) {
       );
     });
   });
+}
+
+// Helper to check if indicator is enabled
+function isIndicatorEnabled(indicatorId) {
+  const el = /** @type {HTMLInputElement | null} */ (
+    document.getElementById(indicatorId)
+  );
+  return el?.checked || false;
 }
 
 // Render chart with multiple panes (async - fetches real data from API)
@@ -358,79 +393,110 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
   // Configure volume pane height ratio (approximately 30% for volume)
   priceChart.panes()[1]?.setHeight(150);
 
-  // Add Indicators
-  const showMA = /** @type {HTMLInputElement | null} */ (
-    document.getElementById("indicator-ma")
-  )?.checked;
-  const showEMA = /** @type {HTMLInputElement | null} */ (
-    document.getElementById("indicator-ema")
-  )?.checked;
-  const showBB = /** @type {HTMLInputElement | null} */ (
-    document.getElementById("indicator-bb")
-  )?.checked;
-  const showRSI = /** @type {HTMLInputElement | null} */ (
-    document.getElementById("indicator-rsi")
-  )?.checked;
-  const showMACD = /** @type {HTMLInputElement | null} */ (
-    document.getElementById("indicator-macd")
-  )?.checked;
-  const showVolSMA = /** @type {HTMLInputElement | null} */ (
-    document.getElementById("indicator-vol-sma")
-  )?.checked;
+  // Get price range for scaling oscillators
+  const prices = data.map((d) => d.c);
+  const minPrice = Math.min(...prices);
+  const maxPrice = Math.max(...prices);
+  const priceRange = maxPrice - minPrice;
+  const priceMid = (maxPrice + minPrice) / 2;
 
-  if (showMA) {
+  // Helper to add a line series
+  const addLineSeries = (seriesData, options, pane = 0) => {
+    const series = priceChart.addSeries(
+      LightweightCharts.LineSeries,
+      options,
+      pane,
+    );
+    series.setData(seriesData);
+    indicatorSeries.push(series);
+    return series;
+  };
+
+  // =====================
+  // MOVING AVERAGES
+  // =====================
+
+  if (isIndicatorEnabled("indicator-ma")) {
     const maData = calculateMA(data, 20)
       .map((v, i) => ({
         time: Math.floor(data[i].x.getTime() / 1000),
         value: v,
       }))
       .filter((d) => d.value !== null);
-    const maSeries = priceChart.addSeries(
-      LightweightCharts.LineSeries,
-      {
-        color: "#3b82f6",
-        lineWidth: 1,
-        priceLineVisible: false,
-        lastValueVisible: false,
-      },
-      0,
-    );
-    maSeries.setData(maData);
-    indicatorSeries.push(maSeries);
-    // Store for tooltip
+    addLineSeries(maData, {
+      color: INDICATOR_CONFIG.ma.color,
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
     maData.forEach((d) => {
       if (!indicatorValues[d.time]) indicatorValues[d.time] = {};
       indicatorValues[d.time].ma = d.value;
     });
   }
 
-  if (showEMA) {
+  if (isIndicatorEnabled("indicator-ema")) {
     const emaData = calculateEMA(data, 9)
       .map((v, i) => ({
         time: Math.floor(data[i].x.getTime() / 1000),
         value: v,
       }))
       .filter((d) => d.value !== null);
-    const emaSeries = priceChart.addSeries(
-      LightweightCharts.LineSeries,
-      {
-        color: "#f97316",
-        lineWidth: 1,
-        priceLineVisible: false,
-        lastValueVisible: false,
-      },
-      0,
-    );
-    emaSeries.setData(emaData);
-    indicatorSeries.push(emaSeries);
-    // Store for tooltip
+    addLineSeries(emaData, {
+      color: INDICATOR_CONFIG.ema.color,
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
     emaData.forEach((d) => {
       if (!indicatorValues[d.time]) indicatorValues[d.time] = {};
       indicatorValues[d.time].ema = d.value;
     });
   }
 
-  if (showBB) {
+  if (isIndicatorEnabled("indicator-wma")) {
+    const wmaData = calculateWMA(data, 20)
+      .map((v, i) => ({
+        time: Math.floor(data[i].x.getTime() / 1000),
+        value: v,
+      }))
+      .filter((d) => d.value !== null);
+    addLineSeries(wmaData, {
+      color: INDICATOR_CONFIG.wma.color,
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    wmaData.forEach((d) => {
+      if (!indicatorValues[d.time]) indicatorValues[d.time] = {};
+      indicatorValues[d.time].wma = d.value;
+    });
+  }
+
+  if (isIndicatorEnabled("indicator-vwap")) {
+    const vwapData = calculateVWAP(data)
+      .map((v, i) => ({
+        time: Math.floor(data[i].x.getTime() / 1000),
+        value: v,
+      }))
+      .filter((d) => d.value !== null);
+    addLineSeries(vwapData, {
+      color: INDICATOR_CONFIG.vwap.color,
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    vwapData.forEach((d) => {
+      if (!indicatorValues[d.time]) indicatorValues[d.time] = {};
+      indicatorValues[d.time].vwap = d.value;
+    });
+  }
+
+  // =====================
+  // BANDS / CHANNELS
+  // =====================
+
+  if (isIndicatorEnabled("indicator-bb")) {
     const bb = calculateBB(data, 20, 2);
     const upperData = bb
       .map((v, i) => ({
@@ -445,34 +511,20 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
       }))
       .filter((d) => d.value !== null);
 
-    const upperSeries = priceChart.addSeries(
-      LightweightCharts.LineSeries,
-      {
-        color: "#a855f7",
-        lineWidth: 1,
-        lineStyle: LightweightCharts.LineStyle.Dashed,
-        priceLineVisible: false,
-        lastValueVisible: false,
-      },
-      0,
-    );
-    upperSeries.setData(upperData);
-    indicatorSeries.push(upperSeries);
-
-    const lowerSeries = priceChart.addSeries(
-      LightweightCharts.LineSeries,
-      {
-        color: "#a855f7",
-        lineWidth: 1,
-        lineStyle: LightweightCharts.LineStyle.Dashed,
-        priceLineVisible: false,
-        lastValueVisible: false,
-      },
-      0,
-    );
-    lowerSeries.setData(lowerData);
-    indicatorSeries.push(lowerSeries);
-    // Store for tooltip
+    addLineSeries(upperData, {
+      color: INDICATOR_CONFIG.bb.color,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    addLineSeries(lowerData, {
+      color: INDICATOR_CONFIG.bb.color,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
     bb.forEach((v, i) => {
       if (v.upper !== null) {
         const time = Math.floor(data[i].x.getTime() / 1000);
@@ -484,31 +536,51 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
     });
   }
 
-  if (showRSI) {
+  if (isIndicatorEnabled("indicator-atr")) {
+    const atr = calculateATR(data, 14);
+    // Scale ATR to visible range (overlay as offset from bottom of price range)
+    const atrMax = Math.max(...atr.filter((v) => v !== null)) || 1;
+    const atrData = atr
+      .map((v, i) => ({
+        time: Math.floor(data[i].x.getTime() / 1000),
+        value: v === null ? null : minPrice + (v / atrMax) * priceRange * 0.3,
+      }))
+      .filter((d) => d.value !== null);
+    addLineSeries(atrData, {
+      color: INDICATOR_CONFIG.atr.color,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dotted,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    atr.forEach((v, i) => {
+      if (v !== null) {
+        const time = Math.floor(data[i].x.getTime() / 1000);
+        if (!indicatorValues[time]) indicatorValues[time] = {};
+        indicatorValues[time].atr = v;
+      }
+    });
+  }
+
+  // =====================
+  // OSCILLATORS
+  // =====================
+
+  if (isIndicatorEnabled("indicator-rsi")) {
     const rsi = calculateRSI(data, 14);
-    const prices = data.map((d) => d.c);
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
     const rsiData = rsi
       .map((v, i) => ({
         time: Math.floor(data[i].x.getTime() / 1000),
-        value: v === null ? null : minPrice + (v / 100) * (maxPrice - minPrice),
+        value: v === null ? null : minPrice + (v / 100) * priceRange,
       }))
       .filter((d) => d.value !== null);
-    const rsiSeries = priceChart.addSeries(
-      LightweightCharts.LineSeries,
-      {
-        color: CONFIG.COLORS.RSI,
-        lineWidth: 1,
-        lineStyle: LightweightCharts.LineStyle.Dotted,
-        priceLineVisible: false,
-        lastValueVisible: false,
-      },
-      0,
-    );
-    rsiSeries.setData(rsiData);
-    indicatorSeries.push(rsiSeries);
-    // Store raw RSI values for tooltip
+    addLineSeries(rsiData, {
+      color: INDICATOR_CONFIG.rsi.color,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dotted,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
     rsi.forEach((v, i) => {
       if (v !== null) {
         const time = Math.floor(data[i].x.getTime() / 1000);
@@ -518,18 +590,12 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
     });
   }
 
-  if (showMACD) {
+  if (isIndicatorEnabled("indicator-macd")) {
     const macd = calculateMACD(data, 12, 26, 9);
-    const prices = data.map((d) => d.c);
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
-    const priceRange = maxPrice - minPrice;
     const macdValues = macd.macdLine.filter((v) => v !== null);
     const macdMax = Math.max(...macdValues.map(Math.abs)) || 1;
     const scaleMACD = (v) =>
-      v === null
-        ? null
-        : (maxPrice + minPrice) / 2 + (v / macdMax) * (priceRange / 4);
+      v === null ? null : priceMid + (v / macdMax) * (priceRange / 4);
 
     const macdData = macd.macdLine
       .map((v, i) => ({
@@ -544,33 +610,19 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
       }))
       .filter((d) => d.value !== null);
 
-    const macdSeries = priceChart.addSeries(
-      LightweightCharts.LineSeries,
-      {
-        color: CONFIG.COLORS.MACD_LINE,
-        lineWidth: 1,
-        priceLineVisible: false,
-        lastValueVisible: false,
-      },
-      0,
-    );
-    macdSeries.setData(macdData);
-    indicatorSeries.push(macdSeries);
-
-    const signalSeries = priceChart.addSeries(
-      LightweightCharts.LineSeries,
-      {
-        color: CONFIG.COLORS.MACD_SIGNAL,
-        lineWidth: 1,
-        lineStyle: LightweightCharts.LineStyle.Dashed,
-        priceLineVisible: false,
-        lastValueVisible: false,
-      },
-      0,
-    );
-    signalSeries.setData(signalData);
-    indicatorSeries.push(signalSeries);
-    // Store raw MACD values for tooltip
+    addLineSeries(macdData, {
+      color: INDICATOR_CONFIG.macd.colors.line,
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    addLineSeries(signalData, {
+      color: INDICATOR_CONFIG.macd.colors.signal,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
     macd.macdLine.forEach((v, i) => {
       if (
         v !== null ||
@@ -586,156 +638,295 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
     });
   }
 
-  if (showVolSMA) {
+  if (isIndicatorEnabled("indicator-stoch")) {
+    const stoch = calculateStochastic(data, 14, 3, 3);
+    const stochK = stoch.k
+      .map((v, i) => ({
+        time: Math.floor(data[i].x.getTime() / 1000),
+        value: v === null ? null : minPrice + (v / 100) * priceRange,
+      }))
+      .filter((d) => d.value !== null);
+    const stochD = stoch.d
+      .map((v, i) => ({
+        time: Math.floor(data[i].x.getTime() / 1000),
+        value: v === null ? null : minPrice + (v / 100) * priceRange,
+      }))
+      .filter((d) => d.value !== null);
+
+    addLineSeries(stochK, {
+      color: INDICATOR_CONFIG.stoch.colors.k,
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    addLineSeries(stochD, {
+      color: INDICATOR_CONFIG.stoch.colors.d,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    stoch.k.forEach((v, i) => {
+      if (v !== null || stoch.d[i] !== null) {
+        const time = Math.floor(data[i].x.getTime() / 1000);
+        if (!indicatorValues[time]) indicatorValues[time] = {};
+        indicatorValues[time].stochK = v;
+        indicatorValues[time].stochD = stoch.d[i];
+      }
+    });
+  }
+
+  if (isIndicatorEnabled("indicator-williams")) {
+    const willR = calculateWilliamsR(data, 14);
+    const willRData = willR
+      .map((v, i) => ({
+        time: Math.floor(data[i].x.getTime() / 1000),
+        value: v === null ? null : minPrice + ((v + 100) / 100) * priceRange,
+      }))
+      .filter((d) => d.value !== null);
+    addLineSeries(willRData, {
+      color: INDICATOR_CONFIG.williams.color,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dotted,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    willR.forEach((v, i) => {
+      if (v !== null) {
+        const time = Math.floor(data[i].x.getTime() / 1000);
+        if (!indicatorValues[time]) indicatorValues[time] = {};
+        indicatorValues[time].williamsR = v;
+      }
+    });
+  }
+
+  if (isIndicatorEnabled("indicator-cci")) {
+    const cci = calculateCCI(data, 20);
+    const cciMax =
+      Math.max(...cci.filter((v) => v !== null).map(Math.abs)) || 100;
+    const cciData = cci
+      .map((v, i) => ({
+        time: Math.floor(data[i].x.getTime() / 1000),
+        value: v === null ? null : priceMid + (v / cciMax) * (priceRange / 4),
+      }))
+      .filter((d) => d.value !== null);
+    addLineSeries(cciData, {
+      color: INDICATOR_CONFIG.cci.color,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dotted,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    cci.forEach((v, i) => {
+      if (v !== null) {
+        const time = Math.floor(data[i].x.getTime() / 1000);
+        if (!indicatorValues[time]) indicatorValues[time] = {};
+        indicatorValues[time].cci = v;
+      }
+    });
+  }
+
+  if (isIndicatorEnabled("indicator-roc")) {
+    const roc = calculateROC(data, 10);
+    const rocMax =
+      Math.max(...roc.filter((v) => v !== null).map(Math.abs)) || 10;
+    const rocData = roc
+      .map((v, i) => ({
+        time: Math.floor(data[i].x.getTime() / 1000),
+        value: v === null ? null : priceMid + (v / rocMax) * (priceRange / 4),
+      }))
+      .filter((d) => d.value !== null);
+    addLineSeries(rocData, {
+      color: INDICATOR_CONFIG.roc.color,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dotted,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    roc.forEach((v, i) => {
+      if (v !== null) {
+        const time = Math.floor(data[i].x.getTime() / 1000);
+        if (!indicatorValues[time]) indicatorValues[time] = {};
+        indicatorValues[time].roc = v;
+      }
+    });
+  }
+
+  // =====================
+  // TREND
+  // =====================
+
+  if (isIndicatorEnabled("indicator-adx")) {
+    const adxResult = calculateADX(data, 14);
+    const adxMax = Math.max(...adxResult.adx.filter((v) => v !== null)) || 50;
+    const scaleADX = (v) =>
+      v === null ? null : minPrice + (v / adxMax) * priceRange * 0.5;
+
+    const adxData = adxResult.adx
+      .map((v, i) => ({
+        time: Math.floor(data[i].x.getTime() / 1000),
+        value: scaleADX(v),
+      }))
+      .filter((d) => d.value !== null);
+    const plusDIData = adxResult.plusDI
+      .map((v, i) => ({
+        time: Math.floor(data[i].x.getTime() / 1000),
+        value: scaleADX(v),
+      }))
+      .filter((d) => d.value !== null);
+    const minusDIData = adxResult.minusDI
+      .map((v, i) => ({
+        time: Math.floor(data[i].x.getTime() / 1000),
+        value: scaleADX(v),
+      }))
+      .filter((d) => d.value !== null);
+
+    addLineSeries(adxData, {
+      color: INDICATOR_CONFIG.adx.colors.adx,
+      lineWidth: 2,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    addLineSeries(plusDIData, {
+      color: INDICATOR_CONFIG.adx.colors.plusDI,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    addLineSeries(minusDIData, {
+      color: INDICATOR_CONFIG.adx.colors.minusDI,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    adxResult.adx.forEach((v, i) => {
+      if (v !== null) {
+        const time = Math.floor(data[i].x.getTime() / 1000);
+        if (!indicatorValues[time]) indicatorValues[time] = {};
+        indicatorValues[time].adx = v;
+        indicatorValues[time].plusDI = adxResult.plusDI[i];
+        indicatorValues[time].minusDI = adxResult.minusDI[i];
+      }
+    });
+  }
+
+  // =====================
+  // VOLUME INDICATORS
+  // =====================
+
+  if (isIndicatorEnabled("indicator-vol-sma")) {
     const volSmaData = calculateVolumeSMA(data, 20)
       .map((v, i) => ({
         time: Math.floor(data[i].x.getTime() / 1000),
         value: v,
       }))
       .filter((d) => d.value !== null);
-
-    // Add to pane 1 (volume pane)
-    const volSmaSeries = priceChart.addSeries(
-      LightweightCharts.LineSeries,
+    addLineSeries(
+      volSmaData,
       {
-        color: CONFIG.COLORS.VOLUME_SMA,
+        color: INDICATOR_CONFIG.volSma.color,
         lineWidth: 1,
         priceLineVisible: false,
         lastValueVisible: false,
       },
       1,
     );
-    volSmaSeries.setData(volSmaData);
-    indicatorSeries.push(volSmaSeries);
-    // Store for tooltip
     volSmaData.forEach((d) => {
       if (!indicatorValues[d.time]) indicatorValues[d.time] = {};
       indicatorValues[d.time].volSma = d.value;
     });
   }
 
-  // Create tooltip element for the chart (follows crosshair)
-  const createTooltip = (targetContainer) => {
-    const tooltip = document.createElement("div");
-    tooltip.style.cssText = `
-      position: absolute;
-      z-index: 100;
-      font-size: 12px;
-      font-family: sans-serif;
-      line-height: 1.5;
-      padding: 10px 14px;
-      border-radius: 8px;
-      pointer-events: none;
-      display: none;
-      white-space: nowrap;
-      ${
-        isDark
-          ? "background: rgba(30, 41, 59, 0.95); color: #e2e8f0; border: 1px solid rgba(148, 163, 184, 0.2);"
-          : "background: rgba(255, 255, 255, 0.95); color: #1e293b; border: 1px solid rgba(100, 116, 139, 0.2);"
+  if (isIndicatorEnabled("indicator-obv")) {
+    const obv = calculateOBV(data);
+    // Scale OBV to fit volume pane
+    const obvMax = Math.max(...obv.map(Math.abs)) || 1;
+    const volMax = Math.max(...data.map((d) => d.v)) || 1;
+    const obvData = obv
+      .map((v, i) => ({
+        time: Math.floor(data[i].x.getTime() / 1000),
+        value: (v / obvMax) * volMax * 0.8,
+      }))
+      .filter((d) => d.value !== null);
+    addLineSeries(
+      obvData,
+      {
+        color: INDICATOR_CONFIG.obv.color,
+        lineWidth: 1,
+        priceLineVisible: false,
+        lastValueVisible: false,
+      },
+      1,
+    );
+    obv.forEach((v, i) => {
+      const time = Math.floor(data[i].x.getTime() / 1000);
+      if (!indicatorValues[time]) indicatorValues[time] = {};
+      indicatorValues[time].obv = v;
+    });
+  }
+
+  if (isIndicatorEnabled("indicator-mfi")) {
+    const mfi = calculateMFI(data, 14);
+    const volMax = Math.max(...data.map((d) => d.v)) || 1;
+    const mfiData = mfi
+      .map((v, i) => ({
+        time: Math.floor(data[i].x.getTime() / 1000),
+        value: v === null ? null : (v / 100) * volMax * 0.8,
+      }))
+      .filter((d) => d.value !== null);
+    addLineSeries(
+      mfiData,
+      {
+        color: INDICATOR_CONFIG.mfi.color,
+        lineWidth: 1,
+        lineStyle: LightweightCharts.LineStyle.Dotted,
+        priceLineVisible: false,
+        lastValueVisible: false,
+      },
+      1,
+    );
+    mfi.forEach((v, i) => {
+      if (v !== null) {
+        const time = Math.floor(data[i].x.getTime() / 1000);
+        if (!indicatorValues[time]) indicatorValues[time] = {};
+        indicatorValues[time].mfi = v;
       }
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    `;
-    targetContainer.style.position = "relative";
-    targetContainer.appendChild(tooltip);
-    return tooltip;
-  };
+    });
+  }
 
-  const chartTooltip = createTooltip(chartContainer);
-
-  // Helper for indicator values in tooltip
-  const renderTooltipIndicators = (time, isVolumeChart = false) => {
-    const values = indicatorValues[time];
-    if (!values) return "";
-    let html =
-      '<div style="margin-top: 6px; border-top: 1px solid rgba(148, 163, 184, 0.2); padding-top: 4px;">';
-    let count = 0;
-
-    if (!isVolumeChart) {
-      if (values.ma !== undefined) {
-        html += `<div><span style="color: #3b82f6; opacity: 0.8;">MA(20):</span> <strong>${formatPrice(
-          values.ma,
-        )}</strong></div>`;
-        count++;
+  if (isIndicatorEnabled("indicator-cmf")) {
+    const cmf = calculateCMF(data, 20);
+    const volMax = Math.max(...data.map((d) => d.v)) || 1;
+    const cmfData = cmf
+      .map((v, i) => ({
+        time: Math.floor(data[i].x.getTime() / 1000),
+        value: v === null ? null : (v + 1) * 0.5 * volMax * 0.8,
+      }))
+      .filter((d) => d.value !== null);
+    addLineSeries(
+      cmfData,
+      {
+        color: INDICATOR_CONFIG.cmf.color,
+        lineWidth: 1,
+        lineStyle: LightweightCharts.LineStyle.Dotted,
+        priceLineVisible: false,
+        lastValueVisible: false,
+      },
+      1,
+    );
+    cmf.forEach((v, i) => {
+      if (v !== null) {
+        const time = Math.floor(data[i].x.getTime() / 1000);
+        if (!indicatorValues[time]) indicatorValues[time] = {};
+        indicatorValues[time].cmf = v;
       }
-      if (values.ema !== undefined) {
-        html += `<div><span style="color: #f97316; opacity: 0.8;">EMA(9):</span> <strong>${formatPrice(
-          values.ema,
-        )}</strong></div>`;
-        count++;
-      }
-      if (values.bbUpper !== undefined) {
-        html += `<div><span style="color: #a855f7; opacity: 0.8;">BB Upper:</span> <strong>${formatPrice(
-          values.bbUpper,
-        )}</strong></div>`;
-        html += `<div><span style="color: #a855f7; opacity: 0.8;">BB Lower:</span> <strong>${formatPrice(
-          values.bbLower,
-        )}</strong></div>`;
-        count++;
-      }
-      if (values.rsi !== undefined) {
-        html += `<div><span style="color: ${
-          CONFIG.COLORS.RSI
-        }; opacity: 0.8;">RSI(14):</span> <strong>${formatNumber(
-          values.rsi,
-          2,
-        )}</strong></div>`;
-        count++;
-      }
-      if (values.macdLine !== undefined) {
-        html += `<div><span style="color: ${
-          CONFIG.COLORS.MACD_LINE
-        }; opacity: 0.8;">MACD:</span> <strong>${formatNumber(
-          values.macdLine,
-          2,
-        )}</strong></div>`;
-        html += `<div><span style="color: ${
-          CONFIG.COLORS.MACD_SIGNAL
-        }; opacity: 0.8;">Signal:</span> <strong>${formatNumber(
-          values.macdSignal,
-          2,
-        )}</strong></div>`;
-        count++;
-      }
-    } else {
-      if (values.volSma !== undefined) {
-        html += `<div><span style="color: ${
-          CONFIG.COLORS.VOLUME_SMA
-        }; opacity: 0.8;">Vol SMA(20):</span> <strong>${formatNumber(
-          values.volSma,
-          2,
-        )}</strong></div>`;
-        count++;
-      }
-    }
+    });
+  }
 
-    html += "</div>";
-    return count > 0 ? html : "";
-  };
-
-  // Update tooltip position to follow crosshair
-  const updateTooltipPosition = (tooltip, container, param) => {
-    if (!param.point) return;
-
-    const containerRect = container.getBoundingClientRect();
-    const tooltipWidth = tooltip.offsetWidth || 200;
-    const tooltipHeight = tooltip.offsetHeight || 100;
-
-    let left = param.point.x + 15;
-    let top = param.point.y + 15;
-
-    // Keep tooltip within container bounds
-    if (left + tooltipWidth > containerRect.width) {
-      left = param.point.x - tooltipWidth - 15;
-    }
-    if (top + tooltipHeight > containerRect.height) {
-      top = param.point.y - tooltipHeight - 15;
-    }
-    if (left < 0) left = 10;
-    if (top < 0) top = 10;
-
-    tooltip.style.left = left + "px";
-    tooltip.style.top = top + "px";
-  };
+  // Create tooltip using shared utility
+  const chartTooltip = createChartTooltip(chartContainer);
 
   // Single crosshair handler for unified chart with panes
   priceChart.subscribeCrosshairMove((param) => {
@@ -784,17 +975,29 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
         )}</strong></div>`;
       }
 
-      // Add indicator values
-      tooltipContent += renderTooltipIndicators(param.time);
+      // Add indicator values using shared utility
+      tooltipContent += renderTooltipIndicators(
+        indicatorValues,
+        param.time,
+        INDICATOR_CONFIG,
+      );
 
-      // Add volume SMA if exists
-      const volIndicators = renderTooltipIndicators(param.time, true);
+      // Add volume indicators if exists
+      const volIndicators = renderTooltipIndicators(
+        indicatorValues,
+        param.time,
+        INDICATOR_CONFIG,
+        true,
+      );
       if (volIndicators) {
         tooltipContent += volIndicators;
       }
 
       chartTooltip.innerHTML = tooltipContent;
       chartTooltip.style.display = "block";
+      // Apply theme using shared utility
+      applyTooltipTheme(chartTooltip);
+
       updateTooltipPosition(chartTooltip, chartContainer, param);
     } else {
       chartTooltip.style.display = "none";

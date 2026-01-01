@@ -56,6 +56,210 @@ function handleAnalysisTabSwitch(symbol, companyName) {
 let analysisChart = null;
 let analysisCandleSeries = null;
 let analysisVolumeSeries = null;
+let analysisIndicatorSeries = []; // Array to hold indicator line series
+let analysisIndicatorValues = {}; // Store raw indicator values for tooltip
+let lastAnalysisOHLCVData = null; // Store last OHLCV data for re-rendering
+
+// Analysis Indicator Configuration
+const ANALYSIS_INDICATOR_CONFIG = {
+  // Moving Averages
+  ma: {
+    id: "analysis-indicator-ma",
+    label: "SMA(20)",
+    color: "#3b82f6",
+    pane: 0,
+  },
+  ema: {
+    id: "analysis-indicator-ema",
+    label: "EMA(9)",
+    color: "#f97316",
+    pane: 0,
+  },
+  wma: {
+    id: "analysis-indicator-wma",
+    label: "WMA(20)",
+    color: "#06b6d4",
+    pane: 0,
+  },
+  vwap: {
+    id: "analysis-indicator-vwap",
+    label: "VWAP",
+    color: "#8b5cf6",
+    pane: 0,
+  },
+  // Bands
+  bb: { id: "analysis-indicator-bb", label: "BB", color: "#a855f7", pane: 0 },
+  atr: {
+    id: "analysis-indicator-atr",
+    label: "ATR(14)",
+    color: "#ec4899",
+    pane: 0,
+  },
+  // Oscillators
+  rsi: {
+    id: "analysis-indicator-rsi",
+    label: "RSI(14)",
+    color: "#f59e0b",
+    pane: 0,
+  },
+  macd: {
+    id: "analysis-indicator-macd",
+    label: "MACD",
+    colors: { line: "#3b82f6", signal: "#ef4444" },
+    pane: 0,
+  },
+  stoch: {
+    id: "analysis-indicator-stoch",
+    label: "Stoch",
+    colors: { k: "#10b981", d: "#ef4444" },
+    pane: 0,
+  },
+  williams: {
+    id: "analysis-indicator-williams",
+    label: "WillR",
+    color: "#06b6d4",
+    pane: 0,
+  },
+  cci: {
+    id: "analysis-indicator-cci",
+    label: "CCI(20)",
+    color: "#8b5cf6",
+    pane: 0,
+  },
+  roc: {
+    id: "analysis-indicator-roc",
+    label: "ROC(10)",
+    color: "#f97316",
+    pane: 0,
+  },
+  // Trend
+  adx: {
+    id: "analysis-indicator-adx",
+    label: "ADX(14)",
+    colors: { adx: "#22c55e", plusDI: "#3b82f6", minusDI: "#ef4444" },
+    pane: 0,
+  },
+  // Volume
+  volSma: {
+    id: "analysis-indicator-vol-sma",
+    label: "Vol SMA(20)",
+    color: "#8b5cf6",
+    pane: 1,
+  },
+  obv: {
+    id: "analysis-indicator-obv",
+    label: "OBV",
+    color: "#06b6d4",
+    pane: 1,
+  },
+  mfi: {
+    id: "analysis-indicator-mfi",
+    label: "MFI(14)",
+    color: "#f59e0b",
+    pane: 1,
+  },
+  cmf: {
+    id: "analysis-indicator-cmf",
+    label: "CMF(20)",
+    color: "#ec4899",
+    pane: 1,
+  },
+};
+
+// Flag to track if dropdown has been initialized after becoming visible
+let analysisIndicatorDropdownInitialized = false;
+
+// All analysis indicator checkbox IDs
+const ANALYSIS_INDICATOR_IDS = [
+  "analysis-indicator-ma",
+  "analysis-indicator-ema",
+  "analysis-indicator-wma",
+  "analysis-indicator-vwap",
+  "analysis-indicator-bb",
+  "analysis-indicator-atr",
+  "analysis-indicator-rsi",
+  "analysis-indicator-macd",
+  "analysis-indicator-stoch",
+  "analysis-indicator-williams",
+  "analysis-indicator-cci",
+  "analysis-indicator-roc",
+  "analysis-indicator-adx",
+  "analysis-indicator-vol-sma",
+  "analysis-indicator-obv",
+  "analysis-indicator-mfi",
+  "analysis-indicator-cmf",
+];
+
+// Initialize analysis indicator dropdown toggle
+function initAnalysisIndicatorDropdown() {
+  // Skip if already initialized
+  if (analysisIndicatorDropdownInitialized) return;
+
+  const trigger = document.getElementById(
+    "analysis-indicator-dropdown-trigger",
+  );
+  const panel = document.getElementById("analysis-indicator-dropdown-panel");
+  const chevron = document.getElementById("analysis-indicator-chevron");
+
+  if (!trigger || !panel) return;
+
+  // Mark as initialized
+  analysisIndicatorDropdownInitialized = true;
+  // Toggle dropdown on button click
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = !panel.classList.contains("hidden");
+    panel.classList.toggle("hidden");
+    chevron?.classList.toggle("rotate-180", !isOpen);
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener("click", (e) => {
+    const target = /** @type {Node} */ (e.target);
+    if (!panel.contains(target) && !trigger.contains(target)) {
+      panel.classList.add("hidden");
+      chevron?.classList.remove("rotate-180");
+    }
+  });
+
+  // Update badge count when any indicator checkbox changes
+  const updateBadge = () => {
+    const badge = document.getElementById("analysis-indicator-count-badge");
+    const count = ANALYSIS_INDICATOR_IDS.filter((id) => {
+      const el = /** @type {HTMLInputElement | null} */ (
+        document.getElementById(id)
+      );
+      return el?.checked;
+    }).length;
+
+    if (badge) {
+      badge.textContent = count.toString();
+      badge.classList.toggle("hidden", count === 0);
+    }
+  };
+
+  // Add change listeners to all indicator checkboxes
+  ANALYSIS_INDICATOR_IDS.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener("change", () => {
+        updateBadge();
+        // Re-render chart with updated indicators
+        if (lastAnalysisOHLCVData) {
+          renderAnalysisChart(lastAnalysisOHLCVData);
+        }
+      });
+    }
+  });
+}
+
+// Helper to check if analysis indicator is enabled
+function isAnalysisIndicatorEnabled(indicatorId) {
+  const el = /** @type {HTMLInputElement | null} */ (
+    document.getElementById(indicatorId)
+  );
+  return el?.checked || false;
+}
 
 // Sparkline charts storage
 let sparklineCharts = {};
@@ -222,30 +426,520 @@ async function renderAnalysisChart(ohlcv_data) {
 
   analysisChart.panes()[1]?.setHeight(50);
 
-  // Create tooltip element
-  const tooltip = document.createElement("div");
-  tooltip.className = "analysis-chart-tooltip";
-  Object.assign(tooltip.style, {
-    position: "absolute",
-    display: "none",
-    padding: "10px 14px",
-    background: isDark ? "rgba(30, 41, 59, 0.95)" : "rgba(255, 255, 255, 0.95)",
-    color: isDark ? "#e2e8f0" : "#1e293b",
-    fontSize: "12px",
-    fontFamily: "sans-serif",
-    lineHeight: "1.5",
-    borderRadius: "8px",
-    zIndex: "100",
-    pointerEvents: "none",
-    backdropFilter: "blur(8px)",
-    border: isDark
-      ? "1px solid rgba(148, 163, 184, 0.2)"
-      : "1px solid rgba(100, 116, 139, 0.2)",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-    whiteSpace: "nowrap",
-  });
-  chartContainer.style.position = "relative";
-  chartContainer.appendChild(tooltip);
+  // Store OHLCV data for re-rendering when indicators change
+  lastAnalysisOHLCVData = ohlcv_data;
+
+  // Reset indicator series
+  analysisIndicatorSeries = [];
+  analysisIndicatorValues = {};
+
+  // Convert ohlcv_data to format expected by indicator functions
+  const indicatorData = ohlcv_data.map((d) => ({
+    x: new Date(d.time * 1000),
+    o: d.open,
+    h: d.high,
+    l: d.low,
+    c: d.close,
+    v: d.volume,
+  }));
+
+  // Get price range for scaling oscillators
+  const prices = indicatorData.map((d) => d.c);
+  const minPrice = Math.min(...prices);
+  const maxPrice = Math.max(...prices);
+  const priceRange = maxPrice - minPrice;
+  const priceMid = (maxPrice + minPrice) / 2;
+
+  // Helper to add a line series
+  const addLineSeries = (seriesData, options, pane = 0) => {
+    const series = analysisChart.addSeries(
+      LightweightCharts.LineSeries,
+      options,
+      pane,
+    );
+    series.setData(seriesData);
+    analysisIndicatorSeries.push(series);
+    return series;
+  };
+
+  // =====================
+  // MOVING AVERAGES
+  // =====================
+
+  if (isAnalysisIndicatorEnabled("analysis-indicator-ma")) {
+    const maData = calculateMA(indicatorData, 20)
+      .map((v, i) => ({ time: ohlcv_data[i].time, value: v }))
+      .filter((d) => d.value !== null);
+    addLineSeries(maData, {
+      color: ANALYSIS_INDICATOR_CONFIG.ma.color,
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    maData.forEach((d) => {
+      if (!analysisIndicatorValues[d.time])
+        analysisIndicatorValues[d.time] = {};
+      analysisIndicatorValues[d.time].ma = d.value;
+    });
+  }
+
+  if (isAnalysisIndicatorEnabled("analysis-indicator-ema")) {
+    const emaData = calculateEMA(indicatorData, 9)
+      .map((v, i) => ({ time: ohlcv_data[i].time, value: v }))
+      .filter((d) => d.value !== null);
+    addLineSeries(emaData, {
+      color: ANALYSIS_INDICATOR_CONFIG.ema.color,
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    emaData.forEach((d) => {
+      if (!analysisIndicatorValues[d.time])
+        analysisIndicatorValues[d.time] = {};
+      analysisIndicatorValues[d.time].ema = d.value;
+    });
+  }
+
+  if (isAnalysisIndicatorEnabled("analysis-indicator-vwap")) {
+    const vwapData = calculateVWAP(indicatorData)
+      .map((v, i) => ({ time: ohlcv_data[i].time, value: v }))
+      .filter((d) => d.value !== null);
+    addLineSeries(vwapData, {
+      color: ANALYSIS_INDICATOR_CONFIG.vwap.color,
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    vwapData.forEach((d) => {
+      if (!analysisIndicatorValues[d.time])
+        analysisIndicatorValues[d.time] = {};
+      analysisIndicatorValues[d.time].vwap = d.value;
+    });
+  }
+
+  if (isAnalysisIndicatorEnabled("analysis-indicator-wma")) {
+    const wmaData = calculateWMA(indicatorData, 20)
+      .map((v, i) => ({ time: ohlcv_data[i].time, value: v }))
+      .filter((d) => d.value !== null);
+    addLineSeries(wmaData, {
+      color: ANALYSIS_INDICATOR_CONFIG.wma.color,
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    wmaData.forEach((d) => {
+      if (!analysisIndicatorValues[d.time])
+        analysisIndicatorValues[d.time] = {};
+      analysisIndicatorValues[d.time].wma = d.value;
+    });
+  }
+
+  // =====================
+  // BANDS
+  // =====================
+
+  if (isAnalysisIndicatorEnabled("analysis-indicator-bb")) {
+    const bb = calculateBB(indicatorData, 20, 2);
+    const upperData = bb
+      .map((v, i) => ({ time: ohlcv_data[i].time, value: v.upper }))
+      .filter((d) => d.value !== null);
+    const lowerData = bb
+      .map((v, i) => ({ time: ohlcv_data[i].time, value: v.lower }))
+      .filter((d) => d.value !== null);
+
+    addLineSeries(upperData, {
+      color: ANALYSIS_INDICATOR_CONFIG.bb.color,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    addLineSeries(lowerData, {
+      color: ANALYSIS_INDICATOR_CONFIG.bb.color,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    bb.forEach((v, i) => {
+      if (v.upper !== null) {
+        const time = ohlcv_data[i].time;
+        if (!analysisIndicatorValues[time]) analysisIndicatorValues[time] = {};
+        analysisIndicatorValues[time].bbUpper = v.upper;
+        analysisIndicatorValues[time].bbLower = v.lower;
+      }
+    });
+  }
+
+  if (isAnalysisIndicatorEnabled("analysis-indicator-atr")) {
+    const atr = calculateATR(indicatorData, 14);
+    const atrData = atr
+      .map((v, i) => ({
+        time: ohlcv_data[i].time,
+        value: v === null ? null : minPrice + (v / priceRange) * priceRange * 2,
+      }))
+      .filter((d) => d.value !== null);
+    addLineSeries(atrData, {
+      color: ANALYSIS_INDICATOR_CONFIG.atr.color,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dotted,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    atr.forEach((v, i) => {
+      if (v !== null) {
+        const time = ohlcv_data[i].time;
+        if (!analysisIndicatorValues[time]) analysisIndicatorValues[time] = {};
+        analysisIndicatorValues[time].atr = v;
+      }
+    });
+  }
+
+  // =====================
+  // OSCILLATORS
+  // =====================
+
+  if (isAnalysisIndicatorEnabled("analysis-indicator-rsi")) {
+    const rsi = calculateRSI(indicatorData, 14);
+    const rsiData = rsi
+      .map((v, i) => ({
+        time: ohlcv_data[i].time,
+        value: v === null ? null : minPrice + (v / 100) * priceRange,
+      }))
+      .filter((d) => d.value !== null);
+    addLineSeries(rsiData, {
+      color: ANALYSIS_INDICATOR_CONFIG.rsi.color,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dotted,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    rsi.forEach((v, i) => {
+      if (v !== null) {
+        const time = ohlcv_data[i].time;
+        if (!analysisIndicatorValues[time]) analysisIndicatorValues[time] = {};
+        analysisIndicatorValues[time].rsi = v;
+      }
+    });
+  }
+
+  if (isAnalysisIndicatorEnabled("analysis-indicator-macd")) {
+    const macd = calculateMACD(indicatorData, 12, 26, 9);
+    const macdValues = macd.macdLine.filter((v) => v !== null);
+    const macdMax = Math.max(...macdValues.map(Math.abs)) || 1;
+    const scaleMACD = (v) =>
+      v === null ? null : priceMid + (v / macdMax) * (priceRange / 4);
+
+    const macdData = macd.macdLine
+      .map((v, i) => ({ time: ohlcv_data[i].time, value: scaleMACD(v) }))
+      .filter((d) => d.value !== null);
+    const signalData = macd.signalLine
+      .map((v, i) => ({ time: ohlcv_data[i].time, value: scaleMACD(v) }))
+      .filter((d) => d.value !== null);
+
+    addLineSeries(macdData, {
+      color: ANALYSIS_INDICATOR_CONFIG.macd.colors.line,
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    addLineSeries(signalData, {
+      color: ANALYSIS_INDICATOR_CONFIG.macd.colors.signal,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    macd.macdLine.forEach((v, i) => {
+      if (v !== null) {
+        const time = ohlcv_data[i].time;
+        if (!analysisIndicatorValues[time]) analysisIndicatorValues[time] = {};
+        analysisIndicatorValues[time].macdLine = v;
+        analysisIndicatorValues[time].macdSignal = macd.signalLine[i];
+      }
+    });
+  }
+
+  if (isAnalysisIndicatorEnabled("analysis-indicator-stoch")) {
+    const stoch = calculateStochastic(indicatorData, 14, 3, 3);
+    const stochK = stoch.k
+      .map((v, i) => ({
+        time: ohlcv_data[i].time,
+        value: v === null ? null : minPrice + (v / 100) * priceRange,
+      }))
+      .filter((d) => d.value !== null);
+    const stochD = stoch.d
+      .map((v, i) => ({
+        time: ohlcv_data[i].time,
+        value: v === null ? null : minPrice + (v / 100) * priceRange,
+      }))
+      .filter((d) => d.value !== null);
+
+    addLineSeries(stochK, {
+      color: ANALYSIS_INDICATOR_CONFIG.stoch.colors.k,
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    addLineSeries(stochD, {
+      color: ANALYSIS_INDICATOR_CONFIG.stoch.colors.d,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    stoch.k.forEach((v, i) => {
+      if (v !== null) {
+        const time = ohlcv_data[i].time;
+        if (!analysisIndicatorValues[time]) analysisIndicatorValues[time] = {};
+        analysisIndicatorValues[time].stochK = v;
+        analysisIndicatorValues[time].stochD = stoch.d[i];
+      }
+    });
+  }
+
+  if (isAnalysisIndicatorEnabled("analysis-indicator-williams")) {
+    const williams = calculateWilliamsR(indicatorData, 14);
+    const williamsData = williams
+      .map((v, i) => ({
+        time: ohlcv_data[i].time,
+        value: v === null ? null : minPrice + ((v + 100) / 100) * priceRange,
+      }))
+      .filter((d) => d.value !== null);
+    addLineSeries(williamsData, {
+      color: ANALYSIS_INDICATOR_CONFIG.williams.color,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dotted,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    williams.forEach((v, i) => {
+      if (v !== null) {
+        const time = ohlcv_data[i].time;
+        if (!analysisIndicatorValues[time]) analysisIndicatorValues[time] = {};
+        analysisIndicatorValues[time].williams = v;
+      }
+    });
+  }
+
+  if (isAnalysisIndicatorEnabled("analysis-indicator-cci")) {
+    const cci = calculateCCI(indicatorData, 20);
+    const cciValues = cci.filter((v) => v !== null);
+    const cciMax = Math.max(...cciValues.map(Math.abs)) || 200;
+    const cciData = cci
+      .map((v, i) => ({
+        time: ohlcv_data[i].time,
+        value: v === null ? null : priceMid + (v / cciMax) * (priceRange / 3),
+      }))
+      .filter((d) => d.value !== null);
+    addLineSeries(cciData, {
+      color: ANALYSIS_INDICATOR_CONFIG.cci.color,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dotted,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    cci.forEach((v, i) => {
+      if (v !== null) {
+        const time = ohlcv_data[i].time;
+        if (!analysisIndicatorValues[time]) analysisIndicatorValues[time] = {};
+        analysisIndicatorValues[time].cci = v;
+      }
+    });
+  }
+
+  if (isAnalysisIndicatorEnabled("analysis-indicator-roc")) {
+    const roc = calculateROC(indicatorData, 10);
+    const rocValues = roc.filter((v) => v !== null);
+    const rocMax = Math.max(...rocValues.map(Math.abs)) || 10;
+    const rocData = roc
+      .map((v, i) => ({
+        time: ohlcv_data[i].time,
+        value: v === null ? null : priceMid + (v / rocMax) * (priceRange / 3),
+      }))
+      .filter((d) => d.value !== null);
+    addLineSeries(rocData, {
+      color: ANALYSIS_INDICATOR_CONFIG.roc.color,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dotted,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    roc.forEach((v, i) => {
+      if (v !== null) {
+        const time = ohlcv_data[i].time;
+        if (!analysisIndicatorValues[time]) analysisIndicatorValues[time] = {};
+        analysisIndicatorValues[time].roc = v;
+      }
+    });
+  }
+
+  // =====================
+  // TREND
+  // =====================
+
+  if (isAnalysisIndicatorEnabled("analysis-indicator-adx")) {
+    const adx = calculateADX(indicatorData, 14);
+    const adxData = adx.adx
+      .map((v, i) => ({
+        time: ohlcv_data[i].time,
+        value: v === null ? null : minPrice + (v / 100) * priceRange,
+      }))
+      .filter((d) => d.value !== null);
+    const plusDIData = adx.plusDI
+      .map((v, i) => ({
+        time: ohlcv_data[i].time,
+        value: v === null ? null : minPrice + (v / 100) * priceRange,
+      }))
+      .filter((d) => d.value !== null);
+    const minusDIData = adx.minusDI
+      .map((v, i) => ({
+        time: ohlcv_data[i].time,
+        value: v === null ? null : minPrice + (v / 100) * priceRange,
+      }))
+      .filter((d) => d.value !== null);
+
+    addLineSeries(adxData, {
+      color: ANALYSIS_INDICATOR_CONFIG.adx.colors.adx,
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    addLineSeries(plusDIData, {
+      color: ANALYSIS_INDICATOR_CONFIG.adx.colors.plusDI,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    addLineSeries(minusDIData, {
+      color: ANALYSIS_INDICATOR_CONFIG.adx.colors.minusDI,
+      lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+    adx.adx.forEach((v, i) => {
+      if (v !== null) {
+        const time = ohlcv_data[i].time;
+        if (!analysisIndicatorValues[time]) analysisIndicatorValues[time] = {};
+        analysisIndicatorValues[time].adx = v;
+        analysisIndicatorValues[time].plusDI = adx.plusDI[i];
+        analysisIndicatorValues[time].minusDI = adx.minusDI[i];
+      }
+    });
+  }
+
+  // =====================
+  // VOLUME INDICATORS
+  // =====================
+
+  if (isAnalysisIndicatorEnabled("analysis-indicator-vol-sma")) {
+    const volSmaData = calculateVolumeSMA(indicatorData, 20)
+      .map((v, i) => ({ time: ohlcv_data[i].time, value: v }))
+      .filter((d) => d.value !== null);
+    addLineSeries(
+      volSmaData,
+      {
+        color: ANALYSIS_INDICATOR_CONFIG.volSma.color,
+        lineWidth: 1,
+        priceLineVisible: false,
+        lastValueVisible: false,
+      },
+      1,
+    );
+    volSmaData.forEach((d) => {
+      if (!analysisIndicatorValues[d.time])
+        analysisIndicatorValues[d.time] = {};
+      analysisIndicatorValues[d.time].volSma = d.value;
+    });
+  }
+
+  if (isAnalysisIndicatorEnabled("analysis-indicator-obv")) {
+    const obv = calculateOBV(indicatorData);
+    const obvMax = Math.max(...obv.map(Math.abs)) || 1;
+    const volMax = Math.max(...indicatorData.map((d) => d.v)) || 1;
+    const obvData = obv
+      .map((v, i) => ({
+        time: ohlcv_data[i].time,
+        value: (v / obvMax) * volMax * 0.8,
+      }))
+      .filter((d) => d.value !== null);
+    addLineSeries(
+      obvData,
+      {
+        color: ANALYSIS_INDICATOR_CONFIG.obv.color,
+        lineWidth: 1,
+        priceLineVisible: false,
+        lastValueVisible: false,
+      },
+      1,
+    );
+    obv.forEach((v, i) => {
+      const time = ohlcv_data[i].time;
+      if (!analysisIndicatorValues[time]) analysisIndicatorValues[time] = {};
+      analysisIndicatorValues[time].obv = v;
+    });
+  }
+
+  if (isAnalysisIndicatorEnabled("analysis-indicator-mfi")) {
+    const mfi = calculateMFI(indicatorData, 14);
+    const volMax = Math.max(...indicatorData.map((d) => d.v)) || 1;
+    const mfiData = mfi
+      .map((v, i) => ({
+        time: ohlcv_data[i].time,
+        value: v === null ? null : (v / 100) * volMax * 0.8,
+      }))
+      .filter((d) => d.value !== null);
+    addLineSeries(
+      mfiData,
+      {
+        color: ANALYSIS_INDICATOR_CONFIG.mfi.color,
+        lineWidth: 1,
+        priceLineVisible: false,
+        lastValueVisible: false,
+      },
+      1,
+    );
+    mfi.forEach((v, i) => {
+      if (v !== null) {
+        const time = ohlcv_data[i].time;
+        if (!analysisIndicatorValues[time]) analysisIndicatorValues[time] = {};
+        analysisIndicatorValues[time].mfi = v;
+      }
+    });
+  }
+
+  if (isAnalysisIndicatorEnabled("analysis-indicator-cmf")) {
+    const cmf = calculateCMF(indicatorData, 20);
+    const volMax = Math.max(...indicatorData.map((d) => d.v)) || 1;
+    const cmfData = cmf
+      .map((v, i) => ({
+        time: ohlcv_data[i].time,
+        value: v === null ? null : (v + 0.5) * volMax * 0.6,
+      }))
+      .filter((d) => d.value !== null);
+    addLineSeries(
+      cmfData,
+      {
+        color: ANALYSIS_INDICATOR_CONFIG.cmf.color,
+        lineWidth: 1,
+        priceLineVisible: false,
+        lastValueVisible: false,
+      },
+      1,
+    );
+    cmf.forEach((v, i) => {
+      if (v !== null) {
+        const time = ohlcv_data[i].time;
+        if (!analysisIndicatorValues[time]) analysisIndicatorValues[time] = {};
+        analysisIndicatorValues[time].cmf = v;
+      }
+    });
+  }
+
+  // Create tooltip using shared utility
+  const tooltip = createChartTooltip(chartContainer);
 
   // Subscribe to crosshair move
   analysisChart.subscribeCrosshairMove((param) => {
@@ -277,7 +971,7 @@ async function renderAnalysisChart(ohlcv_data) {
         candleData.close >= candleData.open ? "#10b981" : "#ef4444";
       const changeSign = candleData.close >= candleData.open ? "+" : "";
 
-      tooltip.innerHTML = `
+      let tooltipContent = `
         <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatDate(
           param.time,
         )}</div>
@@ -304,25 +998,32 @@ async function renderAnalysisChart(ohlcv_data) {
         }
       `;
 
+      // Add indicator values to tooltip
+      tooltipContent += renderTooltipIndicators(
+        analysisIndicatorValues,
+        param.time,
+        ANALYSIS_INDICATOR_CONFIG,
+      );
+
+      // Add volume indicators if exists
+      const volIndicators = renderTooltipIndicators(
+        analysisIndicatorValues,
+        param.time,
+        ANALYSIS_INDICATOR_CONFIG,
+        true,
+      );
+      if (volIndicators) {
+        tooltipContent += volIndicators;
+      }
+
+      tooltip.innerHTML = tooltipContent;
+
       tooltip.style.display = "block";
+      // Apply theme using shared utility
+      applyTooltipTheme(tooltip);
 
-      // Position tooltip
-      const tooltipWidth = tooltip.offsetWidth || 150;
-      const tooltipHeight = tooltip.offsetHeight || 100;
-      let left = param.point.x + 15;
-      let top = param.point.y + 15;
-
-      if (left + tooltipWidth > chartContainer.clientWidth) {
-        left = param.point.x - tooltipWidth - 15;
-      }
-      if (top + tooltipHeight > chartContainer.clientHeight) {
-        top = param.point.y - tooltipHeight - 15;
-      }
-      if (left < 0) left = 10;
-      if (top < 0) top = 10;
-
-      tooltip.style.left = left + "px";
-      tooltip.style.top = top + "px";
+      // Position tooltip using shared utility
+      updateTooltipPosition(tooltip, chartContainer, param);
     } else {
       tooltip.style.display = "none";
     }
@@ -429,17 +1130,12 @@ function drawSparkline(containerId, data, color) {
     position: "absolute",
     display: "none",
     padding: "4px 8px",
-    background: isDark ? "rgba(15, 23, 42, 0.95)" : "rgba(255, 255, 255, 0.95)",
-    color: isDark ? "#f1f5f9" : "#1e293b",
     fontSize: "11px",
     fontWeight: "bold",
     borderRadius: "6px",
     zIndex: "100",
     pointerEvents: "none",
     backdropFilter: "blur(8px)",
-    border: isDark
-      ? "1px solid rgba(255,255,255,0.1)"
-      : "1px solid rgba(0,0,0,0.1)",
     boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
     whiteSpace: "nowrap",
     lineHeight: "1.2",
@@ -470,6 +1166,18 @@ function drawSparkline(containerId, data, color) {
           )}</div>
           <div>${formatNumber(value, 2)}</div>
         `;
+        // Check current theme dynamically
+        const currentIsDark =
+          document.documentElement.classList.contains("dark");
+        if (currentIsDark) {
+          tooltip.style.background = "rgba(15, 23, 42, 0.95)";
+          tooltip.style.color = "#f1f5f9";
+          tooltip.style.border = "1px solid rgba(255,255,255,0.1)";
+        } else {
+          tooltip.style.background = "rgba(255, 255, 255, 0.95)";
+          tooltip.style.color = "#1e293b";
+          tooltip.style.border = "1px solid rgba(0,0,0,0.1)";
+        }
 
         const tooltipWidth = tooltip.offsetWidth || 50;
         const tooltipHeight = tooltip.offsetHeight || 25;
@@ -521,6 +1229,9 @@ async function fetchTechnicalAnalysis(symbol, companyName) {
   document
     .getElementById("analysis-chart-collapsible")
     .classList.remove("hidden");
+
+  // Initialize dropdown after container is visible
+  initAnalysisIndicatorDropdown();
 
   const analysisContentEl = document.getElementById("tech-analysis-content");
   const badge = document.getElementById("tech-recommendation-badge");
@@ -1452,7 +2163,7 @@ function clearAnalysisDisplay() {
         for (let i = 0; i < 20; i++) {
           const bar = document.createElement("div");
           bar.className =
-            "flex-1 inset-0 bg-slate-200/50 dark:bg-slate-800/40 skeleton-shimmer rounded";
+            "flex-1 inset-0 bg-slate-200/50 dark:bg-slate-800/40 skeleton-shimmer-vertical rounded";
           bar.style.height = `${30 + Math.random() * 60}%`;
           barsContainer.appendChild(bar);
         }

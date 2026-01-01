@@ -177,19 +177,281 @@
       >
         <i data-lucide="line-chart" class="w-4 h-4 text-primary-500"></i> Diễn biến giá
       </h5>
-      <button
-        onclick="toggleAnalysisChart()"
-        class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all text-slate-400 hover:text-primary-500"
-        title="Thu gọn/Mở rộng biểu đồ"
-      >
-        <i
-          data-lucide="chevron-up"
-          class="w-4 h-4 transition-transform duration-300"
-          id="analysis-chart-toggle-icon"
-        ></i>
-      </button>
+      <div class="flex items-center gap-2">
+        <!-- Indicator Dropdown for Analysis Chart -->
+        <div class="relative" id="analysis-indicator-dropdown-container">
+          <button
+            id="analysis-indicator-dropdown-trigger"
+            class="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-colors"
+          >
+            <i data-lucide="line-chart" class="w-3 h-3"></i>
+            <span>Chỉ báo</span>
+            <span
+              id="analysis-indicator-count-badge"
+              class="hidden min-w-[16px] h-[16px] px-1 bg-primary-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"
+              >0</span
+            >
+            <i
+              data-lucide="chevron-down"
+              class="w-3 h-3 ml-0.5 transition-transform"
+              id="analysis-indicator-chevron"
+            ></i>
+          </button>
+
+          <!-- Dropdown Panel -->
+          <div
+            id="analysis-indicator-dropdown-panel"
+            class="hidden absolute top-full right-0 mt-2 w-72 max-h-[400px] overflow-y-auto p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50"
+          >
+            <!-- Moving Averages Group -->
+            <div class="mb-3">
+              <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
+                Đường trung bình
+              </div>
+              <div class="space-y-1">
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="analysis-indicator-ma"
+                    class="w-3.5 h-3.5 rounded border-slate-300 accent-blue-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">SMA (20)</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="analysis-indicator-ema"
+                    class="w-3.5 h-3.5 rounded border-slate-300 accent-orange-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">EMA (9)</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="analysis-indicator-wma"
+                    class="w-3.5 h-3.5 rounded border-slate-300 accent-cyan-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">WMA (20)</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="analysis-indicator-vwap"
+                    class="w-3.5 h-3.5 rounded border-slate-300 accent-violet-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-violet-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">VWAP</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Bands Group -->
+            <div class="mb-3">
+              <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
+                Dải giá
+              </div>
+              <div class="space-y-1">
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="analysis-indicator-bb"
+                    class="w-3.5 h-3.5 rounded border-slate-300 accent-purple-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Bollinger Bands</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="analysis-indicator-atr"
+                    class="w-3.5 h-3.5 rounded border-slate-300 accent-pink-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-pink-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">ATR (14)</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Oscillators Group -->
+            <div class="mb-3">
+              <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
+                Dao động
+              </div>
+              <div class="space-y-1">
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="analysis-indicator-rsi"
+                    class="w-3.5 h-3.5 rounded border-slate-300 accent-amber-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">RSI (14)</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="analysis-indicator-macd"
+                    class="w-3.5 h-3.5 rounded border-slate-300 accent-blue-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">MACD</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="analysis-indicator-stoch"
+                    class="w-3.5 h-3.5 rounded border-slate-300 accent-emerald-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Stochastic</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="analysis-indicator-williams"
+                    class="w-3.5 h-3.5 rounded border-slate-300 accent-cyan-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Williams %R</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="analysis-indicator-cci"
+                    class="w-3.5 h-3.5 rounded border-slate-300 accent-violet-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-violet-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">CCI (20)</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="analysis-indicator-roc"
+                    class="w-3.5 h-3.5 rounded border-slate-300 accent-orange-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">ROC (10)</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Trend Group -->
+            <div class="mb-3">
+              <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
+                Xu hướng
+              </div>
+              <div class="space-y-1">
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="analysis-indicator-adx"
+                    class="w-3.5 h-3.5 rounded border-slate-300 accent-green-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">ADX (14)</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Volume Group -->
+            <div>
+              <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
+                Khối lượng
+              </div>
+              <div class="space-y-1">
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="analysis-indicator-vol-sma"
+                    class="w-3.5 h-3.5 rounded border-slate-300 accent-violet-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-violet-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Vol SMA (20)</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="analysis-indicator-obv"
+                    class="w-3.5 h-3.5 rounded border-slate-300 accent-cyan-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">OBV</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="analysis-indicator-mfi"
+                    class="w-3.5 h-3.5 rounded border-slate-300 accent-amber-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">MFI (14)</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="analysis-indicator-cmf"
+                    class="w-3.5 h-3.5 rounded border-slate-300 accent-pink-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-pink-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">CMF (20)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onclick="toggleAnalysisChart()"
+          class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all text-slate-400 hover:text-primary-500"
+          title="Thu gọn/Mở rộng biểu đồ"
+        >
+          <i
+            data-lucide="chevron-up"
+            class="w-4 h-4 transition-transform duration-300"
+            id="analysis-chart-toggle-icon"
+            style="transform: rotate(180deg)"
+          ></i>
+        </button>
+      </div>
     </div>
-    <div id="analysis-chart-wrapper" class="w-full h-full flex flex-col gap-3 overflow-hidden">
+    <div id="analysis-chart-wrapper" class="w-full h-full flex flex-col gap-3 overflow-hidden collapsed">
       <!-- Analysis Price Chart Only -->
       <div
         id="analysis-price-chart-container"

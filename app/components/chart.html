@@ -64,72 +64,235 @@
             <option value="1M">1 tháng</option>
           </select>
         </div>
-        <!-- Indicator Toggles with Mobile Dropdown -->
-        <div class="relative ml-auto">
-          <!-- Mobile Trigger Button -->
+        <!-- Indicator Dropdown -->
+        <div class="relative ml-auto" id="indicator-dropdown-container">
           <button
-            onclick="document.getElementById('mobile-indicators').classList.toggle('hidden')"
-            class="lg:hidden flex items-center gap-1 text-xs font-bold px-2 py-1 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700"
+            id="indicator-dropdown-trigger"
+            class="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-colors"
           >
+            <i data-lucide="line-chart" class="w-3.5 h-3.5"></i>
             <span>Chỉ báo</span>
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
+            <span
+              id="indicator-count-badge"
+              class="hidden min-w-[18px] h-[18px] px-1 bg-primary-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+              >0</span
+            >
+            <i data-lucide="chevron-down" class="w-3 h-3 ml-0.5 transition-transform" id="indicator-chevron"></i>
           </button>
 
-          <!-- Indicators List -->
+          <!-- Dropdown Panel -->
           <div
-            id="mobile-indicators"
-            class="hidden lg:flex lg:items-center lg:gap-3 absolute lg:static top-full right-0 mt-2 lg:mt-0 p-3 lg:p-0 bg-white/90 dark:bg-slate-900/90 lg:bg-transparent backdrop-blur-xl lg:backdrop-blur-none border border-white/20 lg:border-0 rounded-xl lg:rounded-none shadow-xl lg:shadow-none flex-col lg:flex-row gap-3 min-w-[120px] z-50"
+            id="indicator-dropdown-panel"
+            class="hidden absolute top-full right-0 mt-2 w-72 max-h-[400px] overflow-y-auto p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50"
           >
-            <label class="flex items-center gap-1.5 cursor-pointer group whitespace-nowrap">
-              <input
-                type="checkbox"
-                id="indicator-ma"
-                class="w-4 h-4 rounded border-slate-300 accent-blue-500 transition-transform group-hover:scale-110"
-              />
-              <span class="text-xs font-bold text-blue-500">MA20</span>
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer group whitespace-nowrap">
-              <input
-                type="checkbox"
-                id="indicator-ema"
-                class="w-4 h-4 rounded border-slate-300 accent-orange-500 transition-transform group-hover:scale-110"
-              />
-              <span class="text-xs font-bold text-orange-500">EMA9</span>
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer group whitespace-nowrap">
-              <input
-                type="checkbox"
-                id="indicator-bb"
-                class="w-4 h-4 rounded border-slate-300 accent-purple-500 transition-transform group-hover:scale-110"
-              />
-              <span class="text-xs font-bold text-purple-500">BB</span>
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer group whitespace-nowrap">
-              <input
-                type="checkbox"
-                id="indicator-rsi"
-                class="w-4 h-4 rounded border-slate-300 accent-amber-500 transition-transform group-hover:scale-110"
-              />
-              <span class="text-xs font-bold text-amber-500">RSI</span>
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer group whitespace-nowrap">
-              <input
-                type="checkbox"
-                id="indicator-macd"
-                class="w-4 h-4 rounded border-slate-300 accent-blue-500 transition-transform group-hover:scale-110"
-              />
-              <span class="text-xs font-bold text-blue-500">MACD</span>
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer group whitespace-nowrap">
-              <input
-                type="checkbox"
-                id="indicator-vol-sma"
-                class="w-4 h-4 rounded border-slate-300 accent-violet-500 transition-transform group-hover:scale-110"
-              />
-              <span class="text-xs font-bold text-violet-500">Vol SMA</span>
-            </label>
+            <!-- Moving Averages Group -->
+            <div class="mb-3">
+              <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
+                Đường trung bình
+              </div>
+              <div class="space-y-1">
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input type="checkbox" id="indicator-ma" class="w-4 h-4 rounded border-slate-300 accent-blue-500" />
+                  <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">SMA (20)</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">Simple MA</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="indicator-ema"
+                    class="w-4 h-4 rounded border-slate-300 accent-orange-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">EMA (9)</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">Exponential MA</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input type="checkbox" id="indicator-wma" class="w-4 h-4 rounded border-slate-300 accent-cyan-500" />
+                  <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">WMA (20)</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">Weighted MA</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="indicator-vwap"
+                    class="w-4 h-4 rounded border-slate-300 accent-violet-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-violet-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">VWAP</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">Vol Weighted Price</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Bands/Channels Group -->
+            <div class="mb-3">
+              <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
+                Dải giá
+              </div>
+              <div class="space-y-1">
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input type="checkbox" id="indicator-bb" class="w-4 h-4 rounded border-slate-300 accent-purple-500" />
+                  <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Bollinger Bands</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">BB (20,2)</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input type="checkbox" id="indicator-atr" class="w-4 h-4 rounded border-slate-300 accent-pink-500" />
+                  <span class="w-2 h-2 rounded-full bg-pink-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">ATR (14)</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">Avg True Range</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Oscillators Group -->
+            <div class="mb-3">
+              <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
+                Dao động
+              </div>
+              <div class="space-y-1">
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input type="checkbox" id="indicator-rsi" class="w-4 h-4 rounded border-slate-300 accent-amber-500" />
+                  <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">RSI (14)</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">Relative Strength</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input type="checkbox" id="indicator-macd" class="w-4 h-4 rounded border-slate-300 accent-blue-500" />
+                  <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">MACD</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">12, 26, 9</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="indicator-stoch"
+                    class="w-4 h-4 rounded border-slate-300 accent-emerald-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Stochastic</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">%K, %D</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="indicator-williams"
+                    class="w-4 h-4 rounded border-slate-300 accent-cyan-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Williams %R</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">14 periods</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="indicator-cci"
+                    class="w-4 h-4 rounded border-slate-300 accent-violet-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-violet-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">CCI (20)</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">Commodity Channel</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="indicator-roc"
+                    class="w-4 h-4 rounded border-slate-300 accent-orange-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">ROC (10)</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">Rate of Change</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Trend Group -->
+            <div class="mb-3">
+              <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
+                Xu hướng
+              </div>
+              <div class="space-y-1">
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input type="checkbox" id="indicator-adx" class="w-4 h-4 rounded border-slate-300 accent-green-500" />
+                  <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">ADX (14)</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">+DI / -DI</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Volume Group -->
+            <div>
+              <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
+                Khối lượng
+              </div>
+              <div class="space-y-1">
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input
+                    type="checkbox"
+                    id="indicator-vol-sma"
+                    class="w-4 h-4 rounded border-slate-300 accent-violet-500"
+                  />
+                  <span class="w-2 h-2 rounded-full bg-violet-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Vol SMA (20)</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">Volume Average</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input type="checkbox" id="indicator-obv" class="w-4 h-4 rounded border-slate-300 accent-cyan-500" />
+                  <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">OBV</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">On Balance Vol</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input type="checkbox" id="indicator-mfi" class="w-4 h-4 rounded border-slate-300 accent-amber-500" />
+                  <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">MFI (14)</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">Money Flow Index</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+                >
+                  <input type="checkbox" id="indicator-cmf" class="w-4 h-4 rounded border-slate-300 accent-pink-500" />
+                  <span class="w-2 h-2 rounded-full bg-pink-500"></span>
+                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">CMF (20)</span>
+                  <span class="text-[10px] text-slate-400 ml-auto">Chaikin Money Flow</span>
+                </label>
+              </div>
+            </div>
           </div>
         </div>
       </div>

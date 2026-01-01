@@ -75,7 +75,7 @@ def calculate_all_indicators(
             "histogram": _get_last_value(macd_result.iloc[:, 2]),  # Histogram
             "series": [
                 {"time": t.strftime("%Y-%m-%d"), "value": float(v)}
-                for t, v in macd_result.iloc[:, 0].dropna().tail(30).items()
+                for t, v in macd_result.iloc[:, 0].dropna().tail(100).items()
             ],
         }
     else:
@@ -108,7 +108,7 @@ def calculate_all_indicators(
         "series": (
             [
                 {"time": t.strftime("%Y-%m-%d"), "value": float(v)}
-                for t, v in rsi_series.dropna().tail(30).items()
+                for t, v in rsi_series.dropna().tail(100).items()
             ]
             if rsi_series is not None and not rsi_series.empty
             else []
@@ -123,7 +123,7 @@ def calculate_all_indicators(
             "d": _get_last_value(stoch_result.iloc[:, 1]),  # %D
             "series": [
                 {"time": t.strftime("%Y-%m-%d"), "value": float(v)}
-                for t, v in stoch_result.iloc[:, 0].dropna().tail(30).items()
+                for t, v in stoch_result.iloc[:, 0].dropna().tail(100).items()
             ],
         }
     else:
