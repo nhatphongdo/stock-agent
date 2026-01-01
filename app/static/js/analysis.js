@@ -64,8 +64,16 @@ let sparklineCharts = {};
  * Refresh analysis chart by fitting content to time scale
  */
 function refreshAnalysisChart() {
-  if (typeof analysisChart !== "undefined" && analysisChart)
+  const isDark = document.documentElement.classList.contains("dark");
+  const theme = isDark ? CONFIG.CHART_THEMES.dark : CONFIG.CHART_THEMES.light;
+  if (typeof analysisChart !== "undefined" && analysisChart) {
+    analysisChart.applyOptions(theme);
     analysisChart.timeScale().fitContent();
+  }
+  for (const sparklineChart of Object.values(sparklineCharts)) {
+    sparklineChart.applyOptions(theme);
+    sparklineChart.timeScale().fitContent();
+  }
 }
 
 /**
@@ -83,7 +91,10 @@ function toggleAnalysisChart() {
         : "rotate(0deg)";
     }
   }
-  refreshAnalysisChart();
+  setTimeout(() => {
+    window.dispatchEvent(new Event("resize"));
+    refreshAnalysisChart();
+  }, 50);
 }
 
 /**
@@ -167,31 +178,7 @@ async function renderAnalysisChart(ohlcv_data) {
   chartContainer.classList.remove("hidden");
 
   const isDark = document.documentElement.classList.contains("dark");
-  const theme = isDark
-    ? {
-        layout: {
-          background: { type: "solid", color: "#0f172a" },
-          textColor: "#94a3b8",
-        },
-        grid: {
-          vertLines: { color: "rgba(148, 163, 184, 0.1)" },
-          horzLines: { color: "rgba(148, 163, 184, 0.1)" },
-        },
-        rightPriceScale: { borderColor: "rgba(148, 163, 184, 0.2)" },
-        timeScale: { borderColor: "rgba(148, 163, 184, 0.2)" },
-      }
-    : {
-        layout: {
-          background: { type: "solid", color: "#ffffff" },
-          textColor: "#334155",
-        },
-        grid: {
-          vertLines: { color: "rgba(100, 116, 139, 0.1)" },
-          horzLines: { color: "rgba(100, 116, 139, 0.1)" },
-        },
-        rightPriceScale: { borderColor: "rgba(100, 116, 139, 0.2)" },
-        timeScale: { borderColor: "rgba(100, 116, 139, 0.2)" },
-      };
+  const theme = isDark ? CONFIG.CHART_THEMES.dark : CONFIG.CHART_THEMES.light;
 
   analysisChart = LightweightCharts.createChart(chartContainer, {
     autoSize: true,
@@ -210,6 +197,10 @@ async function renderAnalysisChart(ohlcv_data) {
   analysisCandleSeries = analysisChart.addSeries(
     LightweightCharts.CandlestickSeries,
     {
+      priceFormat: {
+        type: "custom",
+        formatter: (price) => formatNumber(price, 0),
+      },
       upColor: CONFIG.COLORS.UP,
       downColor: CONFIG.COLORS.DOWN,
       borderUpColor: CONFIG.COLORS.UP,
@@ -224,7 +215,6 @@ async function renderAnalysisChart(ohlcv_data) {
     LightweightCharts.HistogramSeries,
     {
       priceFormat: { type: "volume" },
-      priceScaleId: "volume",
     },
     1,
   );
@@ -371,6 +361,7 @@ function drawSparkline(containerId, data, color) {
 
   const isDark = document.documentElement.classList.contains("dark");
   const chart = LightweightCharts.createChart(container, {
+    autoSize: true,
     layout: {
       background: { type: "solid", color: "transparent" },
       textColor: isDark ? "#94a3b8" : "#64748b",

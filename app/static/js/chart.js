@@ -8,8 +8,12 @@ let currentChartSymbol = null;
 
 // Refresh charts by fitting content to time scale
 function refreshCharts() {
-  if (typeof priceChart !== "undefined" && priceChart)
+  if (typeof priceChart !== "undefined" && priceChart) {
+    const isDark = document.documentElement.classList.contains("dark");
+    const theme = isDark ? CONFIG.CHART_THEMES.dark : CONFIG.CHART_THEMES.light;
+    priceChart.applyOptions(theme);
     priceChart.timeScale().fitContent();
+  }
 }
 
 // Calculate Moving Average
@@ -294,73 +298,7 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
   // Show chart, remove skeletons
   chartContainer.innerHTML = "";
   const isDark = document.documentElement.classList.contains("dark");
-
-  // Full theme presets for Lightweight Charts
-  const darkTheme = {
-    layout: {
-      background: { type: "solid", color: "#0f172a" },
-      textColor: "#94a3b8",
-    },
-    grid: {
-      vertLines: { color: "rgba(148, 163, 184, 0.1)" },
-      horzLines: { color: "rgba(148, 163, 184, 0.1)" },
-    },
-    rightPriceScale: {
-      borderColor: "rgba(148, 163, 184, 0.2)",
-    },
-    timeScale: {
-      borderColor: "rgba(148, 163, 184, 0.2)",
-    },
-    crosshair: {
-      mode: LightweightCharts.CrosshairMode.Normal,
-      vertLine: {
-        color: "rgba(148, 163, 184, 0.5)",
-        width: 1,
-        style: LightweightCharts.LineStyle.Dashed,
-        labelBackgroundColor: "#334155",
-      },
-      horzLine: {
-        color: "rgba(148, 163, 184, 0.5)",
-        width: 1,
-        style: LightweightCharts.LineStyle.Dashed,
-        labelBackgroundColor: "#334155",
-      },
-    },
-  };
-
-  const lightTheme = {
-    layout: {
-      background: { type: "solid", color: "#ffffff" },
-      textColor: "#334155",
-    },
-    grid: {
-      vertLines: { color: "rgba(100, 116, 139, 0.1)" },
-      horzLines: { color: "rgba(100, 116, 139, 0.1)" },
-    },
-    rightPriceScale: {
-      borderColor: "rgba(100, 116, 139, 0.2)",
-    },
-    timeScale: {
-      borderColor: "rgba(100, 116, 139, 0.2)",
-    },
-    crosshair: {
-      mode: LightweightCharts.CrosshairMode.Normal,
-      vertLine: {
-        color: "rgba(100, 116, 139, 0.5)",
-        width: 1,
-        style: LightweightCharts.LineStyle.Dashed,
-        labelBackgroundColor: "#f1f5f9",
-      },
-      horzLine: {
-        color: "rgba(100, 116, 139, 0.5)",
-        width: 1,
-        style: LightweightCharts.LineStyle.Dashed,
-        labelBackgroundColor: "#f1f5f9",
-      },
-    },
-  };
-
-  const theme = isDark ? darkTheme : lightTheme;
+  const theme = isDark ? CONFIG.CHART_THEMES.dark : CONFIG.CHART_THEMES.light;
 
   // Create single chart with pane support
   priceChart = LightweightCharts.createChart(chartContainer, {
@@ -392,6 +330,10 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
   candleSeries = priceChart.addSeries(
     LightweightCharts.CandlestickSeries,
     {
+      priceFormat: {
+        type: "custom",
+        formatter: (price) => formatNumber(price, 0),
+      },
       upColor: CONFIG.COLORS.UP,
       downColor: CONFIG.COLORS.DOWN,
       borderUpColor: CONFIG.COLORS.UP,
@@ -408,7 +350,6 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
     LightweightCharts.HistogramSeries,
     {
       priceFormat: { type: "volume" },
-      priceScaleId: "volume",
     },
     1,
   ); // paneIndex 1 = second pane for volume

@@ -50,6 +50,71 @@ const CONFIG = {
     RESIZE_MAX_PERCENT: 70,
     TOAST_DURATION_MS: 3000,
   },
+  // Chart themes
+  CHART_THEMES: {
+    dark: {
+      layout: {
+        background: { type: "solid", color: "#0f172a" },
+        textColor: "#94a3b8",
+      },
+      grid: {
+        vertLines: { color: "rgba(148, 163, 184, 0.1)" },
+        horzLines: { color: "rgba(148, 163, 184, 0.1)" },
+      },
+      rightPriceScale: {
+        borderColor: "rgba(148, 163, 184, 0.2)",
+      },
+      timeScale: {
+        borderColor: "rgba(148, 163, 184, 0.2)",
+      },
+      crosshair: {
+        mode: LightweightCharts.CrosshairMode.Magnet,
+        vertLine: {
+          color: "rgba(148, 163, 184, 0.5)",
+          width: 1,
+          style: LightweightCharts.LineStyle.Dashed,
+          labelBackgroundColor: "#334155",
+        },
+        horzLine: {
+          color: "rgba(148, 163, 184, 0.5)",
+          width: 1,
+          style: LightweightCharts.LineStyle.Dashed,
+          labelBackgroundColor: "#334155",
+        },
+      },
+    },
+    light: {
+      layout: {
+        background: { type: "solid", color: "#ffffff" },
+        textColor: "#334155",
+      },
+      grid: {
+        vertLines: { color: "rgba(100, 116, 139, 0.1)" },
+        horzLines: { color: "rgba(100, 116, 139, 0.1)" },
+      },
+      rightPriceScale: {
+        borderColor: "rgba(100, 116, 139, 0.2)",
+      },
+      timeScale: {
+        borderColor: "rgba(100, 116, 139, 0.2)",
+      },
+      crosshair: {
+        mode: LightweightCharts.CrosshairMode.Magnet,
+        vertLine: {
+          color: "rgba(100, 116, 139, 0.5)",
+          width: 1,
+          style: LightweightCharts.LineStyle.Dashed,
+          labelBackgroundColor: "#f1f5f9",
+        },
+        horzLine: {
+          color: "rgba(100, 116, 139, 0.5)",
+          width: 1,
+          style: LightweightCharts.LineStyle.Dashed,
+          labelBackgroundColor: "#f1f5f9",
+        },
+      },
+    },
+  },
 };
 // Freeze to prevent accidental modifications
 Object.freeze(CONFIG);
@@ -58,6 +123,7 @@ Object.freeze(CONFIG.CHART);
 Object.freeze(CONFIG.COLORS);
 Object.freeze(CONFIG.TIMEFRAME_DAYS);
 Object.freeze(CONFIG.UI);
+Object.freeze(CONFIG.CHART_THEMES);
 
 // --- Valid Stock Symbols (fetched from backend) ---
 let symbolsMap = {}; // symbol -> {name, exchange}
@@ -442,7 +508,8 @@ themeToggle.addEventListener("click", () => {
   setTheme(html.classList.contains("dark") ? "light" : "dark");
   // Re-render charts with new theme if a stock is selected
   if (currentChartSymbol) {
-    initAdvancedChart(currentChartSymbol);
+    refreshCharts();
+    refreshAnalysisChart();
   }
 });
 

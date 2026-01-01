@@ -13,10 +13,17 @@ interface IVolumeData {
   color?: string;
 }
 
+interface IPriceScaleApi {
+  applyOptions: (options: unknown) => void;
+  options: () => { id?: string; visible?: boolean; borderColor?: string };
+  width: () => number;
+}
+
 interface ISeriesApi {
   setData: (data: unknown[]) => void;
   dataByIndex: (index: number) => unknown;
   priceLines: () => unknown[];
+  priceScale: () => IPriceScaleApi;
 }
 
 interface ITimeScaleApi {
