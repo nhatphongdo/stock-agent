@@ -55,6 +55,7 @@ function handleAnalysisTabSwitch(symbol, companyName) {
 // Analysis chart instances (separate from main chart)
 let analysisChart = null;
 let analysisCandleSeries = null;
+let analysisVolumeSeries = null;
 
 // Sparkline charts storage
 let sparklineCharts = {};
@@ -147,8 +148,7 @@ function initAnalysisChartResizer() {
 
 /**
  * Render Analysis Chart (separate chart for Analysis tab)
- * @param {string} symbol - Stock symbol
- * @param {string} analysisTimeframe - "short_term" or "long_term"
+ * @param {Array} ohlcv_data - OHLCV data
  */
 async function renderAnalysisChart(ohlcv_data) {
   const chartContainer = document.getElementById("analysis-candlestick-chart");
@@ -160,19 +160,11 @@ async function renderAnalysisChart(ohlcv_data) {
     analysisChart = null;
   }
   analysisCandleSeries = null;
+  analysisVolumeSeries = null;
 
   // Remove skeleton and show chart
-  const parentUpdate = document.getElementById(
-    "analysis-candlestick-chart",
-  )?.parentElement;
-  if (parentUpdate) {
-    parentUpdate
-      .querySelectorAll(".chart-skeleton")
-      .forEach((el) => el.remove());
-    document
-      .getElementById("analysis-candlestick-chart")
-      ?.classList.remove("hidden");
-  }
+  chartContainer.innerHTML = "";
+  chartContainer.classList.remove("hidden");
 
   const isDark = document.documentElement.classList.contains("dark");
   const theme = isDark
@@ -201,24 +193,150 @@ async function renderAnalysisChart(ohlcv_data) {
         timeScale: { borderColor: "rgba(100, 116, 139, 0.2)" },
       };
 
-  const container = document.getElementById("analysis-candlestick-chart");
-  if (!container) return;
-
-  analysisChart = LightweightCharts.createChart(container, {
+  analysisChart = LightweightCharts.createChart(chartContainer, {
     autoSize: true,
     ...theme,
     timeScale: { ...theme.timeScale, timeVisible: false },
   });
 
-  analysisCandleSeries = analysisChart.addCandlestickSeries({
-    upColor: CONFIG.COLORS.UP,
-    downColor: CONFIG.COLORS.DOWN,
-    borderUpColor: CONFIG.COLORS.UP,
-    borderDownColor: CONFIG.COLORS.DOWN,
-    wickUpColor: CONFIG.COLORS.UP,
-    wickDownColor: CONFIG.COLORS.DOWN,
-  });
+  // Convert data to Lightweight Charts format (Unix timestamp in seconds)
+  const volumeData = ohlcv_data.map((d) => ({
+    time: d.time,
+    value: d.volume,
+    color:
+      d.close >= d.open ? "rgba(16, 185, 129, 0.6)" : "rgba(239, 68, 68, 0.6)",
+  }));
+
+  analysisCandleSeries = analysisChart.addSeries(
+    LightweightCharts.CandlestickSeries,
+    {
+      upColor: CONFIG.COLORS.UP,
+      downColor: CONFIG.COLORS.DOWN,
+      borderUpColor: CONFIG.COLORS.UP,
+      borderDownColor: CONFIG.COLORS.DOWN,
+      wickUpColor: CONFIG.COLORS.UP,
+      wickDownColor: CONFIG.COLORS.DOWN,
+    },
+  );
   analysisCandleSeries.setData(ohlcv_data);
+
+  analysisVolumeSeries = analysisChart.addSeries(
+    LightweightCharts.HistogramSeries,
+    {
+      priceFormat: { type: "volume" },
+      priceScaleId: "volume",
+    },
+    1,
+  );
+  analysisVolumeSeries.setData(volumeData);
+
+  analysisChart.panes()[1]?.setHeight(50);
+
+  // Create tooltip element
+  const tooltip = document.createElement("div");
+  tooltip.className = "analysis-chart-tooltip";
+  Object.assign(tooltip.style, {
+    position: "absolute",
+    display: "none",
+    padding: "10px 14px",
+    background: isDark ? "rgba(30, 41, 59, 0.95)" : "rgba(255, 255, 255, 0.95)",
+    color: isDark ? "#e2e8f0" : "#1e293b",
+    fontSize: "12px",
+    fontFamily: "sans-serif",
+    lineHeight: "1.5",
+    borderRadius: "8px",
+    zIndex: "100",
+    pointerEvents: "none",
+    backdropFilter: "blur(8px)",
+    border: isDark
+      ? "1px solid rgba(148, 163, 184, 0.2)"
+      : "1px solid rgba(100, 116, 139, 0.2)",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+    whiteSpace: "nowrap",
+  });
+  chartContainer.style.position = "relative";
+  chartContainer.appendChild(tooltip);
+
+  // Subscribe to crosshair move
+  analysisChart.subscribeCrosshairMove((param) => {
+    if (
+      param.point === undefined ||
+      !param.time ||
+      param.point.x < 0 ||
+      param.point.x > chartContainer.clientWidth ||
+      param.point.y < 0 ||
+      param.point.y > chartContainer.clientHeight
+    ) {
+      tooltip.style.display = "none";
+      return;
+    }
+
+    const candleData = /** @type {ICandleData | undefined} */ (
+      param.seriesData.get(analysisCandleSeries)
+    );
+    const volumeData = /** @type {IVolumeData | undefined} */ (
+      param.seriesData.get(analysisVolumeSeries)
+    );
+
+    if (candleData) {
+      const changePercent = (
+        ((candleData.close - candleData.open) / candleData.open) *
+        100
+      ).toFixed(2);
+      const changeColor =
+        candleData.close >= candleData.open ? "#10b981" : "#ef4444";
+      const changeSign = candleData.close >= candleData.open ? "+" : "";
+
+      tooltip.innerHTML = `
+        <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatDate(
+          param.time,
+        )}</div>
+        <div><span style="opacity: 0.6;">Open:</span> <strong>${formatPrice(
+          candleData.open,
+        )}</strong></div>
+        <div><span style="opacity: 0.6;">High:</span> <strong>${formatPrice(
+          candleData.high,
+        )}</strong></div>
+        <div><span style="opacity: 0.6;">Low:</span> <strong>${formatPrice(
+          candleData.low,
+        )}</strong></div>
+        <div><span style="opacity: 0.6;">Close:</span> <strong>${formatPrice(
+          candleData.close,
+        )}</strong> <span style="color: ${changeColor};">(${changeSign}${changePercent}%)</span></div>
+        ${
+          volumeData?.value
+            ? `<div><span style="opacity: 0.6;">Volume:</span> <strong>${formatNumber(
+                volumeData.value,
+                2,
+                true,
+              )}</strong></div>`
+            : ""
+        }
+      `;
+
+      tooltip.style.display = "block";
+
+      // Position tooltip
+      const tooltipWidth = tooltip.offsetWidth || 150;
+      const tooltipHeight = tooltip.offsetHeight || 100;
+      let left = param.point.x + 15;
+      let top = param.point.y + 15;
+
+      if (left + tooltipWidth > chartContainer.clientWidth) {
+        left = param.point.x - tooltipWidth - 15;
+      }
+      if (top + tooltipHeight > chartContainer.clientHeight) {
+        top = param.point.y - tooltipHeight - 15;
+      }
+      if (left < 0) left = 10;
+      if (top < 0) top = 10;
+
+      tooltip.style.left = left + "px";
+      tooltip.style.top = top + "px";
+    } else {
+      tooltip.style.display = "none";
+    }
+  });
 
   setTimeout(() => {
     window.dispatchEvent(new Event("resize"));
@@ -282,7 +400,7 @@ function drawSparkline(containerId, data, color) {
     },
   });
 
-  const series = chart.addAreaSeries({
+  const series = chart.addSeries(LightweightCharts.AreaSeries, {
     lineColor: color,
     topColor: color.replace(/, 1\)$/, ", 0.2)"),
     bottomColor: color.replace(/, 1\)$/, ", 0)"),
@@ -355,34 +473,29 @@ function drawSparkline(containerId, data, color) {
       const value = seriesData ? seriesData.value : undefined;
       if (value !== undefined) {
         tooltip.style.display = "block";
-
-        // Format Date
-        let dateStr = "";
-        if (typeof param.time === "string") {
-          const parts = param.time.split("-");
-          if (parts.length === 3) {
-            dateStr = `${parts[2]}/${parts[1]}`;
-          } else {
-            dateStr = param.time;
-          }
-        } else {
-          dateStr = "Ngày " + param.time;
-        }
-
         tooltip.innerHTML = `
-          <div style="font-size: 9px; opacity: 0.6; font-weight: medium; margin-bottom: 2px;">${dateStr}</div>
-          <div>${value.toFixed(2)}</div>
+          <div style="font-size: 9px; opacity: 0.6; font-weight: medium; margin-bottom: 2px;">${formatDate(
+            param.time,
+          )}</div>
+          <div>${formatNumber(value, 2)}</div>
         `;
 
-        const tooltipWidth = 50;
+        const tooltipWidth = tooltip.offsetWidth || 50;
+        const tooltipHeight = tooltip.offsetHeight || 25;
         let x = param.point.x + 10;
-        let y = param.point.y - 35;
+        let y = param.point.y + 10;
 
-        if (x > container.clientWidth - tooltipWidth) {
+        if (x + tooltipWidth > container.clientWidth) {
           x = param.point.x - tooltipWidth - 10;
         }
+        if (y + tooltipHeight > container.clientHeight) {
+          y = param.point.y - tooltipHeight - 10;
+        }
+        if (x < 0) {
+          x = 10;
+        }
         if (y < 0) {
-          y = param.point.y + 15;
+          y = 10;
         }
 
         tooltip.style.left = x + "px";
@@ -607,27 +720,6 @@ async function fetchTechnicalAnalysis(symbol, companyName) {
   }
 }
 
-// --- Helper Functions for Technical Analysis ---
-
-/**
- * Format price value to Vietnamese locale
- * @param {number} p - Price value
- * @returns {string} - Formatted price
- */
-function formatPrice(p) {
-  return p !== null && p !== undefined ? p.toLocaleString("vi-VN") : "--";
-}
-
-/**
- * Format number with decimals
- * @param {number} n - Number value
- * @param {number} decimals - Number of decimal places
- * @returns {string} - Formatted number
- */
-function formatNum(n, decimals = 2) {
-  return n !== null && n !== undefined ? n.toFixed(decimals) : "--";
-}
-
 /**
  * Update indicators display with data
  * @param {Object} ind - Indicators data
@@ -641,7 +733,7 @@ function updateIndicatorsDisplay(ind, meth, gauges, ohlcv_data) {
   const rsiValue = typeof rsiData === "object" ? rsiData.value : rsiData;
   if (rsiValue !== null && rsiValue !== undefined) {
     removeSkeleton("tech-rsi-value");
-    updateValueWithTooltip("tech-rsi-value", rsiValue.toFixed(1));
+    updateValueWithTooltip("tech-rsi-value", formatNumber(rsiValue, 1));
     const marker = document.getElementById("tech-rsi-marker");
     if (marker) marker.style.left = `calc(${rsiValue}% - 8px)`;
     const rsiBarSkeleton = document.getElementById("tech-rsi-bar-skeleton");
@@ -690,11 +782,11 @@ function updateIndicatorsDisplay(ind, meth, gauges, ohlcv_data) {
   const stochSignal = document.getElementById("tech-stoch-signal");
   if (stochK) {
     removeSkeleton("tech-stoch-k");
-    updateValueWithTooltip("tech-stoch-k", formatNum(stoch.k, 1));
+    updateValueWithTooltip("tech-stoch-k", formatNumber(stoch.k, 1));
   }
   if (stochD) {
     removeSkeleton("tech-stoch-d");
-    updateValueWithTooltip("tech-stoch-d", formatNum(stoch.d, 1));
+    updateValueWithTooltip("tech-stoch-d", formatNumber(stoch.d, 1));
   }
   if (stochSignal && stoch.k !== null) {
     removeSkeleton("tech-stoch-signal");
@@ -730,7 +822,7 @@ function updateIndicatorsDisplay(ind, meth, gauges, ohlcv_data) {
   // Williams %R
   if (ind.willr !== undefined) {
     removeSkeleton("tech-willr");
-    updateValueWithTooltip("tech-willr", formatNum(ind.willr, 1));
+    updateValueWithTooltip("tech-willr", formatNumber(ind.willr, 1));
   }
 
   // MACD
@@ -741,15 +833,15 @@ function updateIndicatorsDisplay(ind, meth, gauges, ohlcv_data) {
   const macdSignal = document.getElementById("tech-macd-signal");
   if (macdLine) {
     removeSkeleton("tech-macd-line");
-    updateValueWithTooltip("tech-macd-line", formatNum(macd.line));
+    updateValueWithTooltip("tech-macd-line", formatNumber(macd.line));
   }
   if (macdSignalVal) {
     removeSkeleton("tech-macd-signal-val");
-    updateValueWithTooltip("tech-macd-signal-val", formatNum(macd.signal));
+    updateValueWithTooltip("tech-macd-signal-val", formatNumber(macd.signal));
   }
   if (macdHist) {
     removeSkeleton("tech-macd-hist");
-    updateValueWithTooltip("tech-macd-hist", formatNum(macd.histogram));
+    updateValueWithTooltip("tech-macd-hist", formatNumber(macd.histogram));
     if (macd.histogram !== null) {
       macdHist.classList.remove(
         "text-green-600",
@@ -795,15 +887,15 @@ function updateIndicatorsDisplay(ind, meth, gauges, ohlcv_data) {
   const adxSignal = document.getElementById("tech-adx-signal");
   if (adxVal) {
     removeSkeleton("tech-adx-val");
-    updateValueWithTooltip("tech-adx-val", formatNum(adx.adx, 1));
+    updateValueWithTooltip("tech-adx-val", formatNumber(adx.adx, 1));
   }
   if (adxDmp) {
     removeSkeleton("tech-adx-dmp");
-    updateValueWithTooltip("tech-adx-dmp", formatNum(adx.dmp, 1));
+    updateValueWithTooltip("tech-adx-dmp", formatNumber(adx.dmp, 1));
   }
   if (adxDmn) {
     removeSkeleton("tech-adx-dmn");
-    updateValueWithTooltip("tech-adx-dmn", formatNum(adx.dmn, 1));
+    updateValueWithTooltip("tech-adx-dmn", formatNumber(adx.dmn, 1));
   }
   if (adxSignal && adx.adx !== null) {
     removeSkeleton("tech-adx-signal");
@@ -927,7 +1019,7 @@ function updateIndicatorsDisplay(ind, meth, gauges, ohlcv_data) {
   }
   if (cmf) {
     removeSkeleton("tech-cmf");
-    updateValueWithTooltip("tech-cmf", formatNum(ind.cmf, 3));
+    updateValueWithTooltip("tech-cmf", formatNumber(ind.cmf, 3));
   }
   if (volSignal && ind.obv_trend && ind.cmf !== null) {
     removeSkeleton("tech-vol-signal");
@@ -980,13 +1072,27 @@ function updateIndicatorsDisplay(ind, meth, gauges, ohlcv_data) {
   const pivotS1 = document.getElementById("tech-pivot-s1");
   const pivotS2 = document.getElementById("tech-pivot-s2");
   const pivotS3 = document.getElementById("tech-pivot-s3");
-  if (pivot) pivot.textContent = formatPrice(pp.pivot);
-  if (pivotR1) pivotR1.textContent = formatPrice(pp.r1);
-  if (pivotR2) pivotR2.textContent = formatPrice(pp.r2);
-  if (pivotR3) pivotR3.textContent = formatPrice(pp.r3);
-  if (pivotS1) pivotS1.textContent = formatPrice(pp.s1);
-  if (pivotS2) pivotS2.textContent = formatPrice(pp.s2);
-  if (pivotS3) pivotS3.textContent = formatPrice(pp.s3);
+  if (pivot) {
+    updateValueWithTooltip("tech-pivot", formatPrice(pp.pivot));
+  }
+  if (pivotR1) {
+    updateValueWithTooltip("tech-pivot-r1", formatPrice(pp.r1));
+  }
+  if (pivotR2) {
+    updateValueWithTooltip("tech-pivot-r2", formatPrice(pp.r2));
+  }
+  if (pivotR3) {
+    updateValueWithTooltip("tech-pivot-r3", formatPrice(pp.r3));
+  }
+  if (pivotS1) {
+    updateValueWithTooltip("tech-pivot-s1", formatPrice(pp.s1));
+  }
+  if (pivotS2) {
+    updateValueWithTooltip("tech-pivot-s2", formatPrice(pp.s2));
+  }
+  if (pivotS3) {
+    updateValueWithTooltip("tech-pivot-s3", formatPrice(pp.s3));
+  }
 
   // Fibonacci Levels
   const fib = ind.fibonacci || {};
@@ -1008,13 +1114,27 @@ function updateIndicatorsDisplay(ind, meth, gauges, ohlcv_data) {
   const fib618 = document.getElementById("tech-fib-618");
   const fib786 = document.getElementById("tech-fib-786");
   const fib100 = document.getElementById("tech-fib-100");
-  if (fib0) fib0.textContent = formatPrice(fib.level_0);
-  if (fib236) fib236.textContent = formatPrice(fib.level_236);
-  if (fib382) fib382.textContent = formatPrice(fib.level_382);
-  if (fib500) fib500.textContent = formatPrice(fib.level_500);
-  if (fib618) fib618.textContent = formatPrice(fib.level_618);
-  if (fib786) fib786.textContent = formatPrice(fib.level_786);
-  if (fib100) fib100.textContent = formatPrice(fib.level_100);
+  if (fib0) {
+    updateValueWithTooltip("tech-fib-0", formatPrice(fib.level_0));
+  }
+  if (fib236) {
+    updateValueWithTooltip("tech-fib-236", formatPrice(fib.level_236));
+  }
+  if (fib382) {
+    updateValueWithTooltip("tech-fib-382", formatPrice(fib.level_382));
+  }
+  if (fib500) {
+    updateValueWithTooltip("tech-fib-500", formatPrice(fib.level_500));
+  }
+  if (fib618) {
+    updateValueWithTooltip("tech-fib-618", formatPrice(fib.level_618));
+  }
+  if (fib786) {
+    updateValueWithTooltip("tech-fib-786", formatPrice(fib.level_786));
+  }
+  if (fib100) {
+    updateValueWithTooltip("tech-fib-100", formatPrice(fib.level_100));
+  }
 
   // Methods List
   const methodsList = document.getElementById("tech-methods-list");
@@ -1329,35 +1449,24 @@ function clearAnalysisDisplay() {
   // Show chart's skeleton
   const chartContainer = document.getElementById("analysis-candlestick-chart");
   if (chartContainer) {
-    const parent = chartContainer.parentElement;
-    if (parent) {
-      parent.querySelectorAll(".chart-skeleton").forEach((el) => el.remove());
-      chartContainer.classList.add("hidden");
-
-      const template = /** @type {HTMLTemplateElement} */ (
-        document.getElementById("analysis-chart-skeleton-template")
+    const template = /** @type {HTMLTemplateElement} */ (
+      document.getElementById("analysis-chart-skeleton-template")
+    );
+    if (template) {
+      const clone = /** @type {DocumentFragment} */ (
+        template.content.cloneNode(true)
       );
-      if (template) {
-        const clone = /** @type {DocumentFragment} */ (
-          template.content.cloneNode(true)
-        );
-        const barsContainer = clone.querySelector(
-          ".flex-1.flex.items-end.gap-1",
-        );
-
-        if (barsContainer) {
-          barsContainer.innerHTML = Array(20)
-            .fill(0)
-            .map(
-              () =>
-                `<div class="flex-1 skeleton-shimmer rounded" style="height: ${
-                  30 + Math.random() * 60
-                }%"></div>`,
-            )
-            .join("");
+      const barsContainer = clone.querySelector(".chart-skeleton-bars");
+      if (barsContainer) {
+        for (let i = 0; i < 20; i++) {
+          const bar = document.createElement("div");
+          bar.className =
+            "flex-1 inset-0 bg-slate-200/50 dark:bg-slate-800/40 skeleton-shimmer rounded";
+          bar.style.height = `${30 + Math.random() * 60}%`;
+          barsContainer.appendChild(bar);
         }
-        chartContainer.insertAdjacentElement("beforebegin", clone.children[0]);
       }
+      chartContainer.append(clone.children[0]);
     }
   }
 

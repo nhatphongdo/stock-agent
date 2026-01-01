@@ -445,3 +445,81 @@ themeToggle.addEventListener("click", () => {
     initAdvancedChart(currentChartSymbol);
   }
 });
+
+/**
+ * Format price value to Vietnamese locale
+ * @param {number} p - Price value
+ * @returns {string} - Formatted price
+ */
+function formatPrice(p) {
+  return p !== null && p !== undefined
+    ? p.toLocaleString("vi-VN", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      })
+    : "--";
+}
+
+/**
+ * Format number with decimals
+ * @param {number} n - Number value
+ * @param {number} decimals - Number of decimal places. If not defined, automatically set to real value (0 if no fraction, 2 if has fraction)
+ * @param {boolean} converted - Convert to K, M
+ * @returns {string} - Formatted number
+ */
+function formatNumber(n, decimals = 2, converted = false) {
+  if (converted) {
+    if (n >= 1000000) {
+      return (n / 1000000).toFixed(decimals) + "M";
+    } else if (n >= 1000) {
+      return (n / 1000).toFixed(decimals) + "K";
+    }
+    return n.toLocaleString("vi-VN", {
+      minimumFractionDigits: decimals ?? 0,
+      maximumFractionDigits: decimals ?? 2,
+    });
+  }
+  return n !== null && n !== undefined
+    ? n.toLocaleString("vi-VN", {
+        minimumFractionDigits: decimals ?? 0,
+        maximumFractionDigits: decimals ?? 2,
+      })
+    : "--";
+}
+
+/**
+ * Format full date time
+ * @param {number | string} timestamp - Timestamp as string or in seconds
+ * @returns {string} - Formatted date time
+ */
+function formatFullDateTime(timestamp) {
+  const date =
+    typeof timestamp === "string"
+      ? new Date(timestamp)
+      : new Date(timestamp * 1000);
+  return date.toLocaleString("vi-VN", {
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/**
+ * Format date
+ * @param {string | number} timestamp - Timestamp as string or in seconds
+ * @returns {string} - Formatted date
+ */
+function formatDate(timestamp) {
+  const date =
+    typeof timestamp === "string"
+      ? new Date(timestamp)
+      : new Date(timestamp * 1000);
+  return date.toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}

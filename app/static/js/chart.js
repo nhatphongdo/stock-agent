@@ -1,6 +1,5 @@
 // Chart Module - Global chart instances for cleanup (Lightweight Charts)
 let priceChart = null;
-let volumeChart = null;
 let candleSeries = null;
 let volumeSeries = null;
 let indicatorSeries = []; // Array to hold indicator line series
@@ -11,8 +10,6 @@ let currentChartSymbol = null;
 function refreshCharts() {
   if (typeof priceChart !== "undefined" && priceChart)
     priceChart.timeScale().fitContent();
-  if (typeof volumeChart !== "undefined" && volumeChart)
-    volumeChart.timeScale().fitContent();
 }
 
 // Calculate Moving Average
@@ -187,20 +184,15 @@ function initAdvancedChart(symbol) {
   });
 }
 
-// Render both charts (async - fetches real data from API)
+// Render chart with multiple panes (async - fetches real data from API)
 async function renderAdvancedChart(symbol, timeframe, interval) {
-  const candleCanvas = document.getElementById("candlestick-chart");
-  const volumeCanvas = document.getElementById("volume-chart");
-  if (!candleCanvas || !volumeCanvas) return;
+  const chartContainer = document.getElementById("chart-container");
+  if (!chartContainer) return;
 
-  // Destroy previous instances
+  // Destroy previous instance
   if (priceChart) {
     priceChart.remove();
     priceChart = null;
-  }
-  if (volumeChart) {
-    volumeChart.remove();
-    volumeChart = null;
   }
   candleSeries = null;
   volumeSeries = null;
@@ -225,40 +217,28 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
   // Interval is passed directly to API (ONE_MINUTE, ONE_DAY)
   const apiInterval = interval;
 
-  const skeletonHTML = `
-    <div class="h-full w-full flex flex-col gap-2 p-2 chart-skeleton">
-      <div class="flex-1 flex items-end gap-1">
-        ${Array(20)
-          .fill(0)
-          .map(
-            () =>
-              `<div class="flex-1 skeleton-shimmer rounded" style="height: ${
-                30 + Math.random() * 60
-              }%"></div>`,
-          )
-          .join("")}
-      </div>
-      <div class="h-2 skeleton-shimmer rounded w-full"></div>
-    </div>
-  `;
+  // Get skeleton from template
+  const skeletonTemplate = /** @type {HTMLTemplateElement | null} */ (
+    document.getElementById("chart-skeleton-template")
+  );
+  if (skeletonTemplate) {
+    // Clone template and add dynamic bars
+    const skeletonContent = /** @type {DocumentFragment} */ (
+      skeletonTemplate.content.cloneNode(true)
+    );
+    const barsContainer = skeletonContent.querySelector(".chart-skeleton-bars");
+    if (barsContainer) {
+      for (let i = 0; i < 20; i++) {
+        const bar = document.createElement("div");
+        bar.className =
+          "flex-1 inset-0 bg-slate-200/50 dark:bg-slate-800/40 skeleton-shimmer-vertical rounded";
+        bar.style.height = `${30 + Math.random() * 60}%`;
+        barsContainer.appendChild(bar);
+      }
+    }
 
-  // Stable container management: don't nuke parents, just toggle contents
-  const candleParent = candleCanvas.parentElement;
-  const volumeParent = volumeCanvas.parentElement;
-
-  if (candleParent) {
-    candleParent
-      .querySelectorAll(".chart-skeleton")
-      .forEach((el) => el.remove());
-    candleCanvas.classList.add("hidden");
-    candleCanvas.insertAdjacentHTML("beforebegin", skeletonHTML);
-  }
-  if (volumeParent) {
-    volumeParent
-      .querySelectorAll(".chart-skeleton")
-      .forEach((el) => el.remove());
-    volumeCanvas.classList.add("hidden");
-    volumeCanvas.insertAdjacentHTML("beforebegin", skeletonHTML);
+    chartContainer.innerHTML = "";
+    chartContainer.append(skeletonContent.children[0]);
   }
 
   let data;
@@ -283,15 +263,12 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
   } catch (err) {
     console.error("Chart API error:", err);
     // Show error message with links to external charts
-    const candleParent =
-      document.getElementById("candlestick-chart")?.parentElement;
-    const volumeParent = document.getElementById("volume-chart")?.parentElement;
     const stockInfo = getStockInfo(symbol);
     const exchange = stockInfo?.exchange || "HOSE";
     const errorTemplate = /** @type {HTMLTemplateElement | null} */ (
       document.getElementById("chart-error-template")
     );
-    if (errorTemplate && candleParent) {
+    if (errorTemplate) {
       const errorContent = /** @type {DocumentFragment} */ (
         errorTemplate.content.cloneNode(true)
       );
@@ -307,32 +284,15 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
         tradingViewLink.href = `https://www.tradingview.com/chart/?symbol=${exchange}:${symbol}`;
       if (investingLink)
         investingLink.href = `https://vn.investing.com/search?q=${symbol}`;
-      candleParent.innerHTML = "";
-      candleParent.appendChild(errorContent);
+      chartContainer.innerHTML = "";
+      chartContainer.appendChild(errorContent);
     }
-    if (volumeParent) volumeParent.innerHTML = "";
     lucide.createIcons();
     return; // Exit early, don't try to render chart
   }
 
-  // Show chart containers, remove skeletons
-  const candleParentUpdate =
-    document.getElementById("candlestick-chart")?.parentElement;
-  const volumeParentUpdate =
-    document.getElementById("volume-chart")?.parentElement;
-  if (candleParentUpdate) {
-    candleParentUpdate
-      .querySelectorAll(".chart-skeleton")
-      .forEach((el) => el.remove());
-    document.getElementById("candlestick-chart")?.classList.remove("hidden");
-  }
-  if (volumeParentUpdate) {
-    volumeParentUpdate
-      .querySelectorAll(".chart-skeleton")
-      .forEach((el) => el.remove());
-    document.getElementById("volume-chart")?.classList.remove("hidden");
-  }
-
+  // Show chart, remove skeletons
+  chartContainer.innerHTML = "";
   const isDark = document.documentElement.classList.contains("dark");
 
   // Full theme presets for Lightweight Charts
@@ -402,29 +362,14 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
 
   const theme = isDark ? darkTheme : lightTheme;
 
-  // Get chart containers
-  const priceContainer = document.getElementById("candlestick-chart");
-  const volumeContainer = document.getElementById("volume-chart");
-  if (!priceContainer || !volumeContainer) return;
-
-  // Create Price Chart with theme
-  priceChart = LightweightCharts.createChart(priceContainer, {
+  // Create single chart with pane support
+  priceChart = LightweightCharts.createChart(chartContainer, {
     autoSize: true,
     ...theme,
     timeScale: {
       ...theme.timeScale,
       timeVisible: apiInterval.includes("m") || apiInterval === "1H",
       secondsVisible: false,
-    },
-  });
-
-  // Create Volume Chart with theme
-  volumeChart = LightweightCharts.createChart(volumeContainer, {
-    autoSize: true,
-    ...theme,
-    timeScale: {
-      ...theme.timeScale,
-      timeVisible: false,
     },
   });
 
@@ -444,22 +389,33 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
   }));
 
   // Add Candlestick Series
-  candleSeries = priceChart.addCandlestickSeries({
-    upColor: CONFIG.COLORS.UP,
-    downColor: CONFIG.COLORS.DOWN,
-    borderUpColor: CONFIG.COLORS.UP,
-    borderDownColor: CONFIG.COLORS.DOWN,
-    wickUpColor: CONFIG.COLORS.UP,
-    wickDownColor: CONFIG.COLORS.DOWN,
-  });
+  candleSeries = priceChart.addSeries(
+    LightweightCharts.CandlestickSeries,
+    {
+      upColor: CONFIG.COLORS.UP,
+      downColor: CONFIG.COLORS.DOWN,
+      borderUpColor: CONFIG.COLORS.UP,
+      borderDownColor: CONFIG.COLORS.DOWN,
+      wickUpColor: CONFIG.COLORS.UP,
+      wickDownColor: CONFIG.COLORS.DOWN,
+    },
+    0,
+  );
   candleSeries.setData(chartData);
 
-  // Add Volume Series (Histogram)
-  volumeSeries = volumeChart.addHistogramSeries({
-    priceFormat: { type: "volume" },
-    priceScaleId: "right",
-  });
+  // Add Volume Series (Histogram) in a separate pane (paneIndex: 1)
+  volumeSeries = priceChart.addSeries(
+    LightweightCharts.HistogramSeries,
+    {
+      priceFormat: { type: "volume" },
+      priceScaleId: "volume",
+    },
+    1,
+  ); // paneIndex 1 = second pane for volume
   volumeSeries.setData(volumeData);
+
+  // Configure volume pane height ratio (approximately 30% for volume)
+  priceChart.panes()[1]?.setHeight(150);
 
   // Add Indicators
   const showMA = /** @type {HTMLInputElement | null} */ (
@@ -488,12 +444,16 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
         value: v,
       }))
       .filter((d) => d.value !== null);
-    const maSeries = priceChart.addLineSeries({
-      color: "#3b82f6",
-      lineWidth: 1,
-      priceLineVisible: false,
-      lastValueVisible: false,
-    });
+    const maSeries = priceChart.addSeries(
+      LightweightCharts.LineSeries,
+      {
+        color: "#3b82f6",
+        lineWidth: 1,
+        priceLineVisible: false,
+        lastValueVisible: false,
+      },
+      0,
+    );
     maSeries.setData(maData);
     indicatorSeries.push(maSeries);
     // Store for tooltip
@@ -510,12 +470,16 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
         value: v,
       }))
       .filter((d) => d.value !== null);
-    const emaSeries = priceChart.addLineSeries({
-      color: "#f97316",
-      lineWidth: 1,
-      priceLineVisible: false,
-      lastValueVisible: false,
-    });
+    const emaSeries = priceChart.addSeries(
+      LightweightCharts.LineSeries,
+      {
+        color: "#f97316",
+        lineWidth: 1,
+        priceLineVisible: false,
+        lastValueVisible: false,
+      },
+      0,
+    );
     emaSeries.setData(emaData);
     indicatorSeries.push(emaSeries);
     // Store for tooltip
@@ -540,23 +504,31 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
       }))
       .filter((d) => d.value !== null);
 
-    const upperSeries = priceChart.addLineSeries({
-      color: "#a855f7",
-      lineWidth: 1,
-      lineStyle: LightweightCharts.LineStyle.Dashed,
-      priceLineVisible: false,
-      lastValueVisible: false,
-    });
+    const upperSeries = priceChart.addSeries(
+      LightweightCharts.LineSeries,
+      {
+        color: "#a855f7",
+        lineWidth: 1,
+        lineStyle: LightweightCharts.LineStyle.Dashed,
+        priceLineVisible: false,
+        lastValueVisible: false,
+      },
+      0,
+    );
     upperSeries.setData(upperData);
     indicatorSeries.push(upperSeries);
 
-    const lowerSeries = priceChart.addLineSeries({
-      color: "#a855f7",
-      lineWidth: 1,
-      lineStyle: LightweightCharts.LineStyle.Dashed,
-      priceLineVisible: false,
-      lastValueVisible: false,
-    });
+    const lowerSeries = priceChart.addSeries(
+      LightweightCharts.LineSeries,
+      {
+        color: "#a855f7",
+        lineWidth: 1,
+        lineStyle: LightweightCharts.LineStyle.Dashed,
+        priceLineVisible: false,
+        lastValueVisible: false,
+      },
+      0,
+    );
     lowerSeries.setData(lowerData);
     indicatorSeries.push(lowerSeries);
     // Store for tooltip
@@ -582,13 +554,17 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
         value: v === null ? null : minPrice + (v / 100) * (maxPrice - minPrice),
       }))
       .filter((d) => d.value !== null);
-    const rsiSeries = priceChart.addLineSeries({
-      color: CONFIG.COLORS.RSI,
-      lineWidth: 1,
-      lineStyle: LightweightCharts.LineStyle.Dotted,
-      priceLineVisible: false,
-      lastValueVisible: false,
-    });
+    const rsiSeries = priceChart.addSeries(
+      LightweightCharts.LineSeries,
+      {
+        color: CONFIG.COLORS.RSI,
+        lineWidth: 1,
+        lineStyle: LightweightCharts.LineStyle.Dotted,
+        priceLineVisible: false,
+        lastValueVisible: false,
+      },
+      0,
+    );
     rsiSeries.setData(rsiData);
     indicatorSeries.push(rsiSeries);
     // Store raw RSI values for tooltip
@@ -627,22 +603,30 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
       }))
       .filter((d) => d.value !== null);
 
-    const macdSeries = priceChart.addLineSeries({
-      color: CONFIG.COLORS.MACD_LINE,
-      lineWidth: 1,
-      priceLineVisible: false,
-      lastValueVisible: false,
-    });
+    const macdSeries = priceChart.addSeries(
+      LightweightCharts.LineSeries,
+      {
+        color: CONFIG.COLORS.MACD_LINE,
+        lineWidth: 1,
+        priceLineVisible: false,
+        lastValueVisible: false,
+      },
+      0,
+    );
     macdSeries.setData(macdData);
     indicatorSeries.push(macdSeries);
 
-    const signalSeries = priceChart.addLineSeries({
-      color: CONFIG.COLORS.MACD_SIGNAL,
-      lineWidth: 1,
-      lineStyle: LightweightCharts.LineStyle.Dashed,
-      priceLineVisible: false,
-      lastValueVisible: false,
-    });
+    const signalSeries = priceChart.addSeries(
+      LightweightCharts.LineSeries,
+      {
+        color: CONFIG.COLORS.MACD_SIGNAL,
+        lineWidth: 1,
+        lineStyle: LightweightCharts.LineStyle.Dashed,
+        priceLineVisible: false,
+        lastValueVisible: false,
+      },
+      0,
+    );
     signalSeries.setData(signalData);
     indicatorSeries.push(signalSeries);
     // Store raw MACD values for tooltip
@@ -668,12 +652,18 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
         value: v,
       }))
       .filter((d) => d.value !== null);
-    const volSmaSeries = volumeChart.addLineSeries({
-      color: CONFIG.COLORS.VOLUME_SMA,
-      lineWidth: 1,
-      priceLineVisible: false,
-      lastValueVisible: false,
-    });
+
+    // Add to pane 1 (volume pane)
+    const volSmaSeries = priceChart.addSeries(
+      LightweightCharts.LineSeries,
+      {
+        color: CONFIG.COLORS.VOLUME_SMA,
+        lineWidth: 1,
+        priceLineVisible: false,
+        lastValueVisible: false,
+      },
+      1,
+    );
     volSmaSeries.setData(volSmaData);
     indicatorSeries.push(volSmaSeries);
     // Store for tooltip
@@ -683,20 +673,8 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
     });
   }
 
-  // Synchronize time scales between price and volume charts
-  priceChart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
-    if (range !== null) {
-      volumeChart.timeScale().setVisibleLogicalRange(range);
-    }
-  });
-  volumeChart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
-    if (range !== null) {
-      priceChart.timeScale().setVisibleLogicalRange(range);
-    }
-  });
-
-  // Create tooltip elements for both charts (follows crosshair)
-  const createTooltip = (container) => {
+  // Create tooltip element for the chart (follows crosshair)
+  const createTooltip = (targetContainer) => {
     const tooltip = document.createElement("div");
     tooltip.style.cssText = `
       position: absolute;
@@ -716,39 +694,12 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
       }
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     `;
-    container.style.position = "relative";
-    container.appendChild(tooltip);
+    targetContainer.style.position = "relative";
+    targetContainer.appendChild(tooltip);
     return tooltip;
   };
 
-  const priceTooltip = createTooltip(priceContainer);
-  const volumeTooltip = createTooltip(volumeContainer);
-
-  // Helper function to format full datetime
-  const formatFullDateTime = (timestamp) => {
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleString("vi-VN", {
-      weekday: "long",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  // Helper function to format price with thousands separator
-  const formatPrice = (price) => {
-    return price.toLocaleString("vi-VN", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    });
-  };
-
-  // Helper function to format volume with thousands separator
-  const formatVolume = (vol) => {
-    return vol.toLocaleString("vi-VN");
-  };
+  const chartTooltip = createTooltip(chartContainer);
 
   // Helper for indicator values in tooltip
   const renderTooltipIndicators = (time, isVolumeChart = false) => {
@@ -783,7 +734,8 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
       if (values.rsi !== undefined) {
         html += `<div><span style="color: ${
           CONFIG.COLORS.RSI
-        }; opacity: 0.8;">RSI(14):</span> <strong>${values.rsi.toFixed(
+        }; opacity: 0.8;">RSI(14):</span> <strong>${formatNumber(
+          values.rsi,
           2,
         )}</strong></div>`;
         count++;
@@ -791,12 +743,14 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
       if (values.macdLine !== undefined) {
         html += `<div><span style="color: ${
           CONFIG.COLORS.MACD_LINE
-        }; opacity: 0.8;">MACD:</span> <strong>${values.macdLine.toFixed(
+        }; opacity: 0.8;">MACD:</span> <strong>${formatNumber(
+          values.macdLine,
           2,
         )}</strong></div>`;
         html += `<div><span style="color: ${
           CONFIG.COLORS.MACD_SIGNAL
-        }; opacity: 0.8;">Signal:</span> <strong>${values.macdSignal.toFixed(
+        }; opacity: 0.8;">Signal:</span> <strong>${formatNumber(
+          values.macdSignal,
           2,
         )}</strong></div>`;
         count++;
@@ -805,8 +759,9 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
       if (values.volSma !== undefined) {
         html += `<div><span style="color: ${
           CONFIG.COLORS.VOLUME_SMA
-        }; opacity: 0.8;">Vol SMA(20):</span> <strong>${formatVolume(
+        }; opacity: 0.8;">Vol SMA(20):</span> <strong>${formatNumber(
           values.volSma,
+          2,
         )}</strong></div>`;
         count++;
       }
@@ -841,104 +796,22 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
     tooltip.style.top = top + "px";
   };
 
-  // Crosshair sync with moving tooltips
+  // Single crosshair handler for unified chart with panes
   priceChart.subscribeCrosshairMove((param) => {
     if (param.time && param.point) {
-      // Sync crosshair with volume chart
-      volumeChart.setCrosshairPosition(
-        volumeSeries.dataByIndex(param.logical),
-        param.time,
-        volumeSeries,
-      );
-
-      // Update price tooltip with OHLC
+      // Get candle data
       const candlePrice = /** @type {ICandleData | undefined} */ (
         param.seriesData.get(candleSeries)
       );
-      if (candlePrice) {
-        const changePercent = (
-          ((candlePrice.close - candlePrice.open) / candlePrice.open) *
-          100
-        ).toFixed(2);
-        const changeColor =
-          candlePrice.close >= candlePrice.open ? "#10b981" : "#ef4444";
-        const changeSign = candlePrice.close >= candlePrice.open ? "+" : "";
-        priceTooltip.innerHTML = `
-          <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatFullDateTime(
-            param.time,
-          )}</div>
-          <div><span style="opacity: 0.6;">Open:</span> <strong>${formatPrice(
-            candlePrice.open,
-          )}</strong></div>
-          <div><span style="opacity: 0.6;">High:</span> <strong>${formatPrice(
-            candlePrice.high,
-          )}</strong></div>
-          <div><span style="opacity: 0.6;">Low:</span> <strong>${formatPrice(
-            candlePrice.low,
-          )}</strong></div>
-          <div><span style="opacity: 0.6;">Close:</span> <strong>${formatPrice(
-            candlePrice.close,
-          )}</strong> <span style="color: ${changeColor};">(${changeSign}${changePercent}%)</span></div>
-          ${renderTooltipIndicators(param.time)}
-        `;
-        priceTooltip.style.display = "block";
-        updateTooltipPosition(priceTooltip, priceContainer, param);
-      }
-
-      // Update volume tooltip
+      // Get volume data
       const volData = /** @type {IVolumeData | undefined} */ (
         param.seriesData.get(volumeSeries)
       );
-      if (volData) {
-        volumeTooltip.innerHTML = `
-          <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatFullDateTime(
-            param.time,
-          )}</div>
-          <div><span style="opacity: 0.6;">Volume:</span> <strong>${formatVolume(
-            volData.value,
-          )}</strong></div>
-          ${renderTooltipIndicators(param.time, true)}
-        `;
-        volumeTooltip.style.display = "block";
-        updateTooltipPosition(volumeTooltip, volumeContainer, param);
-      }
-    } else {
-      priceTooltip.style.display = "none";
-      volumeTooltip.style.display = "none";
-    }
-  });
 
-  volumeChart.subscribeCrosshairMove((param) => {
-    if (param.time && param.point) {
-      // Sync crosshair with price chart
-      priceChart.setCrosshairPosition(
-        candleSeries.dataByIndex(param.logical),
+      let tooltipContent = `<div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatFullDateTime(
         param.time,
-        candleSeries,
-      );
+      )}</div>`;
 
-      // Update volume tooltip
-      const volData = /** @type {IVolumeData | undefined} */ (
-        param.seriesData.get(volumeSeries)
-      );
-      if (volData) {
-        volumeTooltip.innerHTML = `
-          <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatFullDateTime(
-            param.time,
-          )}</div>
-          <div><span style="opacity: 0.6;">Volume:</span> <strong>${formatVolume(
-            volData.value,
-          )}</strong></div>
-          ${renderTooltipIndicators(param.time, true)}
-        `;
-        volumeTooltip.style.display = "block";
-        updateTooltipPosition(volumeTooltip, volumeContainer, param);
-      }
-
-      // Update price tooltip from synced data
-      const candlePrice = /** @type {ICandleData | undefined} */ (
-        candleSeries.dataByIndex(param.logical)
-      );
       if (candlePrice) {
         const changePercent = (
           ((candlePrice.close - candlePrice.open) / candlePrice.open) *
@@ -947,10 +820,7 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
         const changeColor =
           candlePrice.close >= candlePrice.open ? "#10b981" : "#ef4444";
         const changeSign = candlePrice.close >= candlePrice.open ? "+" : "";
-        priceTooltip.innerHTML = `
-          <div style="margin-bottom: 6px; font-weight: 500; opacity: 0.8;">${formatFullDateTime(
-            param.time,
-          )}</div>
+        tooltipContent += `
           <div><span style="opacity: 0.6;">Open:</span> <strong>${formatPrice(
             candlePrice.open,
           )}</strong></div>
@@ -963,21 +833,35 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
           <div><span style="opacity: 0.6;">Close:</span> <strong>${formatPrice(
             candlePrice.close,
           )}</strong> <span style="color: ${changeColor};">(${changeSign}${changePercent}%)</span></div>
-          ${renderTooltipIndicators(param.time)}
         `;
-        priceTooltip.style.display = "block";
       }
+
+      if (volData) {
+        tooltipContent += `<div><span style="opacity: 0.6;">Volume:</span> <strong>${formatNumber(
+          volData.value,
+          0,
+        )}</strong></div>`;
+      }
+
+      // Add indicator values
+      tooltipContent += renderTooltipIndicators(param.time);
+
+      // Add volume SMA if exists
+      const volIndicators = renderTooltipIndicators(param.time, true);
+      if (volIndicators) {
+        tooltipContent += volIndicators;
+      }
+
+      chartTooltip.innerHTML = tooltipContent;
+      chartTooltip.style.display = "block";
+      updateTooltipPosition(chartTooltip, chartContainer, param);
     } else {
-      priceTooltip.style.display = "none";
-      volumeTooltip.style.display = "none";
+      chartTooltip.style.display = "none";
     }
   });
 
   setTimeout(() => {
     window.dispatchEvent(new Event("resize"));
-    if (typeof priceChart !== "undefined" && priceChart)
-      priceChart.timeScale().fitContent();
-    if (typeof volumeChart !== "undefined" && volumeChart)
-      volumeChart.timeScale().fitContent();
+    refreshCharts();
   }, 50);
 }

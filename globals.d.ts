@@ -1,4 +1,4 @@
-// Lightweight Charts library - https://github.com/tradingview/lightweight-charts
+// Lightweight Charts library v5.1 - https://github.com/tradingview/lightweight-charts
 interface ICandleData {
   open: number;
   high: number;
@@ -16,14 +16,26 @@ interface IVolumeData {
 interface ISeriesApi {
   setData: (data: unknown[]) => void;
   dataByIndex: (index: number) => unknown;
+  priceLines: () => unknown[];
 }
 
 interface ITimeScaleApi {
   subscribeVisibleLogicalRangeChange: (
     handler: (range: unknown) => void,
   ) => void;
+  unsubscribeVisibleLogicalRangeChange: (
+    handler: (range: unknown) => void,
+  ) => void;
+  subscribeVisibleTimeRangeChange: (handler: (range: unknown) => void) => void;
+  unsubscribeVisibleTimeRangeChange: (
+    handler: (range: unknown) => void,
+  ) => void;
   setVisibleLogicalRange: (range: unknown) => void;
   fitContent: () => void;
+  getVisibleRange: () => unknown;
+  getVisibleLogicalRange: () => unknown;
+  scrollToPosition: (position: number, animated?: boolean) => void;
+  scrollToRealTime: () => void;
 }
 
 interface ICrosshairMoveParam {
@@ -33,13 +45,23 @@ interface ICrosshairMoveParam {
   seriesData: Map<ISeriesApi, unknown>;
 }
 
+interface IPaneApi {
+  setHeight: (height: number) => void;
+}
+
 interface IChartApi {
-  addCandlestickSeries: (options?: unknown) => ISeriesApi;
-  addHistogramSeries: (options?: unknown) => ISeriesApi;
-  addLineSeries: (options?: unknown) => ISeriesApi;
-  addAreaSeries: (options?: unknown) => ISeriesApi;
+  // v5.1 unified series API
+  addSeries: (
+    seriesType: unknown,
+    options?: unknown,
+    paneIndex?: number,
+  ) => ISeriesApi;
+  panes: () => IPaneApi[];
   timeScale: () => ITimeScaleApi;
   subscribeCrosshairMove: (
+    handler: (param: ICrosshairMoveParam) => void,
+  ) => void;
+  unsubscribeCrosshairMove: (
     handler: (param: ICrosshairMoveParam) => void,
   ) => void;
   setCrosshairPosition: (
@@ -47,7 +69,11 @@ interface IChartApi {
     time: unknown,
     series: ISeriesApi,
   ) => void;
+  clearCrosshairPosition: () => void;
   remove: () => void;
+  resize: (width: number, height: number, forceRepaint?: boolean) => void;
+  applyOptions: (options: unknown) => void;
+  options: () => unknown;
 }
 
 declare const LightweightCharts: {
@@ -55,6 +81,7 @@ declare const LightweightCharts: {
   CrosshairMode: {
     Normal: number;
     Magnet: number;
+    Hidden: number;
   };
   LineStyle: {
     Solid: number;
@@ -63,6 +90,19 @@ declare const LightweightCharts: {
     LargeDashed: number;
     SparseDotted: number;
   };
+  PriceScaleMode: {
+    Normal: number;
+    Logarithmic: number;
+    Percentage: number;
+    IndexedTo100: number;
+  };
+  // Series types for addSeries method (v5.1)
+  CandlestickSeries: unknown;
+  LineSeries: unknown;
+  AreaSeries: unknown;
+  HistogramSeries: unknown;
+  BarSeries: unknown;
+  BaselineSeries: unknown;
 };
 
 // Marked library - Markdown parser

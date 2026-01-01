@@ -134,20 +134,12 @@
         </div>
       </div>
 
-      <!-- Candlestick Chart (70%) -->
+      <!-- Combined Chart with Panes (Price + Volume) -->
       <div
-        id="price-chart-container"
-        class="flex-[7] bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-white/10 backdrop-blur-sm p-3 min-h-0"
+        id="chart-container-wrapper"
+        class="flex-1 bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-white/10 backdrop-blur-sm p-3 min-h-0"
       >
-        <div id="candlestick-chart" style="width: 100%; height: 100%"></div>
-      </div>
-
-      <!-- Volume Chart (30%) -->
-      <div
-        id="volume-chart-container"
-        class="flex-[3] bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-white/10 backdrop-blur-sm p-3 min-h-0"
-      >
-        <div id="volume-chart" style="width: 100%; height: 100%"></div>
+        <div id="chart-container" style="width: 100%; height: 100%"></div>
       </div>
     </div>
   </div>
@@ -187,5 +179,13 @@
         Investing
       </a>
     </div>
+  </div>
+</template>
+
+<!-- Chart Skeleton Template -->
+<template id="chart-skeleton-template">
+  <div class="h-full w-full flex flex-col gap-2 p-2 chart-skeleton">
+    <div class="flex-1 flex items-end gap-1 chart-skeleton-bars"></div>
+    <div class="h-2 inset-0 bg-slate-200/50 dark:bg-slate-800/40 skeleton-shimmer rounded-lg w-full"></div>
   </div>
 </template>
