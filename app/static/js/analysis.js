@@ -2205,6 +2205,97 @@ function handleAnalysisSummary(summary) {
       }
     }
   }
+
+  // Initialize collapsible cards after content update
+  updateCardTooltip("tech-card-short");
+  updateCardTooltip("tech-card-long");
+}
+
+// Helper to update card's tooltip
+function updateCardTooltip(cardId) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+
+  const content = /** @type {HTMLElement} */ (
+    card.querySelector(".tech-card-content")
+  );
+
+  if (!content) return;
+
+  // Collect text for tooltip from specific IDs
+  const prefix = cardId === "tech-card-short" ? "tech-short" : "tech-long";
+  const summary =
+    document.getElementById(`${prefix}-trend-badge`)?.textContent?.trim() ||
+    "--";
+  const trend =
+    document.getElementById(`${prefix}-trend`)?.textContent?.trim() || "--";
+  const signal =
+    document.getElementById(`${prefix}-signal`)?.textContent?.trim() || "--";
+  const conf =
+    document.getElementById(`${prefix}-confidence`)?.textContent?.trim() ||
+    "--";
+
+  const tooltipText = `Tổng hợp xu hướng ngắn hạn trong ${
+    prefix === "tech-short" ? 1 : 5
+  } năm: ${summary}\nXu hướng: ${trend}\nTín hiệu: ${signal}\nĐộ tin cậy: ${conf}`;
+  card.setAttribute("title", tooltipText);
+}
+
+function toggleSummaryCard() {
+  const shortContentToCheck = document.querySelector(
+    "#tech-card-short .tech-card-content",
+  );
+  const isCollapsed =
+    shortContentToCheck &&
+    /** @type {HTMLElement} */ (shortContentToCheck).style.display === "none";
+  const shortCardIcon = /** @type {HTMLElement} */ (
+    document.querySelector("#tech-card-short .tech-card-toggle svg")
+  );
+  const longCardIcon = /** @type {HTMLElement} */ (
+    document.querySelector("#tech-card-long .tech-card-toggle svg")
+  );
+
+  if (isCollapsed) {
+    // Expand
+    const shortContent = /** @type {HTMLElement} */ (
+      document.querySelector("#tech-card-short .tech-card-content")
+    );
+    if (shortContent) shortContent.style.display = "flex";
+
+    const longContent = /** @type {HTMLElement} */ (
+      document.querySelector("#tech-card-long .tech-card-content")
+    );
+    if (longContent) longContent.style.display = "flex";
+
+    document
+      .querySelector("#tech-card-short > div:first-child")
+      .classList.remove("card-truncate");
+    document
+      .querySelector("#tech-card-long > div:first-child")
+      .classList.remove("card-truncate");
+    if (shortCardIcon) shortCardIcon.style.transform = "rotate(0deg)";
+    if (longCardIcon) longCardIcon.style.transform = "rotate(0deg)";
+  } else {
+    // Collapse
+    const shortContent = /** @type {HTMLElement} */ (
+      document.querySelector("#tech-card-short .tech-card-content")
+    );
+    if (shortContent) shortContent.style.display = "none";
+
+    const longContent = /** @type {HTMLElement} */ (
+      document.querySelector("#tech-card-long .tech-card-content")
+    );
+    if (longContent) longContent.style.display = "none";
+
+    document
+      .querySelector("#tech-card-short > div:first-child")
+      .classList.add("card-truncate");
+    document
+      .querySelector("#tech-card-long > div:first-child")
+      .classList.add("card-truncate");
+    if (shortCardIcon) shortCardIcon.style.transform = "rotate(180deg)";
+    if (longCardIcon) longCardIcon.style.transform = "rotate(180deg)";
+  }
 }
 
 /**

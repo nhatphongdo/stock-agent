@@ -690,3 +690,14 @@ details.thinking-section[open] summary.thinking-header::before {
     transform: scale(1);
   }
 }
+
+/* Truncate Text in Summary Card */
+.card-truncate {
+  margin-bottom: 0 !important;
+}
+
+.card-truncate span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
