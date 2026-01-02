@@ -1,0 +1,131 @@
+/* Sector Selector Modal Styles */
+
+.sector-modal {
+  width: 95vw;
+  max-width: 600px;
+  max-height: 80vh;
+  padding: 2rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.dark .sector-modal {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.modal-overlay.show .sector-modal {
+  transform: translateY(0);
+}
+
+/* Sectors List Container */
+.sector-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: calc(80vh - 200px);
+  padding-right: 4px;
+  margin-right: -4px;
+}
+
+/* Sector Group (icbLv1) */
+.sector-group {
+  margin-bottom: 1rem;
+}
+
+.sector-group-header {
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #f1f5f9;
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dark .sector-group-header {
+  background: rgba(30, 41, 59, 0.5);
+  color: #94a3b8;
+}
+
+/* Sector Item (icbLv2) */
+.sector-item {
+  padding: 0.875rem 1rem 0.875rem 1.5rem;
+  font-size: 0.9rem;
+  color: #334155;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+}
+
+.sector-item:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(245, 158, 11, 0.1) 0%,
+    rgba(249, 115, 22, 0.1) 100%
+  );
+  border-color: rgba(245, 158, 11, 0.3);
+  transform: translateX(4px);
+}
+
+.sector-item:active {
+  transform: translateX(4px) scale(0.98);
+}
+
+.dark .sector-item {
+  color: #e2e8f0;
+}
+
+.dark .sector-item:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(245, 158, 11, 0.15) 0%,
+    rgba(249, 115, 22, 0.15) 100%
+  );
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.sector-item-code {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background: rgba(148, 163, 184, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+}
+
+.dark .sector-item-code {
+  background: rgba(148, 163, 184, 0.15);
+}
+
+/* Hidden state for filtering */
+.sector-group.hidden,
+.sector-item.hidden {
+  display: none;
+}
+
+/* No results message */
+.no-results {
+  text-align: center;
+  padding: 2rem;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}

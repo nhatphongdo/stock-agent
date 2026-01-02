@@ -1,7 +1,12 @@
 // Chat Module - Conversation Management
 
 // Chat Variables (Initialized in DOMContentLoaded)
-let submitBtn, generalBtn, userTaskInput, messagesContainer, chatContainer;
+let submitBtn,
+  generalBtn,
+  sectorBtn,
+  userTaskInput,
+  messagesContainer,
+  chatContainer;
 
 /**
  * Initialize chat DOM elements.
@@ -9,6 +14,7 @@ let submitBtn, generalBtn, userTaskInput, messagesContainer, chatContainer;
 function initChatElements() {
   submitBtn = document.getElementById("submit-btn");
   generalBtn = document.getElementById("general-btn");
+  sectorBtn = document.getElementById("sector-btn");
   userTaskInput = document.getElementById("user-task");
   messagesContainer = document.getElementById("messages");
   chatContainer = document.getElementById("chat-container");
@@ -132,26 +138,44 @@ function addMessage(sender, content) {
 /**
  * Analyzes a task by sending it to the backend.
  * @param {boolean} isGeneral - Whether this is a general market analysis.
+ * @param {string} [sectorCode] - Optional ICB sector code for sector analysis.
+ * @param {string} [sectorName] - Optional sector name for display.
  * @returns {Promise<void>}
  */
-async function analyzeTask(isGeneral = false) {
-  if (!submitBtn || !generalBtn || !userTaskInput || !chatContainer)
+async function analyzeTask(
+  isGeneral = false,
+  sectorCode = null,
+  sectorName = null,
+) {
+  if (
+    !submitBtn ||
+    !generalBtn ||
+    !sectorBtn ||
+    !userTaskInput ||
+    !chatContainer
+  )
     initChatElements();
 
   let task = null;
 
-  if (!isGeneral) {
+  // Determine analysis type and set task/message
+  if (sectorCode && sectorName) {
+    // Sector analysis
+    addMessage("user", `✨ Phân tích tổng quan ngành ${sectorName}`);
+  } else if (!isGeneral) {
+    // User-provided task
     task = userTaskInput.value.trim();
     if (!task) return;
     addMessage("user", task);
     userTaskInput.value = "";
   } else {
+    // General market analysis
     addMessage("user", "✨ Phân tích tổng quan thị trường");
   }
 
-  // Show loading
   submitBtn.disabled = true;
   generalBtn.disabled = true;
+  sectorBtn.disabled = true;
   chatContainer.scrollTop = chatContainer.scrollHeight;
 
   // Prepare bot message bubble for streaming
@@ -189,6 +213,7 @@ async function analyzeTask(isGeneral = false) {
         return_rate: currentUser ? currentUser.return_rate : null,
         dividend_rate: currentUser ? currentUser.dividend_rate : null,
         profit_rate: currentUser ? currentUser.profit_rate : null,
+        sector: sectorCode,
       }),
     });
 
@@ -297,6 +322,7 @@ async function analyzeTask(isGeneral = false) {
   } finally {
     submitBtn.disabled = false;
     generalBtn.disabled = false;
+    sectorBtn.disabled = false;
     chatContainer.scrollTop = chatContainer.scrollHeight;
     // Save conversation to sessionStorage
     saveConversation();

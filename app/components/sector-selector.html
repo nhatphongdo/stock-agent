@@ -1,0 +1,62 @@
+<!-- Sector Selector Modal -->
+<div id="sector-selector-overlay" class="modal-overlay">
+  <div class="sector-modal">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2
+          class="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-orange-500 tracking-tight"
+        >
+          Chọn ngành phân tích
+        </h2>
+        <p class="text-xs text-slate-600 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">
+          Industry Classification Benchmark (ICB)
+        </p>
+      </div>
+      <button
+        onclick="closeSectorSelector()"
+        class="w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-colors"
+      >
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- Search Input -->
+    <div class="relative mb-4">
+      <input
+        type="text"
+        id="sector-search-input"
+        class="w-full p-4 pr-12 rounded-2xl border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950 focus:border-amber-500 dark:focus:border-amber-400 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all text-sm"
+        placeholder="Tìm kiếm ngành..."
+        oninput="filterSectors(this.value)"
+      />
+      <i data-lucide="search" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5"></i>
+    </div>
+
+    <!-- Sectors List -->
+    <div id="sectors-list" class="sector-list custom-scrollbar">
+      <div class="flex items-center justify-center py-8">
+        <div
+          class="inline-block w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"
+        ></div>
+        <span class="ml-3 text-sm text-slate-500">Đang tải danh sách ngành...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Templates -->
+<template id="sector-group-template">
+  <div class="sector-group" data-group="">
+    <div class="sector-group-header">
+      <i data-lucide="folder" class="w-4 h-4"></i>
+      <span class="sector-group-name"></span>
+    </div>
+  </div>
+</template>
+
+<template id="sector-item-template">
+  <div class="sector-item" data-code="" data-name="">
+    <span class="sector-item-name"></span>
+    <span class="sector-item-code"></span>
+  </div>
+</template>

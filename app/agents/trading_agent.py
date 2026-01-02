@@ -4,6 +4,7 @@ from app.tools.vietcap_tools import (
     VIETCAP_TOOLS,
     get_top_tickers,
     get_company_info,
+    get_companies_by_sector,
     get_latest_ohlcv,
     get_technical_indicators,
     get_trending_news,
@@ -13,6 +14,7 @@ from app.tools.vietcap_tools import (
     get_stock_news,
     get_stock_events,
     get_short_financial,
+    get_companies_by_financial_criteria,
 )
 import json
 import re
@@ -25,22 +27,31 @@ FINAL_DELIMITER = "---FINAL---"
 
 
 def fetch_market_context(
-    portfolio_stocks: list[str] = None, whitelist: list[str] = None
+    general_task: bool = True,
+    sector: str = None,
+    portfolio_stocks: list[str] = None,
+    whitelist: list[str] = None,
+    dividend_rate: float = None,
+    return_rate: float = None,
 ):
     """
     Pre-fetch essential market data to reduce model tool calls.
     Returns a structured context with top stocks, technicals, and news.
 
     Args:
+        general_task: Whether this is a general market task or not
         portfolio_stocks: List of stock tickers from user's portfolio to include in prefetch
         whitelist: List of prioritized stock tickers (max 30, always included first)
+        dividend_rate: Minimum dividend rate to filter companies (e.g., 0.05 = 5%)
+        return_rate: Minimum projected TSR percentage to filter companies (e.g., 0.10 = 10%)
 
     Priority order for prefetch (total max 50):
         1. Whitelist tickers (all included, max 30)
         2. Portfolio tickers
         3. Top tickers, coverage universe, news tickers
+        4. Companies meeting dividend_rate and/or return_rate criteria
     """
-    MAX_PREFETCH = 50
+    MAX_PREFETCH = 100
 
     context = {
         "stocks_data": [],
@@ -60,31 +71,56 @@ def fetch_market_context(
         if whitelist:
             prioritized_tickers.extend([t.upper() for t in whitelist])
 
+        # Add tickers by sector and/or financial criteria
+        if sector or (
+            general_task and (dividend_rate is not None or return_rate is not None)
+        ):
+            if sector:
+                # Sector-based filtering
+                companies = get_companies_by_sector(sector)
+            else:
+                # General task with financial filters only
+                companies = get_companies_by_financial_criteria(
+                    dividend_rate=dividend_rate, return_rate=return_rate
+                )
+
+            if (
+                isinstance(companies, list)
+                and companies
+                and "error" not in companies[0]
+            ):
+                prioritized_tickers.extend(
+                    [c.get("ticker") for c in companies if c.get("ticker")]
+                )
+
         # 1. Get trending news FIRST to extract related tickers
-        news = get_trending_news(language=1)
+        news = get_trending_news(language=1) if general_task else []
         if isinstance(news, list):
             context["trending_news"] = news
 
         # 2. Get top tickers (9 positive, 9 negative from All)
-        top_result = get_top_tickers(top_pos=9, top_neg=9, group="all")
-        if isinstance(top_result, list):
-            prioritized_tickers.extend(
-                [t["ticker"] for t in top_result if t.get("ticker")]
-            )
+        if general_task:
+            top_result = get_top_tickers(top_pos=9, top_neg=9, group="all")
+            if isinstance(top_result, list):
+                prioritized_tickers.extend(
+                    [t["ticker"] for t in top_result if t.get("ticker")]
+                )
 
         # 3. Get coverage universe and filter BUY-rated stocks
-        coverage = get_coverage_universe()
-        if coverage and isinstance(coverage, list):
-            buy_stocks = [s for s in coverage if s.get("rating") == "BUY"][:10]
-            prioritized_tickers.extend(
-                [s.get("ticker") for s in buy_stocks if s.get("ticker")]
-            )
+        if general_task:
+            coverage = get_coverage_universe()
+            if coverage and isinstance(coverage, list):
+                buy_stocks = [s for s in coverage if s.get("rating") == "BUY"][:30]
+                prioritized_tickers.extend(
+                    [s.get("ticker") for s in buy_stocks if s.get("ticker")]
+                )
 
         # 4. Add tickers from trending news
-        if isinstance(news, list):
-            prioritized_tickers.extend(
-                [n.get("ticker") for n in news if n.get("ticker")]
-            )
+        if general_task:
+            if isinstance(news, list):
+                prioritized_tickers.extend(
+                    [n.get("ticker") for n in news if n.get("ticker")]
+                )
 
         # Ensure uniqueness (preserve priority order) and apply final limit
         tickers = list(dict.fromkeys(prioritized_tickers))[:MAX_PREFETCH]
@@ -247,10 +283,10 @@ def format_context_for_prompt(context: dict) -> str:
                 f"- Giá hiện tại: {current_price} | High 1Y: {company.get('highestPrice1Year', 'N/A')} | Low 1Y: {company.get('lowestPrice1Year', 'N/A')}"
             )
             lines.append(
-                f"- Vốn hóa: {company.get('marketCap', 'N/A')} | KLGD TB: {company.get('averageMatchVolume1Month', 'N/A')}"
+                f"- Vốn hóa: {company.get('marketCap', 'N/A')} | Cổ phiếu lưu hành: {company.get('numberOfSharesMktCap', 'N/A')} | KLGD TB: {company.get('averageMatchVolume1Month', 'N/A')}"
             )
             lines.append(
-                f"- Dividend per share TSR: {company.get('dividendPerShareTsr', 'N/A')} | Projected TSR percentage: {company.get('projectedTSRPercentage', 'N/A')}"
+                f"- Dividend per share TSR: {company.get('dividendPerShareTsr', 'N/A')} | Dividend rate: {company.get('dividendPerShareTsr') / 10000 if company.get('dividendPerShareTsr') else 'N/A'} | Projected TSR percentage: {company.get('projectedTSRPercentage', 'N/A')}"
             )
             lines.append(f"- Rating: {company.get('rating', 'N/A')}")
 
@@ -383,6 +419,7 @@ class TradingAgent:
         return_rate: float = None,
         dividend_rate: float = None,
         profit_rate: float = None,
+        sector: str = None,
     ):
         # Pre-fetch market context
         yield json.dumps(
@@ -390,7 +427,12 @@ class TradingAgent:
         ) + "\n"
 
         market_context = fetch_market_context(
-            portfolio_stocks=stocks, whitelist=whitelist
+            general_task=task is None and sector is None,
+            sector=sector,
+            portfolio_stocks=stocks,
+            whitelist=whitelist,
+            dividend_rate=dividend_rate,
+            return_rate=return_rate,
         )
         context_text = format_context_for_prompt(market_context)
 

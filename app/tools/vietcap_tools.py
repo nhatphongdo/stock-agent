@@ -21,6 +21,14 @@ VIETCAP_HEADERS = {
 _company_list_cache: dict = {"data": None, "timestamp": None}
 _COMPANY_LIST_CACHE_TTL = 86400  # 1 day in seconds
 
+# Cache for companies by sector (1 day TTL)
+# Key: icb_code_lv2, Value: {"data": list, "timestamp": float}
+_companies_by_sector_cache: dict = {}
+
+# Cache for all symbols (1 day TTL)
+_all_symbols_cache: dict = {"data": None, "timestamp": None}
+_SYMBOLS_CACHE_TTL = 86400  # 1 day in seconds
+
 
 def get_company_list() -> list:
     """
@@ -49,11 +57,26 @@ def get_company_list() -> list:
         if data and "data" in data and isinstance(data["data"], list):
             results = []
             for item in data["data"]:
+                icb_lv1 = item.get("icbLv1") or {}
+                icb_lv2 = item.get("icbLv2") or {}
+                icb_lv3 = item.get("icbLv3") or {}
+                icb_lv4 = item.get("icbLv4") or {}
                 results.append(
                     {
                         "id": item.get("id"),
                         "ticker": item.get("code"),
                         "name": item.get("name"),
+                        "exchange": item.get("floor"),
+                        "icbCodeLv1": icb_lv1.get("code"),
+                        "icbNameLv1": icb_lv1.get("name"),
+                        "icbCodeLv2": icb_lv2.get("code"),
+                        "icbNameLv2": icb_lv2.get("name"),
+                        "icbCodeLv3": icb_lv3.get("code"),
+                        "icbNameLv3": icb_lv3.get("name"),
+                        "icbCodeLv4": icb_lv4.get("code"),
+                        "icbNameLv4": icb_lv4.get("name"),
+                        "dividendPerShareTsr": item.get("dividendPerShareTsr"),
+                        "projectedTsrPercentage": item.get("projectedTsrPercentage"),
                     }
                 )
             # Update cache
@@ -61,6 +84,170 @@ def get_company_list() -> list:
             _company_list_cache["timestamp"] = time.time()
             return results
         return []
+    except Exception as e:
+        return [{"error": str(e)}]
+
+
+def _filter_companies_by_criteria(
+    companies: list,
+    icb_code_lv2: str = None,
+    dividend_rate: float = None,
+    return_rate: float = None,
+) -> list:
+    """
+    Internal helper to filter companies by sector and/or financial criteria.
+
+    Args:
+        companies: List of company dictionaries to filter
+        icb_code_lv2: Optional ICB Level 2 sector code to filter by
+        dividend_rate: Optional minimum dividend rate (dividendPerShareTsr / 10000)
+        return_rate: Optional minimum projected TSR percentage
+
+    Returns:
+        List of filtered company dictionaries with calculated dividendRate added
+    """
+    # Get all valid symbols to filter out delisted/invalid tickers
+    all_symbols = get_all_symbols()
+
+    filtered = []
+    for company in companies:
+        # Filter out companies not in all_symbols or that are DELISTED
+        ticker = company.get("ticker")
+        if ticker not in all_symbols:
+            continue
+        symbol_info = all_symbols.get(ticker, {})
+        if symbol_info.get("exchange") == "DELISTED":
+            continue
+
+        # Apply sector filter if specified
+        if icb_code_lv2 is not None:
+            if company.get("icbCodeLv2") != icb_code_lv2:
+                continue
+
+        dividend_per_share = company.get("dividendPerShareTsr")
+        projected_tsr = company.get("projectedTsrPercentage")
+
+        # Calculate dividend rate if dividend_per_share is available
+        calculated_dividend_rate = None
+        if dividend_per_share is not None and dividend_per_share > 0:
+            calculated_dividend_rate = dividend_per_share / 10000
+
+        # Apply dividend_rate filter if specified
+        if dividend_rate is not None:
+            if calculated_dividend_rate is None:
+                continue  # Skip if no dividend data
+            if calculated_dividend_rate < dividend_rate:
+                continue
+
+        # Apply return_rate filter if specified
+        if return_rate is not None:
+            if projected_tsr is None:
+                continue  # Skip if no return data
+            if projected_tsr < return_rate:
+                continue
+
+        # Add calculated dividend rate to the company data
+        company_with_rate = company.copy()
+        company_with_rate["dividendRate"] = (
+            round(calculated_dividend_rate, 4) if calculated_dividend_rate else None
+        )
+        filtered.append(company_with_rate)
+
+    return filtered
+
+
+def get_companies_by_financial_criteria(
+    dividend_rate: float = None, return_rate: float = None
+) -> list:
+    """
+    Get list of companies filtered by dividend rate and/or return rate criteria.
+
+    Args:
+        dividend_rate: Minimum dividend rate (dividendPerShareTsr / currentPrice).
+                       For example, 0.05 means 5% dividend yield.
+        return_rate: Minimum projected TSR percentage.
+                     For example, 0.10 means 10% projected return.
+
+    Returns:
+        List of company dictionaries that meet the specified criteria.
+        Each company includes ticker, name, currentPrice, dividendPerShareTsr,
+        projectedTsrPercentage, and calculated dividendRate.
+    """
+    try:
+        companies = get_company_list()
+        if companies and len(companies) > 0 and "error" in companies[0]:
+            return companies  # Return error if get_company_list failed
+
+        return _filter_companies_by_criteria(
+            companies, dividend_rate=dividend_rate, return_rate=return_rate
+        )
+    except Exception as e:
+        return [{"error": str(e)}]
+
+
+def get_companies_by_sector(
+    icb_code_lv2: str,
+    dividend_rate: float = None,
+    return_rate: float = None,
+) -> list:
+    """
+    Get list of companies filtered by their sector (ICB Level 2 code).
+    Optionally filter by dividend rate and/or return rate criteria.
+    Results are cached for 1 day per sector (base filter only, financial filters applied on cached data).
+
+    Args:
+        icb_code_lv2: ICB Level 2 sector code (e.g., '1300' for Chemicals, '8600' for Banks)
+        dividend_rate: Optional minimum dividend rate (dividendPerShareTsr / 10000).
+                       For example, 0.05 means 5% dividend yield.
+        return_rate: Optional minimum projected TSR percentage.
+                     For example, 0.10 means 10% projected return.
+
+    Returns:
+        List of company dictionaries with id, ticker, name, ICB codes, and dividendRate
+        that match the sector and optional financial criteria
+    """
+    global _companies_by_sector_cache
+
+    # Check cache validity for this sector (base sector filter only)
+    cached_sector_companies = None
+    if icb_code_lv2 in _companies_by_sector_cache:
+        cache_entry = _companies_by_sector_cache[icb_code_lv2]
+        if (
+            cache_entry["data"] is not None
+            and cache_entry["timestamp"] is not None
+            and (time.time() - cache_entry["timestamp"]) < _COMPANY_LIST_CACHE_TTL
+        ):
+            cached_sector_companies = cache_entry["data"]
+
+    try:
+        if cached_sector_companies is None:
+            companies = get_company_list()
+            if companies and len(companies) > 0 and "error" in companies[0]:
+                return companies  # Return error if get_company_list failed
+
+            # Filter by sector only for caching
+            cached_sector_companies = [
+                company
+                for company in companies
+                if company.get("icbCodeLv2") == icb_code_lv2
+            ]
+
+            # Update cache for this sector
+            _companies_by_sector_cache[icb_code_lv2] = {
+                "data": cached_sector_companies,
+                "timestamp": time.time(),
+            }
+
+        # Apply financial filters on cached sector data
+        if dividend_rate is not None or return_rate is not None:
+            return _filter_companies_by_criteria(
+                cached_sector_companies,
+                dividend_rate=dividend_rate,
+                return_rate=return_rate,
+            )
+
+        # If no financial filters, add dividendRate calculation and return
+        return _filter_companies_by_criteria(cached_sector_companies)
     except Exception as e:
         return [{"error": str(e)}]
 
@@ -81,7 +268,7 @@ def get_company_info(ticker: str) -> dict:
         response.raise_for_status()
         data = response.json()
 
-        if data and "data" in data:
+        if data and "data" in data and data["data"]:
             d = data["data"]
             return {
                 "ticker": ticker,
@@ -95,6 +282,9 @@ def get_company_info(ticker: str) -> dict:
                 "lowestPrice1Year": d.get("lowestPrice1Year"),
                 "averageMatchValue1Month": d.get("averageMatchValue1Month"),
                 "averageMatchVolume1Month": d.get("averageMatchVolume1Month"),
+                "dividendPerShareTsr": d.get("dividendPerShareTsr"),
+                "projectedTSRPercentage": d.get("projectedTSRPercentage"),
+                "numberOfSharesMktCap": d.get("numberOfSharesMktCap"),
             }
         return {"error": "No data found", "ticker": ticker}
     except Exception as e:
@@ -911,10 +1101,21 @@ def get_sector_comparison(ticker: str) -> dict:
 def get_all_symbols() -> dict:
     """
     Get all available stock symbols from Vietnamese exchanges.
+    Results are cached for 1 day.
 
     Returns:
         Dictionary mapping symbols to {name, exchange}
     """
+    global _all_symbols_cache
+
+    # Check cache validity
+    if (
+        _all_symbols_cache["data"] is not None
+        and _all_symbols_cache["timestamp"] is not None
+        and (time.time() - _all_symbols_cache["timestamp"]) < _SYMBOLS_CACHE_TTL
+    ):
+        return _all_symbols_cache["data"]
+
     try:
         url = "https://trading.vietcap.com.vn/api/price/symbols/getAll"
         response = requests.get(url, headers=VIETCAP_HEADERS, timeout=15)
@@ -931,6 +1132,9 @@ def get_all_symbols() -> dict:
                         "exchange": s.get("board"),
                         "type": s.get("type"),
                     }
+            # Update cache
+            _all_symbols_cache["data"] = results
+            _all_symbols_cache["timestamp"] = time.time()
             return results
         return {}
     except Exception as e:

@@ -313,13 +313,18 @@ function processContent(text, highlightTickers = true) {
 
   // Wrap stock tickers in clickable spans (only if highlightTickers is true)
   if (highlightTickers) {
-    html = html.replace(/\b([A-Z0-9]{3,10})\b/g, (match, ticker) => {
-      // Check against the valid symbols list fetched from backend
-      if (ticker in symbolsMap) {
-        return `<span class="stock-ticker" data-symbol="${ticker}">${ticker}</span>`;
-      }
-      return match;
-    });
+    // Use Unicode-aware boundaries to avoid matching within Vietnamese words (e.g., "THU" in "THUẬT")
+    // The ranges cover Latin Extended and Vietnamese diacritics
+    html = html.replace(
+      /(?<![A-Za-z\u00C0-\u024F\u1E00-\u1EFF])([A-Z0-9]{3,10})(?![A-Za-z\u00C0-\u024F\u1E00-\u1EFF])/g,
+      (match, ticker) => {
+        // Check against the valid symbols list fetched from backend
+        if (ticker in symbolsMap) {
+          return `<span class="stock-ticker" data-symbol="${ticker}">${ticker}</span>`;
+        }
+        return match;
+      },
+    );
   }
 
   // Wrap tables in scrollable container

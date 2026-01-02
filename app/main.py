@@ -30,6 +30,7 @@ from app.tools.vietcap_tools import (
     get_stock_ohlcv,
     get_latest_ohlcv,
     get_latest_price_batch,
+    get_company_list,
 )
 
 # Load environment variables early
@@ -98,6 +99,7 @@ class AnalyzeRequest(BaseModel):
     return_rate: Optional[float] = None
     dividend_rate: Optional[float] = None
     profit_rate: Optional[float] = None
+    sector: Optional[str] = None  # ICB sector code for sector analysis
 
 
 class AnalyzeResponse(BaseModel):
@@ -218,6 +220,50 @@ async def get_symbols():
             f"Cached {len(_symbols_cache)} stock symbols (TTL: {SYMBOLS_CACHE_TTL}s)"
         )
     return {"symbols": _symbols_cache}
+
+
+@app.get("/sectors")
+async def get_sectors_endpoint():
+    """
+    Returns list of ICB sectors from company data.
+    Extracts icbLv1 and icbLv2 from companies and groups level 2 by level 1.
+    """
+    try:
+        companies = get_company_list()
+        if companies and len(companies) > 0 and "error" in companies[0]:
+            raise Exception(companies[0]["error"])
+
+        # Build unique sectors and group level 2 by level 1
+        sectors_lv1 = {}  # code -> {code, name, children: []}
+
+        for company in companies:
+            code_lv1 = company.get("icbCodeLv1")
+            name_lv1 = company.get("icbNameLv1")
+            code_lv2 = company.get("icbCodeLv2")
+            name_lv2 = company.get("icbNameLv2")
+
+            if code_lv1 and name_lv1:
+                if code_lv1 not in sectors_lv1:
+                    sectors_lv1[code_lv1] = {
+                        "icbCode": code_lv1,
+                        "icbName": name_lv1,
+                        "icbLevel": 1,
+                        "children": {},
+                    }
+
+                # Add level 2 as child of level 1
+                if code_lv2 and name_lv2:
+                    if code_lv2 not in sectors_lv1[code_lv1]["children"]:
+                        sectors_lv1[code_lv1]["children"][code_lv2] = {
+                            "icbCode": code_lv2,
+                            "icbName": name_lv2,
+                            "icbLevel": 2,
+                        }
+
+        return {"sectors": sectors_lv1}
+    except Exception as e:
+        logger.error(f"❌ Error fetching sectors: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/chart/{symbol}")
@@ -343,6 +389,7 @@ async def analyze_stock(request: Request, body: AnalyzeRequest):
                     return_rate=body.return_rate,
                     dividend_rate=body.dividend_rate,
                     profit_rate=body.profit_rate,
+                    sector=body.sector,
                 ):
                     if chunk:
                         yield chunk
