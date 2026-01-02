@@ -5,9 +5,16 @@ These functions are designed to be used with Google AI function calling.
 
 import requests
 import time
-from typing import Optional
+import logging
+from typing import Optional, Any
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 # Common headers for Vietcap API
 VIETCAP_HEADERS = {
@@ -15,7 +22,45 @@ VIETCAP_HEADERS = {
     "Origin": "https://trading.vietcap.com.vn",
     "Referer": "https://trading.vietcap.com.vn/",
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 }
+
+
+def _make_request(method: str, url: str, **kwargs) -> Any:
+    """
+    Helper to make HTTP requests with standardized logging.
+
+    Args:
+        method: HTTP method ('GET', 'POST', etc.)
+        url: Request URL
+        **kwargs: Additional arguments for requests (headers, json, params, etc.)
+
+    Returns:
+        JSON response data or None if request fails
+    """
+    try:
+        logger.info(f"Request: {method} {url}")
+
+        # Ensure headers are present
+        if "headers" not in kwargs:
+            kwargs["headers"] = VIETCAP_HEADERS
+
+        start_time = time.time()
+        response = requests.request(method, url, **kwargs)
+        duration = time.time() - start_time
+
+        content_size = len(response.content)
+        logger.info(
+            f"Response: {response.status_code} - Size: {content_size} bytes - Duration: {duration:.2f}s"
+        )
+
+        response.raise_for_status()
+        return response.json()
+
+    except Exception as e:
+        logger.error(f"Request failed: {url} - Error: {str(e)}")
+        raise e
+
 
 # Cache for company list (1 day TTL)
 _company_list_cache: dict = {"data": None, "timestamp": None}
@@ -50,9 +95,7 @@ def get_company_list() -> list:
 
     try:
         url = "https://iq.vietcap.com.vn/api/iq-insight-service/v2/company/search-bar?language=1"
-        response = requests.get(url, headers=VIETCAP_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        data = _make_request("GET", url, headers=VIETCAP_HEADERS)
 
         if data and "data" in data and isinstance(data["data"], list):
             results = []
@@ -264,9 +307,7 @@ def get_company_info(ticker: str) -> dict:
     """
     try:
         url = f"https://iq.vietcap.com.vn/api/iq-insight-service/v1/company/{ticker}"
-        response = requests.get(url, headers=VIETCAP_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        data = _make_request("GET", url, headers=VIETCAP_HEADERS)
 
         if data and "data" in data and data["data"]:
             d = data["data"]
@@ -318,9 +359,7 @@ def get_ohlcv_data(
             "countBack": count_back,
             "to": to_time if to_time else int(time.time()),
         }
-        response = requests.post(url, json=payload, headers=VIETCAP_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        data = _make_request("POST", url, json=payload, headers=VIETCAP_HEADERS)
 
         if not data or not isinstance(data, list):
             return {"error": "No data found", "tickers": symbols}
@@ -462,9 +501,7 @@ def get_technical_indicators(ticker: str, timeframe: str = "ONE_DAY") -> dict:
     """
     try:
         url = f"https://iq.vietcap.com.vn/api/iq-insight-service/v1/company/{ticker}/technical/{timeframe}"
-        response = requests.get(url, headers=VIETCAP_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        data = _make_request("GET", url, headers=VIETCAP_HEADERS)
 
         if data and "data" in data:
             d = data["data"]
@@ -571,9 +608,7 @@ def get_financial_ratios(ticker: str, length_report: int = 10) -> dict:
     """
     try:
         url = f"https://iq.vietcap.com.vn/api/iq-insight-service/v1/company-ratio-daily/{ticker}?lengthReport=10"
-        response = requests.get(url, headers=VIETCAP_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        data = _make_request("GET", url, headers=VIETCAP_HEADERS)
 
         if data and "data" in data:
             results = []
@@ -620,9 +655,7 @@ def get_short_financial(ticker: str, length_report: int = 10) -> dict:
     """
     try:
         url = f"https://iq.vietcap.com.vn/api/iq-insight-service/v1/company/{ticker}/short-financial?lengthReport={length_report}"
-        response = requests.get(url, headers=VIETCAP_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        data = _make_request("GET", url, headers=VIETCAP_HEADERS)
 
         if data and "data" in data:
             results = []
@@ -705,9 +738,7 @@ def get_last_quarter_financial(ticker: str) -> dict:
     """
     try:
         url = f"https://iq.vietcap.com.vn/api/iq-insight-service/v1/company/{ticker}/last-quarter-financial"
-        response = requests.get(url, headers=VIETCAP_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        data = _make_request("GET", url, headers=VIETCAP_HEADERS)
 
         if data and "data" in data:
             d = data["data"]
@@ -738,9 +769,7 @@ def get_price_earnings(ticker: str) -> dict:
     """
     try:
         url = f"https://iq.vietcap.com.vn/api/iq-insight-service/v1/company/{ticker}/price-earnings"
-        response = requests.get(url, headers=VIETCAP_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        data = _make_request("GET", url, headers=VIETCAP_HEADERS)
 
         if data and "data" in data and isinstance(data["data"], list):
             results = []
@@ -770,11 +799,9 @@ def get_annual_return(ticker: str, length_report: int = 10) -> dict:
     """
     try:
         url = f"https://iq.vietcap.com.vn/api/iq-insight-service/v1/company/{ticker}/annual-return?lengthReport={length_report}"
-        response = requests.get(url, headers=VIETCAP_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        data = _make_request("GET", url, headers=VIETCAP_HEADERS)
 
-        if data and "data" in data:
+        if data and "data" in data and data["data"]:
             results = []
             for r in data["data"]:
                 results.append(
@@ -824,9 +851,7 @@ def get_stock_news(
             from_date = (datetime.now() - timedelta(days=30)).strftime("%Y%m%d")
 
         url = f"https://iq.vietcap.com.vn/api/iq-insight-service/v1/news?ticker={ticker}&fromDate={from_date}&toDate={to_date}&languageId=1&page=0&size=20"
-        response = requests.get(url, headers=VIETCAP_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        data = _make_request("GET", url, headers=VIETCAP_HEADERS)
 
         if data and "data" in data and "content" in data["data"]:
             results = []
@@ -871,9 +896,7 @@ def get_company_news(ticker: str, lang: str = "vi") -> dict:
         """
         payload = {"query": query, "variables": {"ticker": ticker, "lang": lang}}
 
-        response = requests.post(url, json=payload, headers=VIETCAP_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        data = _make_request("POST", url, json=payload, headers=VIETCAP_HEADERS)
 
         def parse_date(d):
             if not d:
@@ -950,9 +973,7 @@ def get_company_events(ticker: str) -> dict:
         """
         payload = {"query": query, "variables": {"ticker": ticker}}
 
-        response = requests.post(url, json=payload, headers=VIETCAP_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        data = _make_request("POST", url, json=payload, headers=VIETCAP_HEADERS)
 
         def parse_date(d):
             if not d:
@@ -1025,9 +1046,7 @@ def get_stock_events(
 
         event_codes = "DIV,ISS,AGME,AGMR,EGME,DDIND,DDINS,DDRP,DDALL,OTHE,AIS,NLIS,RETU,SUSP,MA,MOVE"
         url = f"https://iq.vietcap.com.vn/api/iq-insight-service/v2/events?toDate={to_date}&fromDate={from_date}&tickers={ticker}&eventCodes={event_codes}&page=0"
-        response = requests.get(url, headers=VIETCAP_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        data = _make_request("GET", url, headers=VIETCAP_HEADERS)
 
         if data and "data" in data and "content" in data["data"]:
             results = []
@@ -1063,9 +1082,7 @@ def get_sector_comparison(ticker: str) -> dict:
     """
     try:
         url = f"https://iq.vietcap.com.vn/api/iq-insight-service/v1/company/{ticker}/stock-return-coverage-peers"
-        response = requests.get(url, headers=VIETCAP_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        data = _make_request("GET", url, headers=VIETCAP_HEADERS)
 
         if data and "data" in data:
             results = []
@@ -1118,9 +1135,7 @@ def get_all_symbols() -> dict:
 
     try:
         url = "https://trading.vietcap.com.vn/api/price/symbols/getAll"
-        response = requests.get(url, headers=VIETCAP_HEADERS, timeout=15)
-        response.raise_for_status()
-        data = response.json()
+        data = _make_request("GET", url, headers=VIETCAP_HEADERS, timeout=15)
 
         if data:
             results = {}
@@ -1155,9 +1170,7 @@ def get_top_tickers(top_pos: int = 5, top_neg: int = 5, group: str = "all") -> d
     """
     try:
         url = f"https://ai.vietcap.com.vn/api/get_top_tickers?top_neg={top_neg}&top_pos={top_pos}&group={group}"
-        response = requests.get(url, headers=VIETCAP_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        data = _make_request("GET", url, headers=VIETCAP_HEADERS)
 
         if data and "ticker_info" in data:
             return [
@@ -1186,9 +1199,7 @@ def get_trending_news(language: int = 1) -> dict:
     """
     try:
         url = f"https://www.vietcap.com.vn/api/cms-service/v1/report/trending?language={language}"
-        response = requests.get(url, headers=VIETCAP_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        data = _make_request("GET", url, headers=VIETCAP_HEADERS)
 
         if data and "data" in data:
 
@@ -1225,9 +1236,7 @@ def get_coverage_universe() -> dict:
     """
     try:
         url = "https://iq.vietcap.com.vn/api/iq-insight-service/v1/coverage-universe"
-        response = requests.get(url, headers=VIETCAP_HEADERS, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+        data = _make_request("GET", url, headers=VIETCAP_HEADERS)
 
         if data and "data" in data:
             results = []
@@ -1404,9 +1413,7 @@ def get_company_analysis(
             f"?is-all=false&page={page}&size={size}&direction=DESC&sortBy=date"
             f"&companyId={company_id}&page-ids=144&page-ids=141&language=1"
         )
-        response = requests.get(url, headers=VIETCAP_HEADERS, timeout=10)
-        response.raise_for_status()
-        content = response.json()
+        content = _make_request("GET", url, headers=VIETCAP_HEADERS)
 
         data = content.get("data") if content else None
         paging_responses = data.get("pagingGeneralResponses") if data else None
