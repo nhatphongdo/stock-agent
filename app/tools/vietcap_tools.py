@@ -22,7 +22,6 @@ VIETCAP_HEADERS = {
     "Origin": "https://trading.vietcap.com.vn",
     "Referer": "https://trading.vietcap.com.vn/",
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 }
 
 
@@ -39,8 +38,6 @@ def _make_request(method: str, url: str, **kwargs) -> Any:
         JSON response data or None if request fails
     """
     try:
-        logger.info(f"Request: {method} {url}")
-
         # Ensure headers are present
         if "headers" not in kwargs:
             kwargs["headers"] = VIETCAP_HEADERS
@@ -51,14 +48,14 @@ def _make_request(method: str, url: str, **kwargs) -> Any:
 
         content_size = len(response.content)
         logger.info(
-            f"Response: {response.status_code} - Size: {content_size} bytes - Duration: {duration:.2f}s"
+            f"Request: {method} {url} - Response: {response.status_code} - Size: {content_size} bytes - Duration: {duration:.2f}s"
         )
 
         response.raise_for_status()
         return response.json()
 
     except Exception as e:
-        logger.error(f"Request failed: {url} - Error: {str(e)}")
+        logger.error(f"Request failed: {method} {url} - Error: {str(e)}")
         raise e
 
 
