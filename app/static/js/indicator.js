@@ -496,3 +496,47 @@ function calculateCMF(data, period = 20) {
     return sumVolume === 0 ? 0 : sumMFV / sumVolume;
   });
 }
+
+// ============================================================================
+// SUPPORT/RESISTANCE INDICATORS
+// ============================================================================
+
+/**
+ * Calculate Classic Pivot Points from the last bar
+ * @param {Object} lastBar - Object with h (high), l (low), c (close) properties
+ * @returns {Object} Pivot point levels: { pivot, r1, r2, r3, s1, s2, s3 }
+ */
+function calculatePivotPoints(lastBar) {
+  const pivot = (lastBar.h + lastBar.l + lastBar.c) / 3;
+  const r1 = 2 * pivot - lastBar.l;
+  const s1 = 2 * pivot - lastBar.h;
+  const r2 = pivot + (lastBar.h - lastBar.l);
+  const s2 = pivot - (lastBar.h - lastBar.l);
+  const r3 = lastBar.h + 2 * (pivot - lastBar.l);
+  const s3 = lastBar.l - 2 * (lastBar.h - pivot);
+
+  return { pivot, r1, r2, r3, s1, s2, s3 };
+}
+
+/**
+ * Calculate Fibonacci Retracement levels from recent data
+ * @param {Array} data - OHLCV data array with h (high), l (low) properties
+ * @param {number} lookback - Number of bars to look back (default: 50)
+ * @returns {Object} Fibonacci levels: { level_0, level_236, level_382, level_500, level_618, level_786, level_100 }
+ */
+function calculateFibonacciLevels(data, lookback = 50) {
+  const recentData = data.slice(-Math.min(lookback, data.length));
+  const high = Math.max(...recentData.map((d) => d.h));
+  const low = Math.min(...recentData.map((d) => d.l));
+  const diff = high - low;
+
+  return {
+    level_0: high,
+    level_236: high - diff * 0.236,
+    level_382: high - diff * 0.382,
+    level_500: high - diff * 0.5,
+    level_618: high - diff * 0.618,
+    level_786: high - diff * 0.786,
+    level_100: low,
+  };
+}

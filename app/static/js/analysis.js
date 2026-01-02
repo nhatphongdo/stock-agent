@@ -59,6 +59,9 @@ let analysisVolumeSeries = null;
 let analysisIndicatorSeries = []; // Array to hold indicator line series
 let analysisIndicatorValues = {}; // Store raw indicator values for tooltip
 let lastAnalysisOHLCVData = null; // Store last OHLCV data for re-rendering
+let analysisSupportResistanceLines = []; // Store summary key_levels lines
+let lastIndicatorsData = null; // Store indicators data for pivot/fib chart indicators
+let lastSummaryKeyLevels = null; // Store last summary key_levels for re-rendering
 
 // Analysis Indicator Configuration
 const ANALYSIS_INDICATOR_CONFIG = {
@@ -164,6 +167,19 @@ const ANALYSIS_INDICATOR_CONFIG = {
     color: "#ec4899",
     pane: 1,
   },
+  // Support/Resistance
+  pivot: {
+    id: "analysis-indicator-pivot",
+    label: "Pivot S/R",
+    colors: { resistance: "#ef4444", support: "#10b981", pivot: "#6366f1" },
+    pane: 0,
+  },
+  fib: {
+    id: "analysis-indicator-fib",
+    label: "Fibonacci",
+    colors: { level: "#f59e0b", key: "#8b5cf6" },
+    pane: 0,
+  },
 };
 
 // Flag to track if dropdown has been initialized after becoming visible
@@ -188,6 +204,8 @@ const ANALYSIS_INDICATOR_IDS = [
   "analysis-indicator-obv",
   "analysis-indicator-mfi",
   "analysis-indicator-cmf",
+  "analysis-indicator-pivot",
+  "analysis-indicator-fib",
 ];
 
 // Initialize analysis indicator dropdown toggle
@@ -387,6 +405,7 @@ let sparklineCharts = {};
 function refreshAnalysisChart() {
   const isDark = document.documentElement.classList.contains("dark");
   const theme = isDark ? CONFIG.CHART_THEMES.dark : CONFIG.CHART_THEMES.light;
+  drawSummaryKeyLevels();
   if (typeof analysisChart !== "undefined" && analysisChart) {
     analysisChart.applyOptions(theme);
     analysisChart.timeScale().fitContent();
@@ -479,6 +498,57 @@ function initAnalysisChartResizer() {
 }
 
 /**
+ * Draw elegant support and resistance lines from analysis summary key_levels
+ * These are drawn automatically when analysis completes, separate from pivot/fib indicators
+ */
+function drawSummaryKeyLevels() {
+  // Remove existing summary lines first
+  analysisSupportResistanceLines.forEach((line) => {
+    try {
+      if (analysisCandleSeries) {
+        analysisCandleSeries.removePriceLine(line);
+      }
+    } catch (e) {
+      console.warn("Could not remove price line:", e);
+    }
+  });
+  analysisSupportResistanceLines = [];
+
+  // Check if chart is ready
+  if (!analysisChart || !analysisCandleSeries) {
+    return;
+  }
+
+  if (!lastSummaryKeyLevels) {
+    return;
+  }
+
+  const supportLevels = lastSummaryKeyLevels.support || [];
+  const resistanceLevels = lastSummaryKeyLevels.resistance || [];
+
+  // Helper to add elegant price line with strong appearance
+  const addElegantLine = (price, isResistance, index) => {
+    if (price && typeof price === "number" && !isNaN(price)) {
+      const line = analysisCandleSeries.createPriceLine({
+        price: price,
+        color: isResistance ? "#dc262680" : "#05966980",
+        lineWidth: 2,
+        lineStyle: LightweightCharts.LineStyle.Solid,
+        axisLabelVisible: true,
+        title: isResistance ? `Res${index + 1}` : `Sup${index + 1}`,
+      });
+      analysisSupportResistanceLines.push(line);
+    }
+  };
+
+  // Draw resistance lines
+  resistanceLevels.forEach((level, i) => addElegantLine(level, true, i));
+
+  // Draw support lines
+  supportLevels.forEach((level, i) => addElegantLine(level, false, i));
+}
+
+/**
  * Render Analysis Chart (separate chart for Analysis tab)
  * @param {Array} ohlcv_data - OHLCV data
  */
@@ -541,7 +611,7 @@ async function renderAnalysisChart(ohlcv_data) {
   );
   analysisVolumeSeries.setData(volumeData);
 
-  analysisChart.panes()[1]?.setHeight(50);
+  analysisChart.panes()[1]?.setHeight(70);
 
   // Store OHLCV data for re-rendering when indicators change
   lastAnalysisOHLCVData = ohlcv_data;
@@ -549,6 +619,10 @@ async function renderAnalysisChart(ohlcv_data) {
   // Reset indicator series
   analysisIndicatorSeries = [];
   analysisIndicatorValues = {};
+
+  // Draw support/resistance levels from summary key_levels
+  analysisSupportResistanceLines = [];
+  drawSummaryKeyLevels();
 
   // Convert ohlcv_data to format expected by indicator functions
   const indicatorData = ohlcv_data.map((d) => ({
@@ -1055,6 +1129,66 @@ async function renderAnalysisChart(ohlcv_data) {
     });
   }
 
+  // =====================
+  // PIVOT POINTS (from lastIndicatorsData)
+  // =====================
+  if (
+    isAnalysisIndicatorEnabled("analysis-indicator-pivot") &&
+    lastIndicatorsData?.pivot_points
+  ) {
+    const pp = lastIndicatorsData.pivot_points;
+    const colors = ANALYSIS_INDICATOR_CONFIG.pivot.colors;
+    const addPivotLine = (price, color, title) => {
+      if (price && typeof price === "number" && !isNaN(price)) {
+        analysisCandleSeries.createPriceLine({
+          price: price,
+          color: color,
+          lineWidth: 1,
+          lineStyle: LightweightCharts.LineStyle.Dashed,
+          axisLabelVisible: true,
+          title: title,
+        });
+      }
+    };
+    addPivotLine(pp.pivot, colors.pivot, "P");
+    addPivotLine(pp.r1, colors.resistance, "R1");
+    addPivotLine(pp.r2, colors.resistance, "R2");
+    addPivotLine(pp.r3, colors.resistance, "R3");
+    addPivotLine(pp.s1, colors.support, "S1");
+    addPivotLine(pp.s2, colors.support, "S2");
+    addPivotLine(pp.s3, colors.support, "S3");
+  }
+
+  // =====================
+  // FIBONACCI LEVELS (from lastIndicatorsData)
+  // =====================
+  if (
+    isAnalysisIndicatorEnabled("analysis-indicator-fib") &&
+    lastIndicatorsData?.fibonacci
+  ) {
+    const fib = lastIndicatorsData.fibonacci;
+    const colors = ANALYSIS_INDICATOR_CONFIG.fib.colors;
+    const addFibLine = (price, color, title) => {
+      if (price && typeof price === "number" && !isNaN(price)) {
+        analysisCandleSeries.createPriceLine({
+          price: price,
+          color: color,
+          lineWidth: 1,
+          lineStyle: LightweightCharts.LineStyle.Dotted,
+          axisLabelVisible: true,
+          title: title,
+        });
+      }
+    };
+    addFibLine(fib.level_0, colors.key, "0%");
+    addFibLine(fib.level_236, colors.level, "23.6%");
+    addFibLine(fib.level_382, colors.key, "38.2%");
+    addFibLine(fib.level_500, colors.key, "50%");
+    addFibLine(fib.level_618, colors.key, "61.8%");
+    addFibLine(fib.level_786, colors.level, "78.6%");
+    addFibLine(fib.level_100, colors.key, "100%");
+  }
+
   // Create tooltip using shared utility
   const tooltip = createChartTooltip(chartContainer);
 
@@ -1547,6 +1681,9 @@ async function fetchTechnicalAnalysis(symbol, companyName) {
  * @param {Array} ohlcv_data - OHLCV data
  */
 function updateIndicatorsDisplay(ind, meth, gauges, ohlcv_data) {
+  // Store indicators data for chart rendering (pivot/fib indicators)
+  lastIndicatorsData = ind;
+
   // RSI
   const rsiData = ind.rsi || {};
   const rsiValue = typeof rsiData === "object" ? rsiData.value : rsiData;
@@ -2204,6 +2341,11 @@ function handleAnalysisSummary(summary) {
         );
       }
     }
+  }
+
+  // Store summary levels for drawing later
+  if (summary.key_levels) {
+    lastSummaryKeyLevels = summary.key_levels;
   }
 
   // Initialize collapsible cards after content update

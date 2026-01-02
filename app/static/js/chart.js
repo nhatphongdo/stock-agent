@@ -59,6 +59,20 @@ const INDICATOR_CONFIG = {
   obv: { id: "indicator-obv", label: "OBV", color: "#06b6d4", pane: 1 },
   mfi: { id: "indicator-mfi", label: "MFI(14)", color: "#f59e0b", pane: 1 },
   cmf: { id: "indicator-cmf", label: "CMF(20)", color: "#ec4899", pane: 1 },
+
+  // Support/Resistance
+  pivot: {
+    id: "indicator-pivot",
+    label: "Pivot S/R",
+    colors: { resistance: "#ef4444", support: "#10b981", pivot: "#6366f1" },
+    pane: 0,
+  },
+  fib: {
+    id: "indicator-fib",
+    label: "Fibonacci",
+    colors: { level: "#f59e0b", key: "#8b5cf6" },
+    pane: 0,
+  },
 };
 
 // All indicator checkbox IDs
@@ -80,6 +94,8 @@ const ALL_INDICATOR_IDS = [
   "indicator-obv",
   "indicator-mfi",
   "indicator-cmf",
+  "indicator-pivot",
+  "indicator-fib",
 ];
 
 // Flag to track if dropdown has been initialized after becoming visible
@@ -999,6 +1015,60 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
         indicatorValues[time].cmf = v;
       }
     });
+  }
+
+  // =====================
+  // PIVOT POINTS
+  // =====================
+  if (isIndicatorEnabled("indicator-pivot")) {
+    const pp = calculatePivotPoints(data[data.length - 1]);
+    const colors = INDICATOR_CONFIG.pivot.colors;
+    const addPivotLine = (price, color, title) => {
+      if (price && !isNaN(price)) {
+        candleSeries.createPriceLine({
+          price: price,
+          color: color,
+          lineWidth: 1,
+          lineStyle: LightweightCharts.LineStyle.Dashed,
+          axisLabelVisible: true,
+          title: title,
+        });
+      }
+    };
+    addPivotLine(pp.pivot, colors.pivot, "P");
+    addPivotLine(pp.r1, colors.resistance, "R1");
+    addPivotLine(pp.r2, colors.resistance, "R2");
+    addPivotLine(pp.r3, colors.resistance, "R3");
+    addPivotLine(pp.s1, colors.support, "S1");
+    addPivotLine(pp.s2, colors.support, "S2");
+    addPivotLine(pp.s3, colors.support, "S3");
+  }
+
+  // =====================
+  // FIBONACCI LEVELS
+  // =====================
+  if (isIndicatorEnabled("indicator-fib")) {
+    const fib = calculateFibonacciLevels(data, 50);
+    const colors = INDICATOR_CONFIG.fib.colors;
+    const addFibLine = (price, color, title) => {
+      if (price && !isNaN(price)) {
+        candleSeries.createPriceLine({
+          price: price,
+          color: color,
+          lineWidth: 1,
+          lineStyle: LightweightCharts.LineStyle.Dotted,
+          axisLabelVisible: true,
+          title: title,
+        });
+      }
+    };
+    addFibLine(fib.level_0, colors.key, "0%");
+    addFibLine(fib.level_236, colors.level, "23.6%");
+    addFibLine(fib.level_382, colors.key, "38.2%");
+    addFibLine(fib.level_500, colors.key, "50%");
+    addFibLine(fib.level_618, colors.key, "61.8%");
+    addFibLine(fib.level_786, colors.level, "78.6%");
+    addFibLine(fib.level_100, colors.key, "100%");
   }
 
   // Create tooltip using shared utility
