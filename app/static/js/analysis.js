@@ -370,7 +370,6 @@ function initAnalysisChartExpandButton() {
 
     // Trigger resize
     setTimeout(() => {
-      window.dispatchEvent(new Event("resize"));
       refreshAnalysisChart();
     }, 100);
   };
@@ -432,7 +431,6 @@ function toggleAnalysisChart() {
     }
   }
   setTimeout(() => {
-    window.dispatchEvent(new Event("resize"));
     refreshAnalysisChart();
   }, 50);
 }
@@ -1281,7 +1279,6 @@ async function renderAnalysisChart(ohlcv_data) {
   });
 
   setTimeout(() => {
-    window.dispatchEvent(new Event("resize"));
     refreshAnalysisChart();
   }, 50);
 }

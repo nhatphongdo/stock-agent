@@ -384,13 +384,13 @@ Nhiệm vụ của bạn là phân tích kỹ thuật toàn diện cho mã cổ 
 ## Yêu cầu phân tích
 
 ### 1. Phân tích ngắn hạn (Đầu tư giao dịch)
-- Đánh giá xu hướng ngắn hạn dựa trên dữ liệu 1D trong 1 năm
+- Đánh giá xu hướng ngắn hạn dựa trên dữ liệu trong 1 năm theo ngày
 - Xác định điểm vào/ra tiềm năng
 - Phân tích các chỉ báo momentum (RSI, Stochastic, MACD)
 - Xác định mức hỗ trợ/kháng cự ngắn hạn
 
 ### 2. Phân tích dài hạn (Tích lũy đầu tư)
-- Đánh giá xu hướng dài hạn dựa trên dữ liệu 1W trong 5 năm
+- Đánh giá xu hướng dài hạn dựa trên dữ liệu trong 5 năm theo tuần
 - Xác định vùng giá tích lũy hấp dẫn
 - Phân tích đường MA dài hạn (SMA50, SMA200)
 - Đánh giá sức mạnh xu hướng (ADX)

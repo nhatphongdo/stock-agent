@@ -421,13 +421,11 @@
         // Handle chart resize for chart tab
         if (tabId === "chart") {
           setTimeout(() => {
-            window.dispatchEvent(new Event("resize"));
             refreshCharts();
           }, 50);
         } else if (tabId === "analysis") {
           // Resize analysis chart when switching to analysis tab
           setTimeout(() => {
-            window.dispatchEvent(new Event("resize"));
             refreshAnalysisChart();
           }, 50);
         }
@@ -486,7 +484,6 @@
 
         // Trigger resize for charts
         setTimeout(() => {
-          window.dispatchEvent(new Event("resize"));
           refreshCharts();
           refreshAnalysisChart();
         }, 500);
@@ -528,7 +525,6 @@
 
         // Trigger resize for charts
         setTimeout(() => {
-          window.dispatchEvent(new Event("resize"));
           refreshCharts();
           refreshAnalysisChart();
         }, 50);

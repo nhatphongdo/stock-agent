@@ -85,6 +85,11 @@ interface IChartApi {
 
 declare const LightweightCharts: {
   createChart: (container: HTMLElement, options?: unknown) => IChartApi;
+  createSeriesMarkers: (
+    series: ISeriesApi,
+    markers: unknown[],
+    options?: unknown,
+  ) => void;
   CrosshairMode: {
     Normal: number;
     Magnet: number;

@@ -8,3 +8,5 @@ fastapi
 uvicorn
 pre-commit
 beautifulsoup4
+TA-Lib
+scipy

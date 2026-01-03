@@ -32,6 +32,8 @@ from app.tools.vietcap_tools import (
     get_latest_price_batch,
     get_company_list,
 )
+from app.tools.technical_indicators import get_price_patterns
+from app.tools.price_patterns import get_chart_patterns, get_support_resistance
 
 # Load environment variables early
 load_dotenv()
@@ -189,6 +191,62 @@ async def analyze_technical(request: TechnicalAnalysisRequest):
         ),
         media_type="application/x-ndjson",
     )
+
+
+@app.get("/candle-patterns/{symbol}")
+async def analyze_patterns(symbol: str, start: str, end: str, interval: str = "1D"):
+    """
+    Detects candlestick patterns for a given stock symbol.
+
+    Args:
+        symbol: Stock ticker symbol (e.g., 'VNM')
+        start: Start date in YYYY-MM-DD format
+        end: End date in YYYY-MM-DD format
+        interval: Data interval ('1D' for daily, '1H' for hourly. Valid: 5m, 15m, 30m, 1H, 1D, 1W, 1M)
+    """
+    result = get_price_patterns(symbol.upper(), start, end, interval)
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    return result
+
+
+@app.get("/chart-patterns/{symbol}")
+async def analyze_chart_patterns(
+    symbol: str, start: str, end: str, interval: str = "1D"
+):
+    """
+    Detects chart patterns (Double Top, Head & Shoulders, Wedges, Triangles, etc.)
+    for a given stock symbol.
+
+    Args:
+        symbol: Stock ticker symbol (e.g., 'VNM')
+        start: Start date in YYYY-MM-DD format
+        end: End date in YYYY-MM-DD format
+        interval: Data interval ('1D' for daily, '1H' for hourly. Valid: 5m, 15m, 30m, 1H, 1D, 1W, 1M)
+    """
+    result = get_chart_patterns(symbol.upper(), start, end, interval)
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    return result
+
+
+@app.get("/support-resistance/{symbol}")
+async def analyze_support_resistance(
+    symbol: str, start: str, end: str, interval: str = "1D"
+):
+    """
+    Detects support and resistance zones for a given stock symbol.
+
+    Args:
+        symbol: Stock ticker symbol (e.g., 'VNM')
+        start: Start date in YYYY-MM-DD format
+        end: End date in YYYY-MM-DD format
+        interval: Data interval ('1D' for daily, '1H' for hourly. Valid: 5m, 15m, 30m, 1H, 1D, 1W, 1M)
+    """
+    result = get_support_resistance(symbol.upper(), start, end, interval)
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    return result
 
 
 # Cache for stock symbols (symbol -> company name) with TTL

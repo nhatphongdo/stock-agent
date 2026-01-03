@@ -6,6 +6,9 @@ Provides wrapper functions for calculating technical indicators from OHLCV data.
 import pandas as pd
 import pandas_ta as ta
 from typing import Optional
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+from app.tools.vietcap_tools import get_stock_ohlcv
 
 
 def create_ohlcv_dataframe(ohlcv_data: list) -> pd.DataFrame:
@@ -571,3 +574,83 @@ def _compare_price_to_ma(price: float, ma: Optional[float]) -> Optional[str]:
     elif price < ma:
         return "below"
     return "at"
+
+
+def get_price_patterns(
+    ticker: str,
+    start_date: str,
+    end_date: str,
+    interval: str = "1D",
+) -> dict:
+    """
+    Detect price action patterns using pandas-ta.
+
+    Args:
+        ticker: Stock ticker symbol
+        start_date: Start date in YYYY-MM-DD format
+        end_date: End date in YYYY-MM-DD format
+        interval: 5m, 15m, 30m, 1H, 1D (default), 1W, 1M
+
+    Returns:
+        Dictionary containing detected patterns and their locations.
+    """
+    try:
+        ohlcv_data = get_stock_ohlcv(
+            symbol=ticker,
+            start_date=start_date,
+            end_date=end_date,
+            interval=interval,
+        )
+
+        if "error" in ohlcv_data:
+            return ohlcv_data
+
+        candles = ohlcv_data.get("data", [])
+        if not candles:
+            return {"error": "No data found", "ticker": ticker}
+
+        # Convert to DataFrame
+        df = create_ohlcv_dataframe(candles)
+
+        # Detect patterns
+        # 'all' detects all patterns available in pandas-ta
+        patterns = df.ta.cdl_pattern(name="all")
+
+        if patterns is None or patterns.empty:
+            return {"ticker": ticker, "patterns": []}
+
+        # Identify non-zero values (detected patterns)
+        detected_patterns = []
+
+        # patterns DataFrame has columns like 'CDL_DOJI', 'CDL_HAMMER', etc.
+        # Values are usually 100 (bullish) or -100 (bearish)
+
+        for col in patterns.columns:
+            # Filter rows where pattern is detected
+            detected = patterns[patterns[col] != 0]
+
+            for date, value in detected[col].items():
+                pattern_name = col.replace("CDL_", "").replace("_", " ").title()
+                signal = "bullish" if value > 0 else "bearish"
+
+                # Find the candle data for this date
+                # date is Timestamp, index of df
+                if date in df.index:
+                    candle = df.loc[date]
+                    detected_patterns.append(
+                        {
+                            "name": pattern_name,
+                            "date": date.strftime("%Y-%m-%d %H:%M:%S"),
+                            "signal": signal,
+                            "price": float(candle["close"]),
+                            "description": f"{signal.capitalize()} {pattern_name} detected",
+                        }
+                    )
+
+        # Sort by date descending (newest first)
+        detected_patterns.sort(key=lambda x: x["date"], reverse=True)
+
+        return {"ticker": ticker, "patterns": detected_patterns}
+
+    except Exception as e:
+        return {"error": str(e), "ticker": ticker}
