@@ -68,7 +68,7 @@ const CONFIG = {
         borderColor: "rgba(148, 163, 184, 0.2)",
       },
       crosshair: {
-        mode: LightweightCharts.CrosshairMode.Magnet,
+        mode: LightweightCharts.CrosshairMode.Normal,
         vertLine: {
           color: "rgba(148, 163, 184, 0.5)",
           width: 1,
@@ -99,7 +99,7 @@ const CONFIG = {
         borderColor: "rgba(100, 116, 139, 0.2)",
       },
       crosshair: {
-        mode: LightweightCharts.CrosshairMode.Magnet,
+        mode: LightweightCharts.CrosshairMode.Normal,
         vertLine: {
           color: "rgba(100, 116, 139, 0.5)",
           width: 1,
