@@ -67,157 +67,9 @@ let lastIndicatorsData = null; // Store indicators data for pivot/fib chart indi
 let lastSummaryKeyLevels = null; // Store last summary key_levels for re-rendering
 let analysisIndicatorSeriesMap = new Map(); // Map indicator key -> array of series
 
-// Map analysis indicator checkbox IDs to config keys for easier lookup
-const ANALYSIS_INDICATOR_ID_TO_KEY = {
-  "analysis-indicator-ma": "ma",
-  "analysis-indicator-ema": "ema",
-  "analysis-indicator-wma": "wma",
-  "analysis-indicator-vwap": "vwap",
-  "analysis-indicator-bb": "bb",
-  "analysis-indicator-atr": "atr",
-  "analysis-indicator-rsi": "rsi",
-  "analysis-indicator-macd": "macd",
-  "analysis-indicator-stoch": "stoch",
-  "analysis-indicator-williams": "williams",
-  "analysis-indicator-cci": "cci",
-  "analysis-indicator-roc": "roc",
-  "analysis-indicator-adx": "adx",
-  "analysis-indicator-vol-sma": "volSma",
-  "analysis-indicator-obv": "obv",
-  "analysis-indicator-mfi": "mfi",
-  "analysis-indicator-cmf": "cmf",
-  "analysis-indicator-pivot": "pivot",
-  "analysis-indicator-fib": "fib",
-};
-
-// All analysis indicator checkbox IDs (derived from mapping)
-const ANALYSIS_INDICATOR_IDS = Object.keys(ANALYSIS_INDICATOR_ID_TO_KEY);
-
-// Common line series options - reduces repetition
-const ANALYSIS_LINE_SERIES_DEFAULTS = {
-  lineWidth: 1,
-  priceLineVisible: false,
-  lastValueVisible: false,
-};
-
-// Analysis Indicator Configuration
-const ANALYSIS_INDICATOR_CONFIG = {
-  // Moving Averages
-  ma: {
-    id: "analysis-indicator-ma",
-    label: "SMA(20)",
-    color: "#3b82f6",
-    pane: 0,
-  },
-  ema: {
-    id: "analysis-indicator-ema",
-    label: "EMA(9)",
-    color: "#f97316",
-    pane: 0,
-  },
-  wma: {
-    id: "analysis-indicator-wma",
-    label: "WMA(20)",
-    color: "#06b6d4",
-    pane: 0,
-  },
-  vwap: {
-    id: "analysis-indicator-vwap",
-    label: "VWAP",
-    color: "#8b5cf6",
-    pane: 0,
-  },
-  // Bands
-  bb: { id: "analysis-indicator-bb", label: "BB", color: "#a855f7", pane: 0 },
-  atr: {
-    id: "analysis-indicator-atr",
-    label: "ATR(14)",
-    color: "#ec4899",
-    pane: 0,
-  },
-  // Oscillators
-  rsi: {
-    id: "analysis-indicator-rsi",
-    label: "RSI(14)",
-    color: "#f59e0b",
-    pane: 0,
-  },
-  macd: {
-    id: "analysis-indicator-macd",
-    label: "MACD",
-    colors: { line: "#3b82f6", signal: "#ef4444" },
-    pane: 0,
-  },
-  stoch: {
-    id: "analysis-indicator-stoch",
-    label: "Stoch",
-    colors: { k: "#10b981", d: "#ef4444" },
-    pane: 0,
-  },
-  williams: {
-    id: "analysis-indicator-williams",
-    label: "WillR",
-    color: "#06b6d4",
-    pane: 0,
-  },
-  cci: {
-    id: "analysis-indicator-cci",
-    label: "CCI(20)",
-    color: "#8b5cf6",
-    pane: 0,
-  },
-  roc: {
-    id: "analysis-indicator-roc",
-    label: "ROC(10)",
-    color: "#f97316",
-    pane: 0,
-  },
-  // Trend
-  adx: {
-    id: "analysis-indicator-adx",
-    label: "ADX(14)",
-    colors: { adx: "#22c55e", plusDI: "#3b82f6", minusDI: "#ef4444" },
-    pane: 0,
-  },
-  // Volume
-  volSma: {
-    id: "analysis-indicator-vol-sma",
-    label: "Vol SMA(20)",
-    color: "#8b5cf6",
-    pane: 1,
-  },
-  obv: {
-    id: "analysis-indicator-obv",
-    label: "OBV",
-    color: "#06b6d4",
-    pane: 1,
-  },
-  mfi: {
-    id: "analysis-indicator-mfi",
-    label: "MFI(14)",
-    color: "#f59e0b",
-    pane: 1,
-  },
-  cmf: {
-    id: "analysis-indicator-cmf",
-    label: "CMF(20)",
-    color: "#ec4899",
-    pane: 1,
-  },
-  // Support/Resistance
-  pivot: {
-    id: "analysis-indicator-pivot",
-    label: "Pivot S/R",
-    colors: { resistance: "#ef4444", support: "#10b981", pivot: "#6366f1" },
-    pane: 0,
-  },
-  fib: {
-    id: "analysis-indicator-fib",
-    label: "Fibonacci",
-    colors: { level: "#f59e0b", key: "#8b5cf6" },
-    pane: 0,
-  },
-};
+// Generate ID mappings for this chart (analysis prefix)
+const ANALYSIS_INDICATOR_ID_TO_KEY = generateIndicatorIdToKey("analysis");
+const ANALYSIS_INDICATOR_IDS = getAllIndicatorIds("analysis");
 
 // Flag to track if dropdown has been initialized after becoming visible
 let analysisIndicatorDropdownInitialized = false;
@@ -468,542 +320,53 @@ function addAnalysisIndicatorToChart(indicatorId, indicatorKey, ohlcv_data) {
   const priceRange = maxPrice - minPrice;
   const priceMid = (maxPrice + minPrice) / 2;
 
-  // Helper to add a line series and track it (merges with defaults automatically)
-  const addLineSeries = (seriesData, options, pane = 0) => {
-    const series = analysisChart.addSeries(
-      LightweightCharts.LineSeries,
-      { ...ANALYSIS_LINE_SERIES_DEFAULTS, ...options },
-      pane,
-    );
-    series.setData(seriesData);
-    analysisIndicatorSeries.push(series);
-    return series;
+  // Create context for shared renderer
+  const ctx = {
+    addLineSeries: (seriesData, options, pane = 0) => {
+      const series = analysisChart.addSeries(
+        LightweightCharts.LineSeries,
+        { ...LINE_SERIES_DEFAULTS, ...options },
+        pane,
+      );
+      series.setData(seriesData);
+      analysisIndicatorSeries.push(series);
+      return series;
+    },
+    getTime: (i) => ohlcv_data[i].time,
+    indicatorValues: analysisIndicatorValues,
+    priceInfo: { minPrice, maxPrice, priceRange, priceMid },
+    candleSeries: analysisCandleSeries,
   };
 
-  const seriesList = [];
-  const config = ANALYSIS_INDICATOR_CONFIG[indicatorKey];
+  const config = SHARED_INDICATOR_CONFIG[indicatorKey];
 
-  switch (indicatorId) {
-    case "analysis-indicator-ma": {
-      const maData = calculateMA(indicatorData, 20)
-        .map((v, i) => ({ time: ohlcv_data[i].time, value: v }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(maData, {
-        color: config.color,
-      });
-      seriesList.push(series);
-      maData.forEach((d) => {
-        if (!analysisIndicatorValues[d.time])
-          analysisIndicatorValues[d.time] = {};
-        analysisIndicatorValues[d.time].ma = d.value;
-      });
-      break;
-    }
-
-    case "analysis-indicator-ema": {
-      const emaData = calculateEMA(indicatorData, 9)
-        .map((v, i) => ({ time: ohlcv_data[i].time, value: v }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(emaData, {
-        color: config.color,
-      });
-      seriesList.push(series);
-      emaData.forEach((d) => {
-        if (!analysisIndicatorValues[d.time])
-          analysisIndicatorValues[d.time] = {};
-        analysisIndicatorValues[d.time].ema = d.value;
-      });
-      break;
-    }
-
-    case "analysis-indicator-wma": {
-      const wmaData = calculateWMA(indicatorData, 20)
-        .map((v, i) => ({ time: ohlcv_data[i].time, value: v }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(wmaData, {
-        color: config.color,
-      });
-      seriesList.push(series);
-      wmaData.forEach((d) => {
-        if (!analysisIndicatorValues[d.time])
-          analysisIndicatorValues[d.time] = {};
-        analysisIndicatorValues[d.time].wma = d.value;
-      });
-      break;
-    }
-
-    case "analysis-indicator-vwap": {
-      const vwapData = calculateVWAP(indicatorData)
-        .map((v, i) => ({ time: ohlcv_data[i].time, value: v }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(vwapData, {
-        color: config.color,
-      });
-      seriesList.push(series);
-      vwapData.forEach((d) => {
-        if (!analysisIndicatorValues[d.time])
-          analysisIndicatorValues[d.time] = {};
-        analysisIndicatorValues[d.time].vwap = d.value;
-      });
-      break;
-    }
-
-    case "analysis-indicator-bb": {
-      const bb = calculateBB(indicatorData, 20, 2);
-      const upperData = bb
-        .map((v, i) => ({ time: ohlcv_data[i].time, value: v.upper }))
-        .filter((d) => d.value !== null);
-      const lowerData = bb
-        .map((v, i) => ({ time: ohlcv_data[i].time, value: v.lower }))
-        .filter((d) => d.value !== null);
-
-      const upperSeries = addLineSeries(upperData, {
-        color: config.color,
-        lineStyle: LightweightCharts.LineStyle.Dashed,
-      });
-      const lowerSeries = addLineSeries(lowerData, {
-        color: config.color,
-        lineStyle: LightweightCharts.LineStyle.Dashed,
-      });
-      seriesList.push(upperSeries, lowerSeries);
-      bb.forEach((v, i) => {
-        if (v.upper !== null) {
-          const time = ohlcv_data[i].time;
-          if (!analysisIndicatorValues[time])
-            analysisIndicatorValues[time] = {};
-          analysisIndicatorValues[time].bbUpper = v.upper;
-          analysisIndicatorValues[time].bbLower = v.lower;
-        }
-      });
-      break;
-    }
-
-    case "analysis-indicator-atr": {
-      const atr = calculateATR(indicatorData, 14);
-      const atrData = atr
-        .map((v, i) => ({
-          time: ohlcv_data[i].time,
-          value:
-            v === null ? null : minPrice + (v / priceRange) * priceRange * 2,
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(atrData, {
-        color: config.color,
-        lineStyle: LightweightCharts.LineStyle.Dotted,
-      });
-      seriesList.push(series);
-      atr.forEach((v, i) => {
-        if (v !== null) {
-          const time = ohlcv_data[i].time;
-          if (!analysisIndicatorValues[time])
-            analysisIndicatorValues[time] = {};
-          analysisIndicatorValues[time].atr = v;
-        }
-      });
-      break;
-    }
-
-    case "analysis-indicator-rsi": {
-      const rsi = calculateRSI(indicatorData, 14);
-      const rsiData = rsi
-        .map((v, i) => ({
-          time: ohlcv_data[i].time,
-          value: v === null ? null : minPrice + (v / 100) * priceRange,
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(rsiData, {
-        color: config.color,
-        lineStyle: LightweightCharts.LineStyle.Dotted,
-      });
-      seriesList.push(series);
-      rsi.forEach((v, i) => {
-        if (v !== null) {
-          const time = ohlcv_data[i].time;
-          if (!analysisIndicatorValues[time])
-            analysisIndicatorValues[time] = {};
-          analysisIndicatorValues[time].rsi = v;
-        }
-      });
-      break;
-    }
-
-    case "analysis-indicator-macd": {
-      const macd = calculateMACD(indicatorData, 12, 26, 9);
-      const macdValues = macd.macdLine.filter((v) => v !== null);
-      const macdMax = Math.max(...macdValues.map(Math.abs)) || 1;
-      const scaleMACD = (v) =>
-        v === null ? null : priceMid + (v / macdMax) * (priceRange / 4);
-
-      const macdData = macd.macdLine
-        .map((v, i) => ({ time: ohlcv_data[i].time, value: scaleMACD(v) }))
-        .filter((d) => d.value !== null);
-      const signalData = macd.signalLine
-        .map((v, i) => ({ time: ohlcv_data[i].time, value: scaleMACD(v) }))
-        .filter((d) => d.value !== null);
-
-      const macdSeries = addLineSeries(macdData, {
-        color: config.colors.line,
-        lineStyle: LightweightCharts.LineStyle.Solid,
-      });
-      const signalSeries = addLineSeries(signalData, {
-        color: config.colors.signal,
-        lineStyle: LightweightCharts.LineStyle.Dashed,
-      });
-      seriesList.push(macdSeries, signalSeries);
-      macd.macdLine.forEach((v, i) => {
-        if (v !== null) {
-          const time = ohlcv_data[i].time;
-          if (!analysisIndicatorValues[time])
-            analysisIndicatorValues[time] = {};
-          analysisIndicatorValues[time].macdLine = v;
-          analysisIndicatorValues[time].macdSignal = macd.signalLine[i];
-        }
-      });
-      break;
-    }
-
-    case "analysis-indicator-stoch": {
-      const stoch = calculateStochastic(indicatorData, 14, 3, 3);
-      const stochK = stoch.k
-        .map((v, i) => ({
-          time: ohlcv_data[i].time,
-          value: v === null ? null : minPrice + (v / 100) * priceRange,
-        }))
-        .filter((d) => d.value !== null);
-      const stochD = stoch.d
-        .map((v, i) => ({
-          time: ohlcv_data[i].time,
-          value: v === null ? null : minPrice + (v / 100) * priceRange,
-        }))
-        .filter((d) => d.value !== null);
-
-      const kSeries = addLineSeries(stochK, {
-        color: config.colors.k,
-        lineStyle: LightweightCharts.LineStyle.Solid,
-      });
-      const dSeries = addLineSeries(stochD, {
-        color: config.colors.d,
-        lineStyle: LightweightCharts.LineStyle.Dashed,
-      });
-      seriesList.push(kSeries, dSeries);
-      stoch.k.forEach((v, i) => {
-        if (v !== null) {
-          const time = ohlcv_data[i].time;
-          if (!analysisIndicatorValues[time])
-            analysisIndicatorValues[time] = {};
-          analysisIndicatorValues[time].stochK = v;
-          analysisIndicatorValues[time].stochD = stoch.d[i];
-        }
-      });
-      break;
-    }
-
-    case "analysis-indicator-williams": {
-      const williams = calculateWilliamsR(indicatorData, 14);
-      const williamsData = williams
-        .map((v, i) => ({
-          time: ohlcv_data[i].time,
-          value: v === null ? null : minPrice + ((v + 100) / 100) * priceRange,
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(williamsData, {
-        color: config.color,
-        lineStyle: LightweightCharts.LineStyle.Dotted,
-      });
-      seriesList.push(series);
-      williams.forEach((v, i) => {
-        if (v !== null) {
-          const time = ohlcv_data[i].time;
-          if (!analysisIndicatorValues[time])
-            analysisIndicatorValues[time] = {};
-          analysisIndicatorValues[time].williams = v;
-        }
-      });
-      break;
-    }
-
-    case "analysis-indicator-cci": {
-      const cci = calculateCCI(indicatorData, 20);
-      const cciValues = cci.filter((v) => v !== null);
-      const cciMax = Math.max(...cciValues.map(Math.abs)) || 200;
-      const cciData = cci
-        .map((v, i) => ({
-          time: ohlcv_data[i].time,
-          value: v === null ? null : priceMid + (v / cciMax) * (priceRange / 3),
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(cciData, {
-        color: config.color,
-        lineStyle: LightweightCharts.LineStyle.Dotted,
-      });
-      seriesList.push(series);
-      cci.forEach((v, i) => {
-        if (v !== null) {
-          const time = ohlcv_data[i].time;
-          if (!analysisIndicatorValues[time])
-            analysisIndicatorValues[time] = {};
-          analysisIndicatorValues[time].cci = v;
-        }
-      });
-      break;
-    }
-
-    case "analysis-indicator-roc": {
-      const roc = calculateROC(indicatorData, 10);
-      const rocValues = roc.filter((v) => v !== null);
-      const rocMax = Math.max(...rocValues.map(Math.abs)) || 10;
-      const rocData = roc
-        .map((v, i) => ({
-          time: ohlcv_data[i].time,
-          value: v === null ? null : priceMid + (v / rocMax) * (priceRange / 3),
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(rocData, {
-        color: config.color,
-        lineStyle: LightweightCharts.LineStyle.Dotted,
-      });
-      seriesList.push(series);
-      roc.forEach((v, i) => {
-        if (v !== null) {
-          const time = ohlcv_data[i].time;
-          if (!analysisIndicatorValues[time])
-            analysisIndicatorValues[time] = {};
-          analysisIndicatorValues[time].roc = v;
-        }
-      });
-      break;
-    }
-
-    case "analysis-indicator-adx": {
-      const adx = calculateADX(indicatorData, 14);
-      const adxData = adx.adx
-        .map((v, i) => ({
-          time: ohlcv_data[i].time,
-          value: v === null ? null : minPrice + (v / 100) * priceRange,
-        }))
-        .filter((d) => d.value !== null);
-      const plusDIData = adx.plusDI
-        .map((v, i) => ({
-          time: ohlcv_data[i].time,
-          value: v === null ? null : minPrice + (v / 100) * priceRange,
-        }))
-        .filter((d) => d.value !== null);
-      const minusDIData = adx.minusDI
-        .map((v, i) => ({
-          time: ohlcv_data[i].time,
-          value: v === null ? null : minPrice + (v / 100) * priceRange,
-        }))
-        .filter((d) => d.value !== null);
-
-      const adxSeries = addLineSeries(adxData, {
-        color: config.colors.adx,
-        lineWidth: 2,
-        lineStyle: LightweightCharts.LineStyle.Solid,
-      });
-      const plusDISeries = addLineSeries(plusDIData, {
-        color: config.colors.plusDI,
-        lineStyle: LightweightCharts.LineStyle.Dashed,
-      });
-      const minusDISeries = addLineSeries(minusDIData, {
-        color: config.colors.minusDI,
-        lineStyle: LightweightCharts.LineStyle.Dashed,
-      });
-      seriesList.push(adxSeries, plusDISeries, minusDISeries);
-      adx.adx.forEach((v, i) => {
-        if (v !== null) {
-          const time = ohlcv_data[i].time;
-          if (!analysisIndicatorValues[time])
-            analysisIndicatorValues[time] = {};
-          analysisIndicatorValues[time].adx = v;
-          analysisIndicatorValues[time].plusDI = adx.plusDI[i];
-          analysisIndicatorValues[time].minusDI = adx.minusDI[i];
-        }
-      });
-      break;
-    }
-
-    case "analysis-indicator-vol-sma": {
-      const volSmaData = calculateVolumeSMA(indicatorData, 20)
-        .map((v, i) => ({ time: ohlcv_data[i].time, value: v }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(
-        volSmaData,
-        {
-          color: config.color,
-          lineStyle: LightweightCharts.LineStyle.Solid,
-        },
-        1,
-      );
-      seriesList.push(series);
-      volSmaData.forEach((d) => {
-        if (!analysisIndicatorValues[d.time])
-          analysisIndicatorValues[d.time] = {};
-        analysisIndicatorValues[d.time].volSma = d.value;
-      });
-      break;
-    }
-
-    case "analysis-indicator-obv": {
-      const obv = calculateOBV(indicatorData);
-      const obvMax = Math.max(...obv.map(Math.abs)) || 1;
-      const volMax = Math.max(...indicatorData.map((d) => d.v)) || 1;
-      const obvData = obv
-        .map((v, i) => ({
-          time: ohlcv_data[i].time,
-          value: (v / obvMax) * volMax * 0.8,
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(
-        obvData,
-        {
-          color: config.color,
-          lineStyle: LightweightCharts.LineStyle.Solid,
-        },
-        1,
-      );
-      seriesList.push(series);
-      obv.forEach((v, i) => {
-        const time = ohlcv_data[i].time;
-        if (!analysisIndicatorValues[time]) analysisIndicatorValues[time] = {};
-        analysisIndicatorValues[time].obv = v;
-      });
-      break;
-    }
-
-    case "analysis-indicator-mfi": {
-      const mfi = calculateMFI(indicatorData, 14);
-      const volMax = Math.max(...indicatorData.map((d) => d.v)) || 1;
-      const mfiData = mfi
-        .map((v, i) => ({
-          time: ohlcv_data[i].time,
-          value: v === null ? null : (v / 100) * volMax * 0.8,
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(
-        mfiData,
-        {
-          color: config.color,
-          lineStyle: LightweightCharts.LineStyle.Solid,
-        },
-        1,
-      );
-      seriesList.push(series);
-      mfi.forEach((v, i) => {
-        if (v !== null) {
-          const time = ohlcv_data[i].time;
-          if (!analysisIndicatorValues[time])
-            analysisIndicatorValues[time] = {};
-          analysisIndicatorValues[time].mfi = v;
-        }
-      });
-      break;
-    }
-
-    case "analysis-indicator-cmf": {
-      const cmf = calculateCMF(indicatorData, 20);
-      const volMax = Math.max(...indicatorData.map((d) => d.v)) || 1;
-      const cmfData = cmf
-        .map((v, i) => ({
-          time: ohlcv_data[i].time,
-          value: v === null ? null : (v + 0.5) * volMax * 0.6,
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(
-        cmfData,
-        {
-          color: config.color,
-          lineStyle: LightweightCharts.LineStyle.Solid,
-        },
-        1,
-      );
-      seriesList.push(series);
-      cmf.forEach((v, i) => {
-        if (v !== null) {
-          const time = ohlcv_data[i].time;
-          if (!analysisIndicatorValues[time])
-            analysisIndicatorValues[time] = {};
-          analysisIndicatorValues[time].cmf = v;
-        }
-      });
-      break;
-    }
-
-    case "analysis-indicator-pivot": {
-      if (lastIndicatorsData?.pivot_points) {
-        const pp = lastIndicatorsData.pivot_points;
-        const colors = config.colors;
-        const lines = [];
-        const addPivotLine = (price, color, title) => {
-          if (price && typeof price === "number" && !isNaN(price)) {
-            const line = analysisCandleSeries.createPriceLine({
-              price: price,
-              color: color,
-              lineWidth: 1,
-              lineStyle: LightweightCharts.LineStyle.Dashed,
-              axisLabelVisible: true,
-              title: title,
-            });
-            lines.push(line);
-          }
-        };
-        addPivotLine(pp.pivot, colors.pivot, "P");
-        addPivotLine(pp.r1, colors.resistance, "R1");
-        addPivotLine(pp.r2, colors.resistance, "R2");
-        addPivotLine(pp.r3, colors.resistance, "R3");
-        addPivotLine(pp.s1, colors.support, "S1");
-        addPivotLine(pp.s2, colors.support, "S2");
-        addPivotLine(pp.s3, colors.support, "S3");
-        // Store as priceLines type
-        analysisIndicatorSeriesMap.set(indicatorId, {
-          type: "priceLines",
-          lines,
-        });
-        return; // Don't add to seriesList
-      }
-      break;
-    }
-
-    case "analysis-indicator-fib": {
-      if (lastIndicatorsData?.fibonacci) {
-        const fib = lastIndicatorsData.fibonacci;
-        const colors = config.colors;
-        const lines = [];
-        const addFibLine = (price, color, title) => {
-          if (price && typeof price === "number" && !isNaN(price)) {
-            const line = analysisCandleSeries.createPriceLine({
-              price: price,
-              color: color,
-              lineWidth: 1,
-              lineStyle: LightweightCharts.LineStyle.Dotted,
-              axisLabelVisible: true,
-              title: title,
-            });
-            lines.push(line);
-          }
-        };
-        addFibLine(fib.level_0, colors.key, "0%");
-        addFibLine(fib.level_236, colors.level, "23.6%");
-        addFibLine(fib.level_382, colors.key, "38.2%");
-        addFibLine(fib.level_500, colors.key, "50%");
-        addFibLine(fib.level_618, colors.key, "61.8%");
-        addFibLine(fib.level_786, colors.level, "78.6%");
-        addFibLine(fib.level_100, colors.key, "100%");
-        // Store as priceLines type
-        analysisIndicatorSeriesMap.set(indicatorId, {
-          type: "priceLines",
-          lines,
-        });
-        return; // Don't add to seriesList
-      }
-      break;
-    }
+  // For pivot/fib, use data from lastIndicatorsData if available
+  let extraData = null;
+  if (indicatorKey === "pivot" && lastIndicatorsData?.pivot_points) {
+    extraData = lastIndicatorsData.pivot_points;
+  } else if (indicatorKey === "fib" && lastIndicatorsData?.fibonacci) {
+    extraData = lastIndicatorsData.fibonacci;
   }
 
-  // Store series in map for later removal
-  if (seriesList.length > 0) {
+  const result = renderIndicator(
+    indicatorKey,
+    ctx,
+    indicatorData,
+    config,
+    extraData,
+  );
+
+  if (!result) return;
+
+  // Handle result based on type
+  if (!Array.isArray(result) && result.type === "priceLines") {
+    // Pivot/Fib return price lines object
+    analysisIndicatorSeriesMap.set(indicatorId, result);
+  } else if (Array.isArray(result) && result.length > 0) {
+    // Regular indicators return array of series
     analysisIndicatorSeriesMap.set(indicatorId, {
       type: "series",
-      series: seriesList,
+      series: result,
     });
   }
 }
@@ -1358,14 +721,14 @@ async function renderAnalysisChart(ohlcv_data) {
       tooltipContent += renderTooltipIndicators(
         analysisIndicatorValues,
         param.time,
-        ANALYSIS_INDICATOR_CONFIG,
+        SHARED_INDICATOR_CONFIG,
       );
 
       // Add volume indicators if exists
       const volIndicators = renderTooltipIndicators(
         analysisIndicatorValues,
         param.time,
-        ANALYSIS_INDICATOR_CONFIG,
+        SHARED_INDICATOR_CONFIG,
         true,
       );
       if (volIndicators) {

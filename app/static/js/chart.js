@@ -11,107 +11,9 @@ let currentChartStart = null; // Current chart start date (YYYY-MM-DD)
 let currentChartEnd = null; // Current chart end date (YYYY-MM-DD)
 let chartListenersInitialized = false; // Flag to prevent duplicate event listeners
 
-// Indicator Configuration Registry
-const INDICATOR_CONFIG = {
-  // Moving Averages (overlay on price, pane 0)
-  ma: { id: "indicator-ma", label: "SMA(20)", color: "#3b82f6", pane: 0 },
-  ema: { id: "indicator-ema", label: "EMA(9)", color: "#f97316", pane: 0 },
-  wma: { id: "indicator-wma", label: "WMA(20)", color: "#06b6d4", pane: 0 },
-  vwap: { id: "indicator-vwap", label: "VWAP", color: "#8b5cf6", pane: 0 },
-
-  // Bands/Channels (overlay on price, pane 0)
-  bb: { id: "indicator-bb", label: "BB", color: "#a855f7", pane: 0 },
-  atr: { id: "indicator-atr", label: "ATR(14)", color: "#ec4899", pane: 0 },
-
-  // Oscillators (scaled to price range, pane 0)
-  rsi: { id: "indicator-rsi", label: "RSI(14)", color: "#f59e0b", pane: 0 },
-  macd: {
-    id: "indicator-macd",
-    label: "MACD",
-    colors: { line: "#3b82f6", signal: "#ef4444" },
-    pane: 0,
-  },
-  stoch: {
-    id: "indicator-stoch",
-    label: "Stoch",
-    colors: { k: "#10b981", d: "#ef4444" },
-    pane: 0,
-  },
-  williams: {
-    id: "indicator-williams",
-    label: "WillR",
-    color: "#06b6d4",
-    pane: 0,
-  },
-  cci: { id: "indicator-cci", label: "CCI(20)", color: "#8b5cf6", pane: 0 },
-  roc: { id: "indicator-roc", label: "ROC(10)", color: "#f97316", pane: 0 },
-
-  // Trend (scaled to price range, pane 0)
-  adx: {
-    id: "indicator-adx",
-    label: "ADX(14)",
-    colors: { adx: "#22c55e", plusDI: "#3b82f6", minusDI: "#ef4444" },
-    pane: 0,
-  },
-
-  // Volume (in volume pane, pane 1)
-  volSma: {
-    id: "indicator-vol-sma",
-    label: "Vol SMA(20)",
-    color: "#8b5cf6",
-    pane: 1,
-  },
-  obv: { id: "indicator-obv", label: "OBV", color: "#06b6d4", pane: 1 },
-  mfi: { id: "indicator-mfi", label: "MFI(14)", color: "#f59e0b", pane: 1 },
-  cmf: { id: "indicator-cmf", label: "CMF(20)", color: "#ec4899", pane: 1 },
-
-  // Support/Resistance
-  pivot: {
-    id: "indicator-pivot",
-    label: "Pivot S/R",
-    colors: { resistance: "#ef4444", support: "#10b981", pivot: "#6366f1" },
-    pane: 0,
-  },
-  fib: {
-    id: "indicator-fib",
-    label: "Fibonacci",
-    colors: { level: "#f59e0b", key: "#8b5cf6" },
-    pane: 0,
-  },
-};
-
-// Map indicator checkbox IDs to config keys for easier lookup
-const INDICATOR_ID_TO_KEY = {
-  "indicator-ma": "ma",
-  "indicator-ema": "ema",
-  "indicator-wma": "wma",
-  "indicator-vwap": "vwap",
-  "indicator-bb": "bb",
-  "indicator-atr": "atr",
-  "indicator-rsi": "rsi",
-  "indicator-macd": "macd",
-  "indicator-stoch": "stoch",
-  "indicator-williams": "williams",
-  "indicator-cci": "cci",
-  "indicator-roc": "roc",
-  "indicator-adx": "adx",
-  "indicator-vol-sma": "volSma",
-  "indicator-obv": "obv",
-  "indicator-mfi": "mfi",
-  "indicator-cmf": "cmf",
-  "indicator-pivot": "pivot",
-  "indicator-fib": "fib",
-};
-
-// All indicator checkbox IDs (derived from mapping)
-const ALL_INDICATOR_IDS = Object.keys(INDICATOR_ID_TO_KEY);
-
-// Common line series options - reduces repetition
-const LINE_SERIES_DEFAULTS = {
-  lineWidth: 1,
-  priceLineVisible: false,
-  lastValueVisible: false,
-};
+// Generate ID mappings for this chart (no prefix)
+const INDICATOR_ID_TO_KEY = generateIndicatorIdToKey("");
+const ALL_INDICATOR_IDS = getAllIndicatorIds("");
 
 // Flag to track if dropdown has been initialized after becoming visible
 let indicatorDropdownInitialized = false;
@@ -471,560 +373,36 @@ function addIndicatorToChart(indicatorId, indicatorKey, data) {
   const priceRange = maxPrice - minPrice;
   const priceMid = (maxPrice + minPrice) / 2;
 
-  // Helper to add a line series and track it (merges with defaults automatically)
-  const addLineSeries = (seriesData, options, pane = 0) => {
-    const series = priceChart.addSeries(
-      LightweightCharts.LineSeries,
-      { ...LINE_SERIES_DEFAULTS, ...options },
-      pane,
-    );
-    series.setData(seriesData);
-    indicatorSeries.push(series);
-    return series;
+  // Create context for shared renderer
+  const ctx = {
+    addLineSeries: (seriesData, options, pane = 0) => {
+      const series = priceChart.addSeries(
+        LightweightCharts.LineSeries,
+        { ...LINE_SERIES_DEFAULTS, ...options },
+        pane,
+      );
+      series.setData(seriesData);
+      indicatorSeries.push(series);
+      return series;
+    },
+    getTime: (i) => Math.floor(data[i].x.getTime() / 1000),
+    indicatorValues,
+    priceInfo: { minPrice, maxPrice, priceRange, priceMid },
+    candleSeries,
   };
 
-  const seriesList = [];
-  const config = INDICATOR_CONFIG[indicatorKey];
+  const config = SHARED_INDICATOR_CONFIG[indicatorKey];
+  const result = renderIndicator(indicatorKey, ctx, data, config);
 
-  switch (indicatorId) {
-    case "indicator-ma": {
-      const maData = calculateMA(data, 20)
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: v,
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(maData, {
-        color: config.color,
-      });
-      seriesList.push(series);
-      maData.forEach((d) => {
-        if (!indicatorValues[d.time]) indicatorValues[d.time] = {};
-        indicatorValues[d.time].ma = d.value;
-      });
-      break;
-    }
+  if (!result) return;
 
-    case "indicator-ema": {
-      const emaData = calculateEMA(data, 9)
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: v,
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(emaData, {
-        color: config.color,
-      });
-      seriesList.push(series);
-      emaData.forEach((d) => {
-        if (!indicatorValues[d.time]) indicatorValues[d.time] = {};
-        indicatorValues[d.time].ema = d.value;
-      });
-      break;
-    }
-
-    case "indicator-wma": {
-      const wmaData = calculateWMA(data, 20)
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: v,
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(wmaData, {
-        color: config.color,
-      });
-      seriesList.push(series);
-      wmaData.forEach((d) => {
-        if (!indicatorValues[d.time]) indicatorValues[d.time] = {};
-        indicatorValues[d.time].wma = d.value;
-      });
-      break;
-    }
-
-    case "indicator-vwap": {
-      const vwapData = calculateVWAP(data)
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: v,
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(vwapData, {
-        color: config.color,
-      });
-      seriesList.push(series);
-      vwapData.forEach((d) => {
-        if (!indicatorValues[d.time]) indicatorValues[d.time] = {};
-        indicatorValues[d.time].vwap = d.value;
-      });
-      break;
-    }
-
-    case "indicator-bb": {
-      const bb = calculateBB(data, 20, 2);
-      const upperData = bb
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: v.upper,
-        }))
-        .filter((d) => d.value !== null);
-      const lowerData = bb
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: v.lower,
-        }))
-        .filter((d) => d.value !== null);
-
-      const upperSeries = addLineSeries(upperData, {
-        color: config.color,
-        lineStyle: LightweightCharts.LineStyle.Dashed,
-      });
-      const lowerSeries = addLineSeries(lowerData, {
-        color: config.color,
-        lineWidth: 1,
-        lineStyle: LightweightCharts.LineStyle.Dashed,
-        priceLineVisible: false,
-        lastValueVisible: false,
-      });
-      seriesList.push(upperSeries, lowerSeries);
-      bb.forEach((v, i) => {
-        if (v.upper !== null) {
-          const time = Math.floor(data[i].x.getTime() / 1000);
-          if (!indicatorValues[time]) indicatorValues[time] = {};
-          indicatorValues[time].bbUpper = v.upper;
-          indicatorValues[time].bbMiddle = v.middle;
-          indicatorValues[time].bbLower = v.lower;
-        }
-      });
-      break;
-    }
-
-    case "indicator-atr": {
-      const atr = calculateATR(data, 14);
-      const atrMax = Math.max(...atr.filter((v) => v !== null)) || 1;
-      const atrData = atr
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: v === null ? null : minPrice + (v / atrMax) * priceRange * 0.3,
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(atrData, {
-        color: config.color,
-        lineStyle: LightweightCharts.LineStyle.Dotted,
-      });
-      seriesList.push(series);
-      atr.forEach((v, i) => {
-        if (v !== null) {
-          const time = Math.floor(data[i].x.getTime() / 1000);
-          if (!indicatorValues[time]) indicatorValues[time] = {};
-          indicatorValues[time].atr = v;
-        }
-      });
-      break;
-    }
-
-    case "indicator-rsi": {
-      const rsi = calculateRSI(data, 14);
-      const rsiData = rsi
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: v === null ? null : minPrice + (v / 100) * priceRange,
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(rsiData, {
-        color: config.color,
-        lineStyle: LightweightCharts.LineStyle.Dotted,
-      });
-      seriesList.push(series);
-      rsi.forEach((v, i) => {
-        if (v !== null) {
-          const time = Math.floor(data[i].x.getTime() / 1000);
-          if (!indicatorValues[time]) indicatorValues[time] = {};
-          indicatorValues[time].rsi = v;
-        }
-      });
-      break;
-    }
-
-    case "indicator-macd": {
-      const macd = calculateMACD(data, 12, 26, 9);
-      const macdValues = macd.macdLine.filter((v) => v !== null);
-      const macdMax = Math.max(...macdValues.map(Math.abs)) || 1;
-      const scaleMACD = (v) =>
-        v === null ? null : priceMid + (v / macdMax) * (priceRange / 4);
-
-      const macdData = macd.macdLine
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: scaleMACD(v),
-        }))
-        .filter((d) => d.value !== null);
-      const signalData = macd.signalLine
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: scaleMACD(v),
-        }))
-        .filter((d) => d.value !== null);
-
-      const macdSeries = addLineSeries(macdData, {
-        color: config.colors.line,
-        lineStyle: LightweightCharts.LineStyle.Solid,
-      });
-      const signalSeries = addLineSeries(signalData, {
-        color: config.colors.signal,
-        lineStyle: LightweightCharts.LineStyle.Dashed,
-      });
-      seriesList.push(macdSeries, signalSeries);
-      macd.macdLine.forEach((v, i) => {
-        if (
-          v !== null ||
-          macd.signalLine[i] !== null ||
-          macd.histogram[i] !== null
-        ) {
-          const time = Math.floor(data[i].x.getTime() / 1000);
-          if (!indicatorValues[time]) indicatorValues[time] = {};
-          indicatorValues[time].macdLine = v;
-          indicatorValues[time].macdSignal = macd.signalLine[i];
-          indicatorValues[time].macdHist = macd.histogram[i];
-        }
-      });
-      break;
-    }
-
-    case "indicator-stoch": {
-      const stoch = calculateStochastic(data, 14, 3, 3);
-      const stochK = stoch.k
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: v === null ? null : minPrice + (v / 100) * priceRange,
-        }))
-        .filter((d) => d.value !== null);
-      const stochD = stoch.d
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: v === null ? null : minPrice + (v / 100) * priceRange,
-        }))
-        .filter((d) => d.value !== null);
-
-      const kSeries = addLineSeries(stochK, {
-        color: config.colors.k,
-        lineStyle: LightweightCharts.LineStyle.Solid,
-      });
-      const dSeries = addLineSeries(stochD, {
-        color: config.colors.d,
-        lineStyle: LightweightCharts.LineStyle.Dashed,
-      });
-      seriesList.push(kSeries, dSeries);
-      stoch.k.forEach((v, i) => {
-        if (v !== null || stoch.d[i] !== null) {
-          const time = Math.floor(data[i].x.getTime() / 1000);
-          if (!indicatorValues[time]) indicatorValues[time] = {};
-          indicatorValues[time].stochK = v;
-          indicatorValues[time].stochD = stoch.d[i];
-        }
-      });
-      break;
-    }
-
-    case "indicator-williams": {
-      const willR = calculateWilliamsR(data, 14);
-      const willRData = willR
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: v === null ? null : minPrice + ((v + 100) / 100) * priceRange,
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(willRData, {
-        color: config.color,
-        lineStyle: LightweightCharts.LineStyle.Dotted,
-      });
-      seriesList.push(series);
-      willR.forEach((v, i) => {
-        if (v !== null) {
-          const time = Math.floor(data[i].x.getTime() / 1000);
-          if (!indicatorValues[time]) indicatorValues[time] = {};
-          indicatorValues[time].williamsR = v;
-        }
-      });
-      break;
-    }
-
-    case "indicator-cci": {
-      const cci = calculateCCI(data, 20);
-      const cciMax =
-        Math.max(...cci.filter((v) => v !== null).map(Math.abs)) || 100;
-      const cciData = cci
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: v === null ? null : priceMid + (v / cciMax) * (priceRange / 4),
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(cciData, {
-        color: config.color,
-        lineStyle: LightweightCharts.LineStyle.Dotted,
-      });
-      seriesList.push(series);
-      cci.forEach((v, i) => {
-        if (v !== null) {
-          const time = Math.floor(data[i].x.getTime() / 1000);
-          if (!indicatorValues[time]) indicatorValues[time] = {};
-          indicatorValues[time].cci = v;
-        }
-      });
-      break;
-    }
-
-    case "indicator-roc": {
-      const roc = calculateROC(data, 10);
-      const rocMax =
-        Math.max(...roc.filter((v) => v !== null).map(Math.abs)) || 10;
-      const rocData = roc
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: v === null ? null : priceMid + (v / rocMax) * (priceRange / 4),
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(rocData, {
-        color: config.color,
-        lineStyle: LightweightCharts.LineStyle.Dotted,
-      });
-      seriesList.push(series);
-      roc.forEach((v, i) => {
-        if (v !== null) {
-          const time = Math.floor(data[i].x.getTime() / 1000);
-          if (!indicatorValues[time]) indicatorValues[time] = {};
-          indicatorValues[time].roc = v;
-        }
-      });
-      break;
-    }
-
-    case "indicator-adx": {
-      const adxResult = calculateADX(data, 14);
-      const adxMax = Math.max(...adxResult.adx.filter((v) => v !== null)) || 50;
-      const scaleADX = (v) =>
-        v === null ? null : minPrice + (v / adxMax) * priceRange * 0.5;
-
-      const adxData = adxResult.adx
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: scaleADX(v),
-        }))
-        .filter((d) => d.value !== null);
-      const plusDIData = adxResult.plusDI
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: scaleADX(v),
-        }))
-        .filter((d) => d.value !== null);
-      const minusDIData = adxResult.minusDI
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: scaleADX(v),
-        }))
-        .filter((d) => d.value !== null);
-
-      const adxSeries = addLineSeries(adxData, {
-        color: config.colors.adx,
-        lineWidth: 2,
-        lineStyle: LightweightCharts.LineStyle.Solid,
-      });
-      const plusDISeries = addLineSeries(plusDIData, {
-        color: config.colors.plusDI,
-        lineStyle: LightweightCharts.LineStyle.Dashed,
-      });
-      const minusDISeries = addLineSeries(minusDIData, {
-        color: config.colors.minusDI,
-        lineStyle: LightweightCharts.LineStyle.Dashed,
-      });
-      seriesList.push(adxSeries, plusDISeries, minusDISeries);
-      adxResult.adx.forEach((v, i) => {
-        if (v !== null) {
-          const time = Math.floor(data[i].x.getTime() / 1000);
-          if (!indicatorValues[time]) indicatorValues[time] = {};
-          indicatorValues[time].adx = v;
-          indicatorValues[time].plusDI = adxResult.plusDI[i];
-          indicatorValues[time].minusDI = adxResult.minusDI[i];
-        }
-      });
-      break;
-    }
-
-    case "indicator-vol-sma": {
-      const volSmaData = calculateVolumeSMA(data, 20)
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: v,
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(
-        volSmaData,
-        {
-          color: config.color,
-          lineStyle: LightweightCharts.LineStyle.Solid,
-        },
-        1,
-      );
-      seriesList.push(series);
-      volSmaData.forEach((d) => {
-        if (!indicatorValues[d.time]) indicatorValues[d.time] = {};
-        indicatorValues[d.time].volSma = d.value;
-      });
-      break;
-    }
-
-    case "indicator-obv": {
-      const obv = calculateOBV(data);
-      const obvMax = Math.max(...obv.map(Math.abs)) || 1;
-      const volMax = Math.max(...data.map((d) => d.v)) || 1;
-      const obvData = obv
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: (v / obvMax) * volMax * 0.8,
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(
-        obvData,
-        {
-          color: config.color,
-          lineStyle: LightweightCharts.LineStyle.Solid,
-        },
-        1,
-      );
-      seriesList.push(series);
-      obv.forEach((v, i) => {
-        const time = Math.floor(data[i].x.getTime() / 1000);
-        if (!indicatorValues[time]) indicatorValues[time] = {};
-        indicatorValues[time].obv = v;
-      });
-      break;
-    }
-
-    case "indicator-mfi": {
-      const mfi = calculateMFI(data, 14);
-      const volMax = Math.max(...data.map((d) => d.v)) || 1;
-      const mfiData = mfi
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: v === null ? null : (v / 100) * volMax * 0.8,
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(
-        mfiData,
-        {
-          color: config.color,
-          lineStyle: LightweightCharts.LineStyle.Dotted,
-        },
-        1,
-      );
-      seriesList.push(series);
-      mfi.forEach((v, i) => {
-        if (v !== null) {
-          const time = Math.floor(data[i].x.getTime() / 1000);
-          if (!indicatorValues[time]) indicatorValues[time] = {};
-          indicatorValues[time].mfi = v;
-        }
-      });
-      break;
-    }
-
-    case "indicator-cmf": {
-      const cmf = calculateCMF(data, 20);
-      const volMax = Math.max(...data.map((d) => d.v)) || 1;
-      const cmfData = cmf
-        .map((v, i) => ({
-          time: Math.floor(data[i].x.getTime() / 1000),
-          value: v === null ? null : (v + 1) * 0.5 * volMax * 0.8,
-        }))
-        .filter((d) => d.value !== null);
-      const series = addLineSeries(
-        cmfData,
-        {
-          color: config.color,
-          lineStyle: LightweightCharts.LineStyle.Dotted,
-        },
-        1,
-      );
-      seriesList.push(series);
-      cmf.forEach((v, i) => {
-        if (v !== null) {
-          const time = Math.floor(data[i].x.getTime() / 1000);
-          if (!indicatorValues[time]) indicatorValues[time] = {};
-          indicatorValues[time].cmf = v;
-        }
-      });
-      break;
-    }
-
-    case "indicator-pivot": {
-      // Pivot points create price lines, not regular series - need special handling
-      const pp = calculatePivotPoints(data[data.length - 1]);
-      const colors = config.colors;
-      const priceLines = [];
-      const addPivotLine = (price, color, title) => {
-        if (price && !isNaN(price)) {
-          const priceLine = candleSeries.createPriceLine({
-            price: price,
-            color: color,
-            lineWidth: 1,
-            lineStyle: LightweightCharts.LineStyle.Dashed,
-            axisLabelVisible: true,
-            title: title,
-          });
-          priceLines.push(priceLine);
-        }
-      };
-      addPivotLine(pp.pivot, colors.pivot, "P");
-      addPivotLine(pp.r1, colors.resistance, "R1");
-      addPivotLine(pp.r2, colors.resistance, "R2");
-      addPivotLine(pp.r3, colors.resistance, "R3");
-      addPivotLine(pp.s1, colors.support, "S1");
-      addPivotLine(pp.s2, colors.support, "S2");
-      addPivotLine(pp.s3, colors.support, "S3");
-      // Store price lines as the "series" for this indicator
-      indicatorSeriesMap.set(indicatorId, {
-        type: "priceLines",
-        lines: priceLines,
-      });
-      return; // Early return since we're handling storage differently
-    }
-
-    case "indicator-fib": {
-      // Fibonacci levels also use price lines
-      const fib = calculateFibonacciLevels(data, 50);
-      const colors = config.colors;
-      const priceLines = [];
-      const addFibLine = (price, color, title) => {
-        if (price && !isNaN(price)) {
-          const priceLine = candleSeries.createPriceLine({
-            price: price,
-            color: color,
-            lineWidth: 1,
-            lineStyle: LightweightCharts.LineStyle.Dotted,
-            axisLabelVisible: true,
-            title: title,
-          });
-          priceLines.push(priceLine);
-        }
-      };
-      addFibLine(fib.level_0, colors.key, "0%");
-      addFibLine(fib.level_236, colors.level, "23.6%");
-      addFibLine(fib.level_382, colors.key, "38.2%");
-      addFibLine(fib.level_500, colors.key, "50%");
-      addFibLine(fib.level_618, colors.key, "61.8%");
-      addFibLine(fib.level_786, colors.level, "78.6%");
-      addFibLine(fib.level_100, colors.key, "100%");
-      // Store price lines as the "series" for this indicator
-      indicatorSeriesMap.set(indicatorId, {
-        type: "priceLines",
-        lines: priceLines,
-      });
-      return; // Early return since we're handling storage differently
-    }
-  }
-
-  // Store the series for later removal
-  if (seriesList.length > 0) {
-    indicatorSeriesMap.set(indicatorId, { type: "series", series: seriesList });
+  // Handle result based on type
+  if (Array.isArray(result) && result.length > 0) {
+    // Regular indicators return array of series
+    indicatorSeriesMap.set(indicatorId, { type: "series", series: result });
+  } else if (!Array.isArray(result) && result.type === "priceLines") {
+    // Pivot/Fib return price lines object
+    indicatorSeriesMap.set(indicatorId, result);
   }
 }
 
@@ -1066,9 +444,6 @@ function removeIndicatorFromChart(indicatorId, indicatorKey) {
 
   // Clear from map
   indicatorSeriesMap.delete(indicatorId);
-
-  // Clear indicator values for this indicator from indicatorValues
-  // Note: This is optional - values will be overwritten on re-add anyway
 }
 
 // Helper to check if indicator is enabled
@@ -1253,25 +628,6 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
   // Configure volume pane height ratio (approximately 30% for volume)
   priceChart.panes()[1]?.setHeight(150);
 
-  // Get price range for scaling oscillators
-  const prices = data.map((d) => d.c);
-  const minPrice = Math.min(...prices);
-  const maxPrice = Math.max(...prices);
-  const priceRange = maxPrice - minPrice;
-  const priceMid = (maxPrice + minPrice) / 2;
-
-  // Helper to add a line series (merges with defaults automatically)
-  const addLineSeries = (seriesData, options, pane = 0) => {
-    const series = priceChart.addSeries(
-      LightweightCharts.LineSeries,
-      { ...LINE_SERIES_DEFAULTS, ...options },
-      pane,
-    );
-    series.setData(seriesData);
-    indicatorSeries.push(series);
-    return series;
-  };
-
   // =====================
   // ADD ENABLED INDICATORS
   // =====================
@@ -1336,14 +692,14 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
       tooltipContent += renderTooltipIndicators(
         indicatorValues,
         param.time,
-        INDICATOR_CONFIG,
+        SHARED_INDICATOR_CONFIG,
       );
 
       // Add volume indicators if exists
       const volIndicators = renderTooltipIndicators(
         indicatorValues,
         param.time,
-        INDICATOR_CONFIG,
+        SHARED_INDICATOR_CONFIG,
         true,
       );
       if (volIndicators) {
