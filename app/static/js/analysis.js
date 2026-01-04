@@ -10,6 +10,9 @@ let lastFetchedTechnicalSymbol = null;
  */
 function resetAnalysisState() {
   lastFetchedTechnicalSymbol = null;
+  // Reset initialization flags so event listeners are re-attached to new DOM elements
+  analysisIndicatorDropdownInitialized = false;
+  analysisChartExpandInitialized = false;
   clearAnalysisDisplay();
 }
 
@@ -1216,6 +1219,14 @@ async function renderAnalysisChart(ohlcv_data) {
   chartContainer.innerHTML = "";
   chartContainer.classList.remove("hidden");
 
+  // Temporarily expand the chart wrapper if collapsed
+  // This is required for LightweightCharts to properly initialize pane separators
+  const chartWrapper = document.getElementById("analysis-chart-wrapper");
+  const wasCollapsed = chartWrapper?.classList.contains("collapsed");
+  if (wasCollapsed) {
+    chartWrapper.classList.remove("collapsed");
+  }
+
   const isDark = document.documentElement.classList.contains("dark");
   const theme = isDark ? CONFIG.CHART_THEMES.dark : CONFIG.CHART_THEMES.light;
 
@@ -1374,9 +1385,14 @@ async function renderAnalysisChart(ohlcv_data) {
     }
   });
 
-  setTimeout(() => {
+  // Restore collapsed state after chart is fully initialized
+  // Use requestAnimationFrame to ensure the chart has rendered first
+  requestAnimationFrame(() => {
+    if (wasCollapsed && chartWrapper) {
+      chartWrapper.classList.add("collapsed");
+    }
     refreshAnalysisChart();
-  }, 50);
+  });
 }
 
 /**

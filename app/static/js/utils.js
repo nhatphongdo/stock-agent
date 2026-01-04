@@ -56,6 +56,9 @@ const CONFIG = {
       layout: {
         background: { type: "solid", color: "#0f172a" },
         textColor: "#94a3b8",
+        panes: {
+          enableResize: true,
+        },
       },
       grid: {
         vertLines: { color: "rgba(148, 163, 184, 0.1)" },
@@ -87,6 +90,9 @@ const CONFIG = {
       layout: {
         background: { type: "solid", color: "#ffffff" },
         textColor: "#334155",
+        panes: {
+          enableResize: true,
+        },
       },
       grid: {
         vertLines: { color: "rgba(100, 116, 139, 0.1)" },
