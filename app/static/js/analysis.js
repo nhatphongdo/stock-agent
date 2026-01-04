@@ -2360,17 +2360,23 @@ function handleAnalysisSummary(summary) {
     if (shortTrendBadge) {
       shortTrendBadge.className =
         "text-xs font-bold px-2 py-1 rounded-full text-center";
-      const sig = summary.short_term.signal?.toLowerCase() || "";
-      if (sig.includes("mua")) {
-        shortTrendBadge.textContent = "Mua";
+      shortTrendBadge.textContent = summary.short_term.signal || "--";
+      const trend = summary.short_term.trend?.toLowerCase() || "";
+      const signal = summary.short_term.signal?.toLowerCase() || "";
+      if (
+        trend.includes("tăng") &&
+        ["tích cực", "mua"].some((s) => signal.includes(s))
+      ) {
         shortTrendBadge.classList.add(
           "bg-green-100",
           "text-green-700",
           "dark:bg-green-500/20",
           "dark:text-green-400",
         );
-      } else if (sig.includes("bán") || sig.includes("phân phối")) {
-        shortTrendBadge.textContent = "Bán";
+      } else if (
+        trend.includes("giảm") &&
+        ["tiêu cực", "bán", "phân phối"].some((s) => signal.includes(s))
+      ) {
         shortTrendBadge.classList.add(
           "bg-red-100",
           "text-red-700",
@@ -2378,7 +2384,6 @@ function handleAnalysisSummary(summary) {
           "dark:text-red-400",
         );
       } else {
-        shortTrendBadge.textContent = summary.short_term.signal || "--";
         shortTrendBadge.classList.add(
           "bg-yellow-100",
           "text-yellow-700",
@@ -2423,17 +2428,23 @@ function handleAnalysisSummary(summary) {
     if (longTrendBadge) {
       longTrendBadge.className =
         "text-xs font-bold px-2 py-1 rounded-full text-center";
-      const sig = summary.long_term.signal?.toLowerCase() || "";
-      if (sig.includes("tích lũy")) {
-        longTrendBadge.textContent = "Tích lũy";
+      longTrendBadge.textContent = summary.long_term.signal || "--";
+      const trend = summary.long_term.trend?.toLowerCase() || "";
+      const signal = summary.long_term.signal?.toLowerCase() || "";
+      if (
+        trend.includes("tăng") &&
+        ["tích cực", "mua"].some((s) => signal.includes(s))
+      ) {
         longTrendBadge.classList.add(
           "bg-green-100",
           "text-green-700",
           "dark:bg-green-500/20",
           "dark:text-green-400",
         );
-      } else if (sig.includes("phân phối")) {
-        longTrendBadge.textContent = "Phân phối";
+      } else if (
+        trend.includes("giảm") &&
+        ["tiêu cực", "bán", "phân phối"].some((s) => signal.includes(s))
+      ) {
         longTrendBadge.classList.add(
           "bg-red-100",
           "text-red-700",
@@ -2441,7 +2452,6 @@ function handleAnalysisSummary(summary) {
           "dark:text-red-400",
         );
       } else {
-        longTrendBadge.textContent = summary.long_term.signal || "--";
         longTrendBadge.classList.add(
           "bg-yellow-100",
           "text-yellow-700",

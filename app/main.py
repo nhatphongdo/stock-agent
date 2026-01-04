@@ -102,6 +102,7 @@ class AnalyzeRequest(BaseModel):
     dividend_rate: Optional[float] = None
     profit_rate: Optional[float] = None
     sector: Optional[str] = None  # ICB sector code for sector analysis
+    sector_name: Optional[str] = None
 
 
 class AnalyzeResponse(BaseModel):
@@ -448,6 +449,7 @@ async def analyze_stock(request: Request, body: AnalyzeRequest):
                     dividend_rate=body.dividend_rate,
                     profit_rate=body.profit_rate,
                     sector=body.sector,
+                    sector_name=body.sector_name,
                 ):
                     if chunk:
                         yield chunk

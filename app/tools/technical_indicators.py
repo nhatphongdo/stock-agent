@@ -576,6 +576,53 @@ def _compare_price_to_ma(price: float, ma: Optional[float]) -> Optional[str]:
     return "at"
 
 
+def detect_candlestick_patterns(df: pd.DataFrame) -> list[dict]:
+    """
+    Detect candlestick patterns from a DataFrame.
+
+    Args:
+        df: DataFrame with OHLCV data
+
+    Returns:
+        List of detected patterns
+    """
+    # Detect patterns
+    # 'all' detects all patterns available in pandas-ta
+    patterns = df.ta.cdl_pattern(name="all")
+
+    if patterns is None or patterns.empty:
+        return []
+
+    detected_patterns = []
+
+    # patterns DataFrame has columns like 'CDL_DOJI', 'CDL_HAMMER', etc.
+    # Values are usually 100 (bullish) or -100 (bearish)
+    for col in patterns.columns:
+        # Filter rows where pattern is detected
+        detected = patterns[patterns[col] != 0]
+
+        for date, value in detected[col].items():
+            pattern_name = col.replace("CDL_", "").replace("_", " ").title()
+            signal = "bullish" if value > 0 else "bearish"
+
+            # Find the candle data for this date
+            if date in df.index:
+                candle = df.loc[date]
+                detected_patterns.append(
+                    {
+                        "name": pattern_name,
+                        "date": date.strftime("%Y-%m-%d %H:%M:%S"),
+                        "signal": signal,
+                        "price": float(candle["close"]),
+                        "description": f"{signal.capitalize()} {pattern_name} detected",
+                    }
+                )
+
+    # Sort by date descending (newest first)
+    detected_patterns.sort(key=lambda x: x["date"], reverse=True)
+    return detected_patterns
+
+
 def get_price_patterns(
     ticker: str,
     start_date: str,
@@ -613,42 +660,7 @@ def get_price_patterns(
         df = create_ohlcv_dataframe(candles)
 
         # Detect patterns
-        # 'all' detects all patterns available in pandas-ta
-        patterns = df.ta.cdl_pattern(name="all")
-
-        if patterns is None or patterns.empty:
-            return {"ticker": ticker, "patterns": []}
-
-        # Identify non-zero values (detected patterns)
-        detected_patterns = []
-
-        # patterns DataFrame has columns like 'CDL_DOJI', 'CDL_HAMMER', etc.
-        # Values are usually 100 (bullish) or -100 (bearish)
-
-        for col in patterns.columns:
-            # Filter rows where pattern is detected
-            detected = patterns[patterns[col] != 0]
-
-            for date, value in detected[col].items():
-                pattern_name = col.replace("CDL_", "").replace("_", " ").title()
-                signal = "bullish" if value > 0 else "bearish"
-
-                # Find the candle data for this date
-                # date is Timestamp, index of df
-                if date in df.index:
-                    candle = df.loc[date]
-                    detected_patterns.append(
-                        {
-                            "name": pattern_name,
-                            "date": date.strftime("%Y-%m-%d %H:%M:%S"),
-                            "signal": signal,
-                            "price": float(candle["close"]),
-                            "description": f"{signal.capitalize()} {pattern_name} detected",
-                        }
-                    )
-
-        # Sort by date descending (newest first)
-        detected_patterns.sort(key=lambda x: x["date"], reverse=True)
+        detected_patterns = detect_candlestick_patterns(df)
 
         return {"ticker": ticker, "patterns": detected_patterns}
 

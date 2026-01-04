@@ -214,6 +214,7 @@ async function analyzeTask(
         dividend_rate: currentUser ? currentUser.dividend_rate : null,
         profit_rate: currentUser ? currentUser.profit_rate : null,
         sector: sectorCode,
+        sector_name: sectorName,
       }),
     });
 

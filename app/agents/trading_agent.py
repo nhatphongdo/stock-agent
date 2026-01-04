@@ -420,6 +420,7 @@ class TradingAgent:
         dividend_rate: float = None,
         profit_rate: float = None,
         sector: str = None,
+        sector_name: str = None,
     ):
         # Pre-fetch market context
         yield json.dumps(
@@ -435,6 +436,12 @@ class TradingAgent:
             return_rate=return_rate,
         )
         context_text = format_context_for_prompt(market_context)
+
+        if task is None and sector and sector_name:
+            companies = get_companies_by_sector(sector)
+            task = f"Phân tích tổng quan ngành {sector_name}, ví dụ các mã CK: {', '.join(c.get("ticker") for c in companies if c.get("ticker"))}"
+        elif task is None and sector is None:
+            task = "Phân tích tổng quan thị trường"
 
         tickers_list = [s["ticker"] for s in market_context.get("stocks_data", [])]
         news_count = len(market_context.get("trending_news") or [])
@@ -544,38 +551,36 @@ IV. THÔNG TIN NGỮ CẢNH CÁ NHÂN
 ────────────────────────────────
 V. NHIỆM VỤ
 ────────────────────────────────
-- Nếu người dùng có yêu cầu cụ thể hợp lệ → trả lời **DUY NHẤT** yêu cầu đó và **DỪNG**.
-  - **PHÂN TÍCH WHITELIST**: Nếu mã trong danh mục theo dõi (whitelist) liên quan đến yêu cầu của user thì phân tích và đưa ra khuyến nghị (mua/bán):
-    - Trình bày bảng gồm:
-      Mã | Tên công ty | Giá hiện tại | RSI | MACD Signal | Xu hướng | Hỗ trợ | Kháng cự | Khuyến nghị | Giá bán KN | Phân tích
-
-- Nếu không có yêu cầu cụ thể hợp lệ, thực hiện lần lượt:
-1. Phân tích tổng quan thị trường hiện tại.
-2. Đưa ra khuyến nghị đầu tư dựa trên:
-   - Dữ liệu thị trường.
-   - Thông tin cá nhân.
-3. Danh sách 05 mã cổ phiếu có xu hướng tăng ngắn hạn (< 1 tháng) theo phân tích kỹ thuật:
+1. Trả lời và phân tích tổng quan:
+   - Nếu user yêu cầu phân tích cụ thể (ngành, cổ phiếu, hoặc yêu cầu khác): Đưa ra phân tích tổng quan cho yêu cầu đó, kết hợp với phân tích ngành chứa mã cụ thể để có góc nhìn toàn diện.
+   - Nếu user không có yêu cầu cụ thể: Phân tích tổng quan toàn bộ thị trường.
+2. Đưa ra các khuyến nghị đầu tư dựa trên:
+   - Dữ liệu thị trường (xu hướng, dòng tiền, tin tức).
+   - Thông tin ngữ cảnh cá nhân (danh mục hiện tại, khẩu vị rủi ro).
+   - Các phân tích tổng quan ở trên.
+3. Phân tích và khuyến nghị danh sách 05 mã cổ phiếu (theo ngành/lĩnh vực user đang phân tích) có xu hướng TĂNG NGẮN HẠN (< 1 tháng) theo phân tích kỹ thuật:
    - Phân loại: **NÊN MUA**, **THEO DÕI**, **THẬN TRỌNG**
    - Trình bày bảng gồm:
-     Mã | Tên công ty | Phân loại | Giá hiện tại | Giá mua KN | Giá bán KN | RSI | MACD Signal | Xu hướng | Mô hình nến | Khối lượng vs TB | Hỗ trợ | Kháng cự | Phân tích
+     Mã | Tên công ty | Phân loại | Giá hiện tại | Giá mua KN | Giá bán KN | RSI | MACD Signal | Xu hướng | Mô hình nến | Khối lượng vs TB | Hỗ trợ | Kháng cự | Phân tích (Nguyên nhân & Giá)
    - Trong đó:
      - RSI: Giá trị RSI 14 ngày (quá mua >70, quá bán <30)
      - MACD Signal: Bullish/Bearish/Neutral
      - Xu hướng: Uptrend/Downtrend/Sideway
      - Mô hình nến: Mô hình nến gần nhất (nếu có)
      - Khối lượng vs trung bình: So với trung bình 20 phiên (VD: +25%, -10%)
-4. Danh sách 10 mã cổ phiếu ổn định, tỷ suất lợi nhuận cao, dài hạn (> 6 tháng):
+     - Phân tích: Nêu rõ nguyên nhân khuyến nghị và cơ sở cho giá mua/bán.
+4. Phân tích và khuyến nghị danh sách 10 mã cổ phiếu (theo ngành/lĩnh vực user đang phân tích) có xu hướng TĂNG DÀI HẠN (> 6 tháng), ỔN ĐỊNH, HIỆU QUẢ CAO:
    - Loại trừ cổ phiếu có tỷ suất lợi nhuận trung bình < {return_rate or 6}%
    - Loại trừ cổ phiếu có tỷ lệ chia cổ tức trung bình 5 năm gần nhất < {dividend_rate or 0}%
    - Trình bày bảng gồm:
-     Mã | Tên công ty | Giá hiện tại | Giá mua KN | Giá bán KN | TSLN TB (%) | Cổ tức TB | RSI | Xu hướng | P/E | P/B | Phân tích
-5. Danh sách các mã cổ phiếu nên tránh mua hiện tại:
+     Mã | Tên công ty | Giá hiện tại | Giá mua KN | Giá bán KN | TSLN TB (%) | Cổ tức TB | RSI | Xu hướng | P/E | P/B | Phân tích tiềm năng
+5. Phân tích và khuyến nghị danh sách các mã cổ phiếu (theo ngành/lĩnh vực user đang phân tích) NÊN TRÁNH MUA hiện tại:
    - Trình bày bảng gồm:
      Mã | Tên công ty | Giá hiện tại | RSI | MACD Signal | Xu hướng | Lý do tránh
-6. Khuyến nghị bán từ danh mục đang nắm giữ:
+6. Phân tích và khuyến nghị BÁN từ DANH MỤC ĐANG NẮM GIỮ:
    - Trình bày bảng gồm:
      Mã | Tên công ty | Giá vốn | Giá hiện tại | Lãi/Lỗ % | RSI | MACD Signal | Xu hướng | Hỗ trợ | Kháng cự | Khuyến nghị | Giá bán KN | Phân tích
-7. Phân tích và đưa ra khuyến nghị (mua/bán) từ danh mục theo dõi (whitelist):
+7. Phân tích và khuyến nghị MUA / BÁN từ DANH MỤC THEO DÕI (Whitelist):
    - Trình bày bảng gồm:
      Mã | Tên công ty | Giá hiện tại | RSI | MACD Signal | Xu hướng | Hỗ trợ | Kháng cự | Khuyến nghị | Giá bán KN | Phân tích
 

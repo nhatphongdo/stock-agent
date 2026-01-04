@@ -13,6 +13,11 @@ from app.tools.technical_indicators import (
     create_ohlcv_dataframe,
     calculate_all_indicators,
     generate_method_evaluations,
+    detect_candlestick_patterns,
+)
+from app.tools.price_patterns import (
+    detect_chart_patterns,
+    detect_support_resistance_zones,
 )
 
 # Constants for parsing delimiters
@@ -183,6 +188,11 @@ class TechnicalAnalysisAgent:
                         "indicators": short_term_data.get("indicators", {}),
                         "methods": short_term_data.get("methods", []),
                         "gauges": short_term_data.get("gauges", {}),
+                        "candlestick_patterns": short_term_data.get(
+                            "candlestick_patterns", []
+                        ),
+                        "chart_patterns": short_term_data.get("chart_patterns", []),
+                        "sr_zones": short_term_data.get("sr_zones", {}),
                     },
                     "long_term": {
                         "timeframe": "1W (5 năm)",
@@ -190,6 +200,11 @@ class TechnicalAnalysisAgent:
                         "indicators": long_term_data.get("indicators", {}),
                         "methods": long_term_data.get("methods", []),
                         "gauges": long_term_data.get("gauges", {}),
+                        "candlestick_patterns": long_term_data.get(
+                            "candlestick_patterns", []
+                        ),
+                        "chart_patterns": long_term_data.get("chart_patterns", []),
+                        "sr_zones": long_term_data.get("sr_zones", {}),
                     },
                 }
             ) + "\n"
@@ -235,11 +250,24 @@ class TechnicalAnalysisAgent:
         # Generate method evaluations
         methods = generate_method_evaluations(indicators, timeframe)
 
+        # 4. Advanced Pattern Detection
+        # Candlestick Patterns
+        candlestick_patterns = detect_candlestick_patterns(df)
+
+        # Geometric Chart Patterns (Double Top/Bottom, Head & Shoulders, etc.)
+        chart_patterns = detect_chart_patterns(df)
+
+        # Support/Resistance Zones (Clustering)
+        sr_zones = detect_support_resistance_zones(df)
+
         return {
             "indicators": indicators,
             "methods": methods,
             "gauges": self._build_gauges(indicators),
             "ohlcv": ohlcv_data,
+            "candlestick_patterns": candlestick_patterns,
+            "chart_patterns": chart_patterns,
+            "sr_zones": sr_zones,
         }
 
     def _build_analysis_context(self, data: dict, timeframe_label: str) -> str:
@@ -283,6 +311,42 @@ class TechnicalAnalysisAgent:
 
         if fib:
             ctx += f"**Fibonacci**: 38.2%={fib.get('level_382'):,.0f}, 50%={fib.get('level_500'):,.0f}, 61.8%={fib.get('level_618'):,.0f}\n"
+
+        # Advanced Patterns
+        candlestick_patterns = data.get("candlestick_patterns", [])
+        chart_patterns = data.get("chart_patterns", [])
+        sr_zones = data.get("sr_zones", {})
+
+        if candlestick_patterns:
+            ctx += "\n**Mô hình nến (Candlestick Patterns):**\n"
+            ctx += "| Ngày | Mô hình | Tín hiệu | Giá |\n"
+            ctx += "|---|---|---|---|\n"
+            # Show top 3 recent patterns
+            for p in candlestick_patterns[:3]:
+                ctx += f"| {p.get('date', '')} | {p.get('name', '')} | {p.get('signal', '')} | {p.get('price', '')} |\n"
+
+        if chart_patterns:
+            ctx += "\n**Mô hình biểu đồ (Chart Patterns):**\n"
+            ctx += "| Mô hình | Tín hiệu | Ngày bắt đầu | Ngày kết thúc | Neckline | Target | Peaks | Stop | Độ tin cậy |\n"
+            ctx += "|---|---|---|---|---|---|---|---|---|\n"
+            for p in chart_patterns:
+                ctx += f"| {p.get('type', '')} | {p.get('signal', '')} | {p.get('start_date', '')} | {p.get('end_date', '')} | {p.get('neckline', 'N/A')} | {p.get('target', 'N/A')} | {", ".join(str(n) for n in p.get('peaks', []))} | {p.get('stop', 'N/A')} | {p.get('confidence', 'N/A')} |\n"
+
+        if sr_zones:
+            ctx += "\n**Vùng Hỗ trợ/Kháng cự quan trọng (Advanced S/R):**\n"
+            supports = sr_zones.get("support_zones", [])
+            resistances = sr_zones.get("resistance_zones", [])
+
+            ctx += "| Loại | Giá | Range | Độ mạnh |\n"
+            ctx += "|---|---|---|---|\n"
+
+            if supports:
+                for z in supports[:3]:
+                    ctx += f"| Hỗ trợ | {z.get('price', 'N/A')} | {", ".join(str(n) for n in z.get('range', []))} | {z.get('strength', 'N/A')} |\n"
+
+            if resistances:
+                for z in resistances[:3]:
+                    ctx += f"| Kháng cự | {z.get('price', 'N/A')} | {", ".join(str(n) for n in z.get('range', []))} | {z.get('strength', 'N/A')} |\n"
 
         return ctx
 
@@ -361,8 +425,8 @@ class TechnicalAnalysisAgent:
     ) -> str:
         """Build the complete prompt for technical analysis."""
         prompt = f"""
-Bạn là một chuyên gia phân tích kỹ thuật chứng khoán với nhiều năm kinh nghiệm.
-Nhiệm vụ của bạn là phân tích kỹ thuật toàn diện cho mã cổ phiếu **{symbol}** ({company_name}).
+Bạn là một chuyên gia phân tích kỹ thuật chứng khoán hàng đầu (CMT Charterholder) với nhiều năm kinh nghiệm tại các quỹ đầu tư lớn.
+Nhiệm vụ của bạn là phân tích kỹ thuật chuyên sâu và đưa ra khuyến nghị hành động cụ thể cho mã cổ phiếu **{symbol}** ({company_name}).
 
 **Thông tin công ty:**
 - Ngành: {company_info.get('sector', 'N/A')}
@@ -371,7 +435,7 @@ Nhiệm vụ của bạn là phân tích kỹ thuật toàn diện cho mã cổ 
 
 ---
 
-## Dữ liệu phân tích
+## DỮ LIỆU PHÂN TÍCH KỸ THUẬT
 
 {short_term_context}
 
@@ -381,31 +445,29 @@ Nhiệm vụ của bạn là phân tích kỹ thuật toàn diện cho mã cổ 
 
 ---
 
-## Yêu cầu phân tích
+## YÊU CẦU PHÂN TÍCH
 
-### 1. Phân tích ngắn hạn (Đầu tư giao dịch)
-- Đánh giá xu hướng ngắn hạn dựa trên dữ liệu trong 1 năm theo ngày
-- Xác định điểm vào/ra tiềm năng
-- Phân tích các chỉ báo momentum (RSI, Stochastic, MACD)
-- Xác định mức hỗ trợ/kháng cự ngắn hạn
+### 1. Phân tích Xu hướng & Động lượng (Trend & Momentum)
+- Xác định xu hướng chính (Ngắn hạn & Dài hạn) dựa trên MA và cấu trúc đỉnh/đáy.
+- Đánh giá sức mạnh xu hướng qua ADX và Momentum.
+- Phân tích sự phân kỳ (Divergence) của RSI, MACD nếu có.
 
-### 2. Phân tích dài hạn (Tích lũy đầu tư)
-- Đánh giá xu hướng dài hạn dựa trên dữ liệu trong 5 năm theo tuần
-- Xác định vùng giá tích lũy hấp dẫn
-- Phân tích đường MA dài hạn (SMA50, SMA200)
-- Đánh giá sức mạnh xu hướng (ADX)
+### 2. Phân tích Hành động giá & Mô hình (Price Action & Patterns)
+- Đánh giá các mô hình nến (Candlestick) xuất hiện gần đây và ý nghĩa của chúng.
+- Phân tích các mô hình biểu đồ (Chart Patterns) như 2 đỉnh/đáy, Vai đầu vai, Tam giác, Nêm... nếu có.
+- Xác định vùng cung/cầu (Supply/Demand) quan trọng dựa trên Pivot Points và Fibonacci.
 
-### 3. Tổng hợp khuyến nghị
-- So sánh tín hiệu ngắn hạn vs dài hạn
-- Đưa ra khuyến nghị cụ thể cho từng chiến lược
-- Xác định các mức giá quan trọng cần theo dõi
+### 3. Kịch bản & Khuyến nghị giao dịch
+- **Kịch bản Tích cực (Bullish)**: Điều kiện kích hoạt, mục tiêu giá ngắn/trung hạn.
+- **Kịch bản Tiêu cực (Bearish)**: Mức cảnh báo rủi ro, điểm cắt lỗ.
+- **Khuyến nghị hành động**: Mua ngay/Canh mua/Nắm giữ/Canh bán/Bán ngay. Giải thích lý do cốt lõi.
 
-**Lưu ý:**
-- LUÔN trả lời bằng tiếng Việt
-- Phân tích phải có căn cứ từ dữ liệu được cung cấp
-- Giải thích rõ ràng từng phương pháp phân tích sử dụng
+**Lưu ý quan trọng:**
+- LUÔN trả lời bằng tiếng Việt chuyên ngành nhưng dễ hiểu.
+- Phân tích phải khách quan, dựa trên dữ liệu (không đoán mò).
+- Nếu dữ liệu mâu thuẫn (ví dụ: chỉ báo tăng nhưng mô hình giảm), hãy nêu rõ sự xung đột và ưu tiên tín hiệu Price Action/Volume.
 
-**BẮT BUỘC**: Ở cuối cùng của câu trả lời, cung cấp 2 thông tin sau:
+**BẮT BUỘC**: Ở cuối cùng của câu trả lời, CUNG CẤP ĐÚNG ĐỊNH DẠNG JSON sau (không thêm bớt):
 
 {RECOMMENDATION_DELIMITER}
 [Khuyến nghị tổng hợp: Mua mạnh/Mua/Nắm giữ/Theo dõi/Bán/Bán mạnh]
@@ -414,13 +476,13 @@ Nhiệm vụ của bạn là phân tích kỹ thuật toàn diện cho mã cổ 
 {{
   "short_term": {{
     "trend": "Tăng/Giảm/Đi ngang",
-    "signal": "Mua/Bán/Trung tính",
-    "confidence": 0.8
+    "signal": "Tích cực/Tiêu cực/Trung tính",
+    "confidence": 0.85
   }},
   "long_term": {{
     "trend": "Tăng/Giảm/Đi ngang",
-    "signal": "Tích lũy/Chờ đợi/Phân phối",
-    "confidence": 0.7
+    "signal": "Tích lũy/Phân phối/Chờ đợi",
+    "confidence": 0.75
   }},
   "key_levels": {{
     "support": [giá hỗ trợ 1, giá hỗ trợ 2],

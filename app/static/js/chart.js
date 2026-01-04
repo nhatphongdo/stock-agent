@@ -9,6 +9,7 @@ let indicatorSeriesMap = new Map(); // Map indicator key -> array of series
 let currentChartSymbol = null;
 let currentChartStart = null; // Current chart start date (YYYY-MM-DD)
 let currentChartEnd = null; // Current chart end date (YYYY-MM-DD)
+let chartListenersInitialized = false; // Flag to prevent duplicate event listeners
 
 // Indicator Configuration Registry
 const INDICATOR_CONFIG = {
@@ -367,51 +368,59 @@ function initAdvancedChart(symbol) {
 
   renderAdvancedChart(symbol, timeframe, interval);
 
-  // Add event listeners for controls
-  document.getElementById("chart-timeframe")?.addEventListener("change", () => {
-    // Clear all pattern visualizations and reset UI before re-rendering
-    clearAllPatternVisualizations();
-    clearPatternListUI();
-    // Clear cache when timeframe changes
-    cachedChartData = null;
-    indicatorSeriesMap.clear();
+  // Add event listeners for controls (only once)
+  if (!chartListenersInitialized) {
+    chartListenersInitialized = true;
 
-    renderAdvancedChart(
-      currentChartSymbol,
-      /** @type {HTMLSelectElement | null} */ (
-        document.getElementById("chart-timeframe")
-      )?.value || "1M",
-      /** @type {HTMLSelectElement | null} */ (
-        document.getElementById("chart-interval")
-      )?.value || "1D",
-    );
-  });
-  document.getElementById("chart-interval")?.addEventListener("change", () => {
-    // Clear all pattern visualizations and reset UI before re-rendering
-    clearAllPatternVisualizations();
-    clearPatternListUI();
-    // Clear cache when interval changes
-    cachedChartData = null;
-    indicatorSeriesMap.clear();
+    document
+      .getElementById("chart-timeframe")
+      ?.addEventListener("change", () => {
+        // Clear all pattern visualizations and reset UI before re-rendering
+        clearAllPatternVisualizations();
+        clearPatternListUI();
+        // Clear cache when timeframe changes
+        cachedChartData = null;
+        indicatorSeriesMap.clear();
 
-    renderAdvancedChart(
-      currentChartSymbol,
-      /** @type {HTMLSelectElement | null} */ (
-        document.getElementById("chart-timeframe")
-      )?.value || "1M",
-      /** @type {HTMLSelectElement | null} */ (
-        document.getElementById("chart-interval")
-      )?.value || "1D",
-    );
-  });
+        renderAdvancedChart(
+          currentChartSymbol,
+          /** @type {HTMLSelectElement | null} */ (
+            document.getElementById("chart-timeframe")
+          )?.value || "1M",
+          /** @type {HTMLSelectElement | null} */ (
+            document.getElementById("chart-interval")
+          )?.value || "1D",
+        );
+      });
+    document
+      .getElementById("chart-interval")
+      ?.addEventListener("change", () => {
+        // Clear all pattern visualizations and reset UI before re-rendering
+        clearAllPatternVisualizations();
+        clearPatternListUI();
+        // Clear cache when interval changes
+        cachedChartData = null;
+        indicatorSeriesMap.clear();
 
-  // Add event listeners for all indicator checkboxes - use toggle instead of full re-render
-  ALL_INDICATOR_IDS.forEach((id) => {
-    document.getElementById(id)?.addEventListener("change", (e) => {
-      const checkbox = /** @type {HTMLInputElement} */ (e.target);
-      toggleIndicator(id, checkbox.checked);
+        renderAdvancedChart(
+          currentChartSymbol,
+          /** @type {HTMLSelectElement | null} */ (
+            document.getElementById("chart-timeframe")
+          )?.value || "1M",
+          /** @type {HTMLSelectElement | null} */ (
+            document.getElementById("chart-interval")
+          )?.value || "1D",
+        );
+      });
+
+    // Add event listeners for all indicator checkboxes - use toggle instead of full re-render
+    ALL_INDICATOR_IDS.forEach((id) => {
+      document.getElementById(id)?.addEventListener("change", (e) => {
+        const checkbox = /** @type {HTMLInputElement} */ (e.target);
+        toggleIndicator(id, checkbox.checked);
+      });
     });
-  });
+  }
 }
 
 /**

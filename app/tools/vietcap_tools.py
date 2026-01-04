@@ -156,7 +156,9 @@ def _filter_companies_by_criteria(
         if ticker not in all_symbols:
             continue
         symbol_info = all_symbols.get(ticker, {})
-        if symbol_info.get("exchange") == "DELISTED":
+        if symbol_info.get("exchange") == "DELISTED" or (
+            symbol_info.get("type") != "STOCK" and symbol_info.get("type") != "ETF"
+        ):
             continue
 
         # Apply sector filter if specified
@@ -928,6 +930,76 @@ def get_company_news(ticker: str, lang: str = "vi") -> dict:
                         "date": parse_date(n.get("publicDate")),
                         "description": n.get("newsShortContent"),
                         "link": link,
+                        "source": source,
+                    }
+                )
+
+        return result
+    except Exception as e:
+        return {"error": str(e), "ticker": ticker}
+
+
+def get_analysis_reports(ticker: str, lang: str = "vi") -> dict:
+    """
+    Get analysis reports for a stock using GraphQL API.
+
+    Args:
+        ticker: Stock ticker symbol
+        lang: Language code ('vi' or 'en')
+
+    Returns:
+        Dictionary containing analysis reports
+    """
+    try:
+        url = "https://trading.vietcap.com.vn/data-mt/graphql"
+        query = """
+        query Query($ticker: String!, $lang: String!) {
+          AnalysisReportFiles(ticker: $ticker, langCode: $lang) {
+            date
+            description
+            link
+            name
+            __typename
+          }
+        }
+        """
+        payload = {"query": query, "variables": {"ticker": ticker, "lang": lang}}
+
+        data = _make_request("POST", url, json=payload, headers=VIETCAP_HEADERS)
+
+        def parse_date(d):
+            if not d:
+                return "N/A"
+            if isinstance(d, int):
+                # Handle timestamp (ms or s)
+                try:
+                    ts = d / 1000 if d > 1e11 else d
+                    return datetime.fromtimestamp(ts).strftime("%Y-%m-%d")
+                except:
+                    return str(d)
+            if isinstance(d, str):
+                return d.split("T")[0]
+            return str(d)
+
+        result = {"ticker": ticker, "reports": []}
+
+        if data and "data" in data and "AnalysisReportFiles" in data["data"]:
+            for r in data["data"]["AnalysisReportFiles"]:
+                link = r.get("link")
+                source = "Vietcap"
+                if link:
+                    try:
+                        parsed_uri = urlparse(link)
+                        source = parsed_uri.netloc.replace("www.", "")
+                    except:
+                        pass
+
+                result["reports"].append(
+                    {
+                        "date": parse_date(r.get("date")),
+                        "description": r.get("description"),
+                        "link": link,
+                        "title": r.get("name"),
                         "source": source,
                     }
                 )

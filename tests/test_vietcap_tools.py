@@ -186,6 +186,14 @@ class TestVietcapTools(unittest.TestCase):
         result = vietcap_tools.get_company_analysis(TEST_TICKER)
         self.assertIsInstance(result, list)
 
+    def test_get_analysis_reports(self):
+        print(f"\nTesting get_analysis_reports for {TEST_TICKER}...")
+        result = vietcap_tools.get_analysis_reports(TEST_TICKER)
+        self.assertIsInstance(result, dict)
+        self.assertIn("ticker", result)
+        self.assertIn("reports", result)
+        self.assertIsInstance(result["reports"], list)
+
 
 if __name__ == "__main__":
     unittest.main()
