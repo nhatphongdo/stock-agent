@@ -32,40 +32,176 @@
         <!-- Row 1: Time Controls + Indicator + Expand -->
         <div class="flex items-start justify-between gap-2">
           <div class="flex flex-wrap items-center gap-2 flex-1 min-w-0">
-            <!-- Timeframe Selector -->
-            <div class="flex items-center gap-1">
-              <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Khoảng:</span>
-              <select
-                id="chart-timeframe"
-                class="text-xs font-bold bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-primary-500/30"
+            <!-- Symbol Selector (populated after analysis) -->
+            <div class="relative items-center gap-1 hidden" id="chart-symbol-selector-container">
+              <button
+                id="chart-symbol-selector-trigger"
+                class="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-colors"
               >
-                <option value="1D">1 Ngày</option>
-                <option value="1W">1 Tuần</option>
-                <option value="1M">1 Tháng</option>
-                <option value="3M">3 Tháng</option>
-                <option value="6M" selected>6 Tháng</option>
-                <option value="9M">9 Tháng</option>
-                <option value="1Y">1 Năm</option>
-                <option value="2Y">2 Năm</option>
-                <option value="5Y">5 Năm</option>
-                <option value="10Y">10 Năm</option>
-              </select>
+                <span class="text-slate-500 dark:text-slate-400">Mã:</span>
+                <span id="chart-symbol-selector-value" class="text-primary-600 dark:text-primary-400">--</span>
+                <i data-lucide="chevron-down" class="w-3 h-3 ml-0.5 transition-transform" id="chart-symbol-chevron"></i>
+              </button>
+
+              <!-- Dropdown Panel -->
+              <div
+                id="chart-symbol-selector-panel"
+                class="hidden absolute top-full left-0 mt-2 w-48 max-h-[300px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden chart-dropdown-panel"
+              >
+                <!-- Search Input -->
+                <div class="p-2 border-b border-slate-200 dark:border-slate-700">
+                  <input
+                    id="chart-symbol-search"
+                    type="text"
+                    placeholder="Tìm mã..."
+                    class="w-full text-xs px-2 py-1.5 bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-primary-500/30"
+                  />
+                </div>
+                <!-- Symbol List -->
+                <div id="chart-symbol-list" class="flex-1 overflow-y-auto p-1 custom-scrollbar"></div>
+              </div>
+            </div>
+            <!-- Timeframe Selector -->
+            <div class="relative" id="chart-timeframe-container">
+              <button
+                id="chart-timeframe-trigger"
+                class="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-colors"
+              >
+                <span class="text-slate-500 dark:text-slate-400">Khoảng:</span>
+                <span id="chart-timeframe-value" class="text-primary-600 dark:text-primary-400">6 Tháng</span>
+                <i
+                  data-lucide="chevron-down"
+                  class="w-3 h-3 ml-0.5 transition-transform"
+                  id="chart-timeframe-chevron"
+                ></i>
+              </button>
+              <div
+                id="chart-timeframe-panel"
+                class="hidden absolute top-full left-0 mt-2 w-32 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-50 p-1 max-h-[250px] overflow-y-auto custom-scrollbar chart-dropdown-panel"
+              >
+                <div
+                  class="timeframe-item px-2 py-1.5 text-xs font-bold rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  data-value="1D"
+                >
+                  1 Ngày
+                </div>
+                <div
+                  class="timeframe-item px-2 py-1.5 text-xs font-bold rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  data-value="1W"
+                >
+                  1 Tuần
+                </div>
+                <div
+                  class="timeframe-item px-2 py-1.5 text-xs font-bold rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  data-value="1M"
+                >
+                  1 Tháng
+                </div>
+                <div
+                  class="timeframe-item px-2 py-1.5 text-xs font-bold rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  data-value="3M"
+                >
+                  3 Tháng
+                </div>
+                <div
+                  class="timeframe-item px-2 py-1.5 text-xs font-bold rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
+                  data-value="6M"
+                >
+                  6 Tháng
+                </div>
+                <div
+                  class="timeframe-item px-2 py-1.5 text-xs font-bold rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  data-value="9M"
+                >
+                  9 Tháng
+                </div>
+                <div
+                  class="timeframe-item px-2 py-1.5 text-xs font-bold rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  data-value="1Y"
+                >
+                  1 Năm
+                </div>
+                <div
+                  class="timeframe-item px-2 py-1.5 text-xs font-bold rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  data-value="2Y"
+                >
+                  2 Năm
+                </div>
+                <div
+                  class="timeframe-item px-2 py-1.5 text-xs font-bold rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  data-value="5Y"
+                >
+                  5 Năm
+                </div>
+                <div
+                  class="timeframe-item px-2 py-1.5 text-xs font-bold rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  data-value="10Y"
+                >
+                  10 Năm
+                </div>
+              </div>
             </div>
             <!-- Interval Selector -->
-            <div class="flex items-center gap-1">
-              <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Chu kỳ:</span>
-              <select
-                id="chart-interval"
-                class="text-xs font-bold bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-primary-500/30"
+            <div class="relative" id="chart-interval-container">
+              <button
+                id="chart-interval-trigger"
+                class="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-colors"
               >
-                <option value="5m">5 phút</option>
-                <option value="15m">15 phút</option>
-                <option value="30m">30 phút</option>
-                <option value="1H">1 giờ</option>
-                <option value="1D" selected>1 ngày</option>
-                <option value="1W">1 tuần</option>
-                <option value="1M">1 tháng</option>
-              </select>
+                <span class="text-slate-500 dark:text-slate-400">Chu kỳ:</span>
+                <span id="chart-interval-value" class="text-primary-600 dark:text-primary-400">1 ngày</span>
+                <i
+                  data-lucide="chevron-down"
+                  class="w-3 h-3 ml-0.5 transition-transform"
+                  id="chart-interval-chevron"
+                ></i>
+              </button>
+              <div
+                id="chart-interval-panel"
+                class="hidden absolute top-full left-0 mt-2 w-28 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-50 p-1 custom-scrollbar chart-dropdown-panel"
+              >
+                <div
+                  class="interval-item px-2 py-1.5 text-xs font-bold rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  data-value="5m"
+                >
+                  5 phút
+                </div>
+                <div
+                  class="interval-item px-2 py-1.5 text-xs font-bold rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  data-value="15m"
+                >
+                  15 phút
+                </div>
+                <div
+                  class="interval-item px-2 py-1.5 text-xs font-bold rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  data-value="30m"
+                >
+                  30 phút
+                </div>
+                <div
+                  class="interval-item px-2 py-1.5 text-xs font-bold rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  data-value="1H"
+                >
+                  1 giờ
+                </div>
+                <div
+                  class="interval-item px-2 py-1.5 text-xs font-bold rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
+                  data-value="1D"
+                >
+                  1 ngày
+                </div>
+                <div
+                  class="interval-item px-2 py-1.5 text-xs font-bold rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  data-value="1W"
+                >
+                  1 tuần
+                </div>
+                <div
+                  class="interval-item px-2 py-1.5 text-xs font-bold rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  data-value="1M"
+                >
+                  1 tháng
+                </div>
+              </div>
             </div>
             <!-- Indicator Dropdown -->
             <div class="relative" id="indicator-dropdown-container">
@@ -86,7 +222,7 @@
               <!-- Dropdown Panel -->
               <div
                 id="indicator-dropdown-panel"
-                class="hidden absolute top-full left-0 mt-2 w-72 max-h-[400px] overflow-y-auto p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50"
+                class="hidden absolute top-full left-0 mt-2 w-72 max-h-[400px] overflow-y-auto p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-50 custom-scrollbar chart-dropdown-panel"
               >
                 <!-- Moving Averages Group -->
                 <div class="mb-3">
@@ -416,7 +552,7 @@
             <!-- Dropdown Panel -->
             <div
               id="pattern-dropdown-panel"
-              class="hidden absolute top-full left-0 mt-2 w-80 max-h-[400px] overflow-y-auto p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50 flex flex-col gap-2"
+              class="hidden absolute top-full left-0 mt-2 w-80 max-h-[400px] overflow-y-auto p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-50 flex flex-col gap-2 custom-scrollbar chart-dropdown-panel"
             >
               <div class="flex items-center justify-between mb-2">
                 <span class="text-xs font-bold text-slate-500 uppercase flex-1">Mô hình nến</span>
@@ -454,7 +590,7 @@
             <!-- Dropdown Panel -->
             <div
               id="chart-pattern-dropdown-panel"
-              class="hidden absolute top-full left-0 mt-2 w-80 max-h-[400px] overflow-y-auto p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50 flex flex-col gap-2"
+              class="hidden absolute top-full left-0 mt-2 w-80 max-h-[400px] overflow-y-auto p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-50 flex flex-col gap-2 custom-scrollbar chart-dropdown-panel"
             >
               <div class="flex items-center justify-between mb-2">
                 <span class="text-xs font-bold text-slate-500 uppercase flex-1">Mô hình giá</span>
@@ -487,7 +623,7 @@
             <!-- Dropdown Panel -->
             <div
               id="sr-zone-dropdown-panel"
-              class="hidden absolute top-full left-0 mt-2 w-72 max-h-[400px] overflow-y-auto p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-xl shadow-xl z-50 flex flex-col gap-2"
+              class="hidden absolute top-full left-0 mt-2 w-72 max-h-[400px] overflow-y-auto p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-50 flex flex-col gap-2 custom-scrollbar chart-dropdown-panel"
             >
               <div class="flex items-center justify-between mb-2">
                 <span class="text-xs font-bold text-slate-500 uppercase flex-1">Vùng hỗ trợ/Kháng cự</span>
@@ -583,9 +719,7 @@
 
 <!-- Pattern Item Template -->
 <template id="pattern-item-template">
-  <div
-    class="pattern-item flex items-center justify-between p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all"
-  >
+  <div class="pattern-item flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all text-xs">
     <div class="flex flex-col gap-0.5">
       <div class="flex items-center gap-1.5 font-bold text-xs text-slate-700 dark:text-slate-200">
         <span class="pattern-name"></span>
@@ -602,9 +736,7 @@
 
 <!-- Chart Pattern Item Template -->
 <template id="chart-pattern-item-template">
-  <div
-    class="chart-pattern-item p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors border border-transparent"
-  >
+  <div class="chart-pattern-item pattern-item p-2 rounded-lg cursor-pointer transition-colors">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
         <span class="chart-pattern-name font-medium text-sm"></span>
@@ -622,9 +754,7 @@
 
 <!-- S/R Zone Item Template -->
 <template id="sr-zone-item-template">
-  <div
-    class="sr-zone-item p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors border border-transparent"
-  >
+  <div class="sr-zone-item pattern-item p-2 rounded-lg cursor-pointer transition-colors">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
         <span class="sr-zone-price font-medium text-sm"></span>

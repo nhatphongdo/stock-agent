@@ -11,12 +11,321 @@ let currentChartStart = null; // Current chart start date (YYYY-MM-DD)
 let currentChartEnd = null; // Current chart end date (YYYY-MM-DD)
 let chartListenersInitialized = false; // Flag to prevent duplicate event listeners
 
+// Store available symbols from latest analysis
+let availableAnalysisSymbols = [];
+let symbolSelectorInitialized = false;
+
+// Current timeframe and interval values
+let currentTimeframe = "6M";
+let currentInterval = "1D";
+let timeframeDropdownInitialized = false;
+let intervalDropdownInitialized = false;
+
 // Generate ID mappings for this chart (no prefix)
 const INDICATOR_ID_TO_KEY = generateIndicatorIdToKey("");
 const ALL_INDICATOR_IDS = getAllIndicatorIds("");
 
 // Flag to track if dropdown has been initialized after becoming visible
 let indicatorDropdownInitialized = false;
+
+/**
+ * Render symbol list items based on search filter
+ * @param {string} filter - Search filter string
+ */
+function renderSymbolList(filter = "") {
+  const listContainer = document.getElementById("chart-symbol-list");
+  if (!listContainer) return;
+
+  const filtered = availableAnalysisSymbols
+    .filter((s) => s.toUpperCase().includes(filter.toUpperCase()))
+    .sort((a, b) => a.localeCompare(b));
+
+  if (filtered.length === 0) {
+    listContainer.innerHTML =
+      '<div class="text-xs text-slate-400 text-center py-2">Không tìm thấy</div>';
+    return;
+  }
+
+  listContainer.innerHTML = filtered
+    .map(
+      (symbol) => `
+      <div
+        class="symbol-item px-2 py-1.5 text-xs font-bold rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 ${
+          symbol === currentChartSymbol
+            ? "bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400"
+            : "text-slate-700 dark:text-slate-300"
+        }"
+        data-symbol="${symbol}"
+      >
+        ${symbol}
+      </div>
+    `,
+    )
+    .join("");
+
+  // Add click handlers
+  listContainer.querySelectorAll(".symbol-item").forEach((item) => {
+    item.addEventListener("click", () => {
+      const symbol = /** @type {HTMLElement} */ (item).dataset.symbol;
+      if (symbol && symbol !== currentChartSymbol) {
+        selectStock(symbol);
+      }
+      // Close dropdown
+      const panel = document.getElementById("chart-symbol-selector-panel");
+      const chevron = document.getElementById("chart-symbol-chevron");
+      if (panel) panel.classList.add("hidden");
+      if (chevron) chevron.style.transform = "rotate(0deg)";
+    });
+  });
+}
+
+/**
+ * Update the symbol selector dropdown with analyzed symbols
+ * @param {string[]} symbols - Array of ticker symbols
+ */
+function updateChartSymbolSelector(symbols) {
+  // Sort symbols ascending
+  availableAnalysisSymbols = (symbols || []).sort((a, b) => a.localeCompare(b));
+  const container = document.getElementById("chart-symbol-selector-container");
+  const valueDisplay = document.getElementById("chart-symbol-selector-value");
+
+  if (!container || !symbols || symbols.length === 0) {
+    if (container) container.classList.add("hidden");
+    return;
+  }
+
+  // Update value display
+  if (valueDisplay) {
+    valueDisplay.textContent =
+      currentChartSymbol || availableAnalysisSymbols[0] || "--";
+  }
+
+  // Render initial list
+  renderSymbolList();
+
+  // Show the selector
+  container.classList.remove("hidden");
+  container.classList.add("flex");
+}
+
+/**
+ * Initialize symbol selector event handlers
+ */
+function initChartSymbolSelector() {
+  if (symbolSelectorInitialized) return;
+
+  const container = document.getElementById("chart-symbol-selector-container");
+  const trigger = document.getElementById("chart-symbol-selector-trigger");
+  const panel = document.getElementById("chart-symbol-selector-panel");
+  const chevron = document.getElementById("chart-symbol-chevron");
+  const searchInput = /** @type {HTMLInputElement | null} */ (
+    document.getElementById("chart-symbol-search")
+  );
+
+  if (!trigger || !panel) return;
+
+  symbolSelectorInitialized = true;
+
+  // Toggle dropdown
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isHidden = panel.classList.toggle("hidden");
+    if (!isHidden) {
+      closeAllDropdowns("chart-symbol-selector-panel");
+      chevron.style.transform = "rotate(180deg)";
+      // Focus search input
+      if (searchInput) {
+        searchInput.value = "";
+        searchInput.focus();
+        renderSymbolList();
+      }
+      updateDropdownPosition(trigger, panel);
+    } else {
+      chevron.style.transform = "rotate(0deg)";
+    }
+  });
+
+  // Search input handler
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      renderSymbolList(/** @type {HTMLInputElement} */ (e.target).value);
+    });
+    // Prevent closing when clicking in search
+    searchInput.addEventListener("click", (e) => e.stopPropagation());
+  }
+
+  // Close when clicking outside
+  document.addEventListener("click", (e) => {
+    if (container && !container.contains(/** @type {Node} */ (e.target))) {
+      panel.classList.add("hidden");
+      if (chevron) chevron.style.transform = "rotate(0deg)";
+    }
+  });
+}
+
+/**
+ * Initialize Timeframe custom dropdown
+ */
+function initTimeframeDropdown() {
+  if (timeframeDropdownInitialized) return;
+
+  const container = document.getElementById("chart-timeframe-container");
+  const trigger = document.getElementById("chart-timeframe-trigger");
+  const panel = document.getElementById("chart-timeframe-panel");
+  const chevron = document.getElementById("chart-timeframe-chevron");
+  const valueDisplay = document.getElementById("chart-timeframe-value");
+
+  if (!trigger || !panel) return;
+
+  timeframeDropdownInitialized = true;
+
+  // Toggle dropdown
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isHidden = panel.classList.toggle("hidden");
+    if (!isHidden) {
+      closeAllDropdowns("chart-timeframe-panel");
+      if (chevron) chevron.style.transform = "rotate(180deg)";
+      updateDropdownPosition(trigger, panel);
+    } else {
+      if (chevron) chevron.style.transform = "rotate(0deg)";
+    }
+  });
+
+  // Item click handlers
+  panel.querySelectorAll(".timeframe-item").forEach((item) => {
+    item.addEventListener("click", () => {
+      const value = /** @type {HTMLElement} */ (item).dataset.value;
+      const label = item.textContent?.trim();
+      if (!value) return;
+
+      currentTimeframe = value;
+      if (valueDisplay) valueDisplay.textContent = label || value;
+
+      // Update selection styling
+      panel.querySelectorAll(".timeframe-item").forEach((i) => {
+        i.classList.remove(
+          "bg-primary-100",
+          "dark:bg-primary-900/30",
+          "text-primary-600",
+          "dark:text-primary-400",
+        );
+        i.classList.add("text-slate-700", "dark:text-slate-300");
+      });
+      item.classList.add(
+        "bg-primary-100",
+        "dark:bg-primary-900/30",
+        "text-primary-600",
+        "dark:text-primary-400",
+      );
+      item.classList.remove("text-slate-700", "dark:text-slate-300");
+
+      // Close and re-render
+      panel.classList.add("hidden");
+      if (chevron) chevron.style.transform = "rotate(0deg)";
+
+      clearAllPatternVisualizations();
+      clearPatternListUI();
+      cachedChartData = null;
+      indicatorSeriesMap.clear();
+      renderAdvancedChart(
+        currentChartSymbol,
+        currentTimeframe,
+        currentInterval,
+      );
+    });
+  });
+
+  // Close when clicking outside
+  document.addEventListener("click", (e) => {
+    if (container && !container.contains(/** @type {Node} */ (e.target))) {
+      panel.classList.add("hidden");
+      if (chevron) chevron.style.transform = "rotate(0deg)";
+    }
+  });
+}
+
+/**
+ * Initialize Interval custom dropdown
+ */
+function initIntervalDropdown() {
+  if (intervalDropdownInitialized) return;
+
+  const container = document.getElementById("chart-interval-container");
+  const trigger = document.getElementById("chart-interval-trigger");
+  const panel = document.getElementById("chart-interval-panel");
+  const chevron = document.getElementById("chart-interval-chevron");
+  const valueDisplay = document.getElementById("chart-interval-value");
+
+  if (!trigger || !panel) return;
+
+  intervalDropdownInitialized = true;
+
+  // Toggle dropdown
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isHidden = panel.classList.toggle("hidden");
+    if (!isHidden) {
+      closeAllDropdowns("chart-interval-panel");
+      if (chevron) chevron.style.transform = "rotate(180deg)";
+      updateDropdownPosition(trigger, panel);
+    } else {
+      if (chevron) chevron.style.transform = "rotate(0deg)";
+    }
+  });
+
+  // Item click handlers
+  panel.querySelectorAll(".interval-item").forEach((item) => {
+    item.addEventListener("click", () => {
+      const value = /** @type {HTMLElement} */ (item).dataset.value;
+      const label = item.textContent?.trim();
+      if (!value) return;
+
+      currentInterval = value;
+      if (valueDisplay) valueDisplay.textContent = label || value;
+
+      // Update selection styling
+      panel.querySelectorAll(".interval-item").forEach((i) => {
+        i.classList.remove(
+          "bg-primary-100",
+          "dark:bg-primary-900/30",
+          "text-primary-600",
+          "dark:text-primary-400",
+        );
+        i.classList.add("text-slate-700", "dark:text-slate-300");
+      });
+      item.classList.add(
+        "bg-primary-100",
+        "dark:bg-primary-900/30",
+        "text-primary-600",
+        "dark:text-primary-400",
+      );
+      item.classList.remove("text-slate-700", "dark:text-slate-300");
+
+      // Close and re-render
+      panel.classList.add("hidden");
+      if (chevron) chevron.style.transform = "rotate(0deg)";
+
+      clearAllPatternVisualizations();
+      clearPatternListUI();
+      cachedChartData = null;
+      indicatorSeriesMap.clear();
+      renderAdvancedChart(
+        currentChartSymbol,
+        currentTimeframe,
+        currentInterval,
+      );
+    });
+  });
+
+  // Close when clicking outside
+  document.addEventListener("click", (e) => {
+    if (container && !container.contains(/** @type {Node} */ (e.target))) {
+      panel.classList.add("hidden");
+      if (chevron) chevron.style.transform = "rotate(0deg)";
+    }
+  });
+}
 
 // Refresh charts by fitting content to time scale
 function refreshCharts() {
@@ -58,13 +367,25 @@ function closeAllDropdowns(exceptId = null) {
     { panelId: "pattern-dropdown-panel", chevronId: "pattern-chevron" },
     {
       panelId: "chart-pattern-dropdown-panel",
-      chevronId: null, // access via trigger querySelector
+      chevronId: null,
       triggerId: "chart-pattern-dropdown-trigger",
     },
     {
       panelId: "sr-zone-dropdown-panel",
       chevronId: null,
       triggerId: "sr-zone-dropdown-trigger",
+    },
+    {
+      panelId: "chart-symbol-selector-panel",
+      chevronId: "chart-symbol-chevron",
+    },
+    {
+      panelId: "chart-timeframe-panel",
+      chevronId: "chart-timeframe-chevron",
+    },
+    {
+      panelId: "chart-interval-panel",
+      chevronId: "chart-interval-chevron",
     },
   ];
 
@@ -237,6 +558,9 @@ function triggerChartDisplay(symbol) {
   // Initialize dropdown and expand button after container is visible
   initIndicatorDropdown();
   initChartExpandButton();
+  initChartSymbolSelector();
+  initTimeframeDropdown();
+  initIntervalDropdown();
   initPatternDropdown();
   initChartPatternDropdown();
   initSRZoneDropdown();
@@ -247,6 +571,14 @@ function triggerChartDisplay(symbol) {
 // Initialize Advanced Chart
 function initAdvancedChart(symbol) {
   currentChartSymbol = symbol;
+
+  // Update symbol selector display value
+  const valueDisplay = document.getElementById("chart-symbol-selector-value");
+  if (valueDisplay) {
+    valueDisplay.textContent = symbol;
+  }
+  // Re-render list to update selection state
+  renderSymbolList();
 
   // Clear pattern markers when switching symbols
   displayedPatternMarkers.clear();
@@ -259,61 +591,12 @@ function initAdvancedChart(symbol) {
   // Clear pattern list UI
   clearPatternListUI();
 
-  const timeframe =
-    /** @type {HTMLSelectElement | null} */ (
-      document.getElementById("chart-timeframe")
-    )?.value || "1M";
-  const interval =
-    /** @type {HTMLSelectElement | null} */ (
-      document.getElementById("chart-interval")
-    )?.value || "1D";
+  // Use state variables for timeframe and interval
+  renderAdvancedChart(symbol, currentTimeframe, currentInterval);
 
-  renderAdvancedChart(symbol, timeframe, interval);
-
-  // Add event listeners for controls (only once)
+  // Add event listeners for indicator checkboxes (only once)
   if (!chartListenersInitialized) {
     chartListenersInitialized = true;
-
-    document
-      .getElementById("chart-timeframe")
-      ?.addEventListener("change", () => {
-        // Clear all pattern visualizations and reset UI before re-rendering
-        clearAllPatternVisualizations();
-        clearPatternListUI();
-        // Clear cache when timeframe changes
-        cachedChartData = null;
-        indicatorSeriesMap.clear();
-
-        renderAdvancedChart(
-          currentChartSymbol,
-          /** @type {HTMLSelectElement | null} */ (
-            document.getElementById("chart-timeframe")
-          )?.value || "1M",
-          /** @type {HTMLSelectElement | null} */ (
-            document.getElementById("chart-interval")
-          )?.value || "1D",
-        );
-      });
-    document
-      .getElementById("chart-interval")
-      ?.addEventListener("change", () => {
-        // Clear all pattern visualizations and reset UI before re-rendering
-        clearAllPatternVisualizations();
-        clearPatternListUI();
-        // Clear cache when interval changes
-        cachedChartData = null;
-        indicatorSeriesMap.clear();
-
-        renderAdvancedChart(
-          currentChartSymbol,
-          /** @type {HTMLSelectElement | null} */ (
-            document.getElementById("chart-timeframe")
-          )?.value || "1M",
-          /** @type {HTMLSelectElement | null} */ (
-            document.getElementById("chart-interval")
-          )?.value || "1D",
-        );
-      });
 
     // Add event listeners for all indicator checkboxes - use toggle instead of full re-render
     ALL_INDICATOR_IDS.forEach((id) => {
@@ -1605,7 +1888,10 @@ function createSRZoneItem(zone, type, currentPrice) {
   if (displayedSRZones.some((z) => z.key === zoneKey)) {
     const checkIcon = item.querySelector(".sr-check");
     if (checkIcon) checkIcon.classList.remove("hidden");
-    item.classList.add("border-blue-500", "dark:border-blue-400");
+    item.classList.add("border-blue-500", "dark:border-blue-400", "selected");
+  } else {
+    // Ensure we clean up if not selected (though unlikely on create)
+    item.classList.remove("selected");
   }
 
   lucide.createIcons({ root: item });
@@ -1646,7 +1932,11 @@ function toggleSRZoneOnChart(zone, type, itemEl, zoneKey) {
     displayedSRZones.splice(existingIndex, 1);
 
     if (checkIcon) checkIcon.classList.add("hidden");
-    itemEl.classList.remove("border-blue-500", "dark:border-blue-400");
+    itemEl.classList.remove(
+      "border-blue-500",
+      "dark:border-blue-400",
+      "selected",
+    );
   } else {
     // Add zone as a band with upper and lower lines
     const isSupport = type === "support";
@@ -1704,7 +1994,7 @@ function toggleSRZoneOnChart(zone, type, itemEl, zoneKey) {
     displayedSRZones.push({ key: zoneKey, lines: lines });
 
     if (checkIcon) checkIcon.classList.remove("hidden");
-    itemEl.classList.add("border-blue-500", "dark:border-blue-400");
+    itemEl.classList.add("border-blue-500", "dark:border-blue-400", "selected");
   }
 }
 

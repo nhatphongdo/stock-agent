@@ -42,6 +42,29 @@ function loadConversation() {
     messagesContainer.innerHTML = saved;
     lucide.createIcons({ root: messagesContainer });
     chatContainer.scrollTop = chatContainer.scrollHeight;
+    // Extract symbols from loaded conversation
+    extractAndUpdateSymbols();
+  }
+}
+
+/**
+ * Extract stock symbols from the entire conversation and update chart symbol selector.
+ * Uses the same stock-ticker class that processContent() adds to valid symbols.
+ */
+function extractAndUpdateSymbols() {
+  if (!messagesContainer) return;
+  const tickers = messagesContainer.querySelectorAll(".stock-ticker");
+  if (tickers.length > 0) {
+    const symbols = [
+      ...new Set(
+        [...tickers].map(
+          (el) => /** @type {HTMLElement} */ (el).dataset.symbol,
+        ),
+      ),
+    ];
+    if (typeof updateChartSymbolSelector === "function") {
+      updateChartSymbolSelector(symbols);
+    }
   }
 }
 
@@ -327,6 +350,9 @@ async function analyzeTask(
     chatContainer.scrollTop = chatContainer.scrollHeight;
     // Save conversation to sessionStorage
     saveConversation();
+
+    // Extract symbols from the entire conversation and update chart symbol selector
+    extractAndUpdateSymbols();
   }
 }
 
