@@ -28,6 +28,11 @@ const ALL_INDICATOR_IDS = getAllIndicatorIds("");
 // Flag to track if dropdown has been initialized after becoming visible
 let indicatorDropdownInitialized = false;
 
+// Auto-reload state
+let autoReloadEnabled = false;
+let autoReloadIntervalId = null;
+const AUTO_RELOAD_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
 /**
  * Render symbol list items based on search filter
  * @param {string} filter - Search filter string
@@ -233,6 +238,11 @@ function initTimeframeDropdown() {
         currentTimeframe,
         currentInterval,
       );
+
+      // Restart auto-reload with new timeframe (if enabled)
+      if (autoReloadEnabled) {
+        startAutoReload();
+      }
     });
   });
 
@@ -315,6 +325,11 @@ function initIntervalDropdown() {
         currentTimeframe,
         currentInterval,
       );
+
+      // Restart auto-reload with new interval (if enabled)
+      if (autoReloadEnabled) {
+        startAutoReload();
+      }
     });
   });
 
@@ -548,6 +563,97 @@ function initChartExpandButton() {
   });
 }
 
+// Initialize auto-reload toggle button
+function initAutoReloadToggle() {
+  const toggle = document.getElementById("chart-auto-reload-toggle");
+  if (!toggle) return;
+
+  toggle.addEventListener("click", () => {
+    autoReloadEnabled = !autoReloadEnabled;
+    toggle.setAttribute("aria-pressed", autoReloadEnabled.toString());
+
+    if (autoReloadEnabled) {
+      startAutoReload();
+    } else {
+      stopAutoReload();
+    }
+  });
+}
+
+// Start auto-reload interval
+function startAutoReload() {
+  stopAutoReload(); // Clear any existing interval
+  if (!autoReloadEnabled || !currentChartSymbol) return;
+
+  autoReloadIntervalId = setInterval(() => {
+    if (autoReloadEnabled && currentChartSymbol) {
+      fetchAndUpdateChartData();
+    }
+  }, AUTO_RELOAD_INTERVAL_MS);
+}
+
+// Stop auto-reload interval
+function stopAutoReload() {
+  if (autoReloadIntervalId) {
+    clearInterval(autoReloadIntervalId);
+    autoReloadIntervalId = null;
+  }
+}
+
+// Fetch and update chart data without re-rendering the entire chart
+async function fetchAndUpdateChartData() {
+  if (!priceChart || !candleSeries || !volumeSeries || !currentChartSymbol) {
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `/chart/${currentChartSymbol}?start=${currentChartStart}&end=${currentChartEnd}&interval=${currentInterval}`,
+    );
+
+    if (!response.ok) {
+      console.warn("Auto-reload: Failed to fetch chart data");
+      return;
+    }
+
+    const result = await response.json();
+
+    // Convert API data to chart format
+    const data = result.data.map((d) => ({
+      x: new Date(d.time),
+      o: d.open,
+      h: d.high,
+      l: d.low,
+      c: d.close,
+      v: d.volume,
+    }));
+
+    // Update cached data
+    cachedChartData = data;
+
+    // Convert to Lightweight Charts format
+    const chartData = data.map((d) => ({
+      time: Math.floor(d.x.getTime() / 1000),
+      open: d.o,
+      high: d.h,
+      low: d.l,
+      close: d.c,
+    }));
+
+    const volumeData = data.map((d) => ({
+      time: Math.floor(d.x.getTime() / 1000),
+      value: d.v,
+      color: d.c >= d.o ? "rgba(16, 185, 129, 0.6)" : "rgba(239, 68, 68, 0.6)",
+    }));
+
+    // Update series data (preserves indicators and patterns)
+    candleSeries.setData(chartData);
+    volumeSeries.setData(volumeData);
+  } catch (err) {
+    console.warn("Auto-reload: Error fetching chart data", err);
+  }
+}
+
 // Trigger chart display and initialization
 function triggerChartDisplay(symbol) {
   document.getElementById("chart-tab-content-empty").classList.add("hidden");
@@ -558,6 +664,7 @@ function triggerChartDisplay(symbol) {
   // Initialize dropdown and expand button after container is visible
   initIndicatorDropdown();
   initChartExpandButton();
+  initAutoReloadToggle();
   initChartSymbolSelector();
   initTimeframeDropdown();
   initIntervalDropdown();
@@ -593,6 +700,14 @@ function initAdvancedChart(symbol) {
 
   // Use state variables for timeframe and interval
   renderAdvancedChart(symbol, currentTimeframe, currentInterval);
+
+  // Enable auto-reload by default when selecting a new symbol
+  autoReloadEnabled = true;
+  const toggle = document.getElementById("chart-auto-reload-toggle");
+  if (toggle) {
+    toggle.setAttribute("aria-pressed", "true");
+  }
+  startAutoReload();
 
   // Add event listeners for indicator checkboxes (only once)
   if (!chartListenersInitialized) {
