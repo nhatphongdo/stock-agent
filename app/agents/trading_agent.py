@@ -15,10 +15,12 @@ from app.tools.vietcap_tools import (
     get_stock_events,
     get_short_financial,
     get_companies_by_financial_criteria,
+    get_all_symbols,
 )
 import json
 import re
 import asyncio
+import random
 from concurrent.futures import ThreadPoolExecutor
 
 # Constant for parsing delimiter
@@ -26,8 +28,8 @@ REASONING_DELIMITER = "---REASONING---"
 FINAL_DELIMITER = "---FINAL---"
 
 
-def fetch_market_context(
-    general_task: bool = True,
+async def fetch_market_context(
+    task: str = None,
     sector: str = None,
     portfolio_stocks: list[str] = None,
     whitelist: list[str] = None,
@@ -58,17 +60,33 @@ def fetch_market_context(
         "trending_news": [],
     }
 
+    general_task = (task is None and sector is None) or (
+        task is not None and "thị trường" in task.lower()
+    )
+
     try:
         # Start with portfolio stocks (highest priority)
         prioritized_tickers = []
-        if portfolio_stocks:
-            for stock in portfolio_stocks:
+        if portfolio_stocks and len(portfolio_stocks) > 0:
+            yield {
+                "status": "loading",
+                "message": "- 📈 Danh sách cổ phiếu trong danh mục: ",
+            }
+            for index, stock in enumerate(portfolio_stocks):
                 ticker = stock.split("(")[0].strip().upper()
+                splitter = ", " if index < len(portfolio_stocks) - 1 else ""
                 if ticker:
+                    yield {"status": "loading", "message": f"{ticker}{splitter}"}
                     prioritized_tickers.append(ticker)
+            yield {"status": "loading", "message": "\n"}
 
         # Add whitelist tickers (second priority)
-        if whitelist:
+        if whitelist and len(whitelist) > 0:
+            whitelist_tickers = ", ".join(whitelist)
+            yield {
+                "status": "loading",
+                "message": f"- 📈 Danh sách cổ phiếu ưu tiên: {whitelist_tickers}\n",
+            }
             prioritized_tickers.extend([t.upper() for t in whitelist])
 
         # Add tickers by sector and/or financial criteria
@@ -87,181 +105,240 @@ def fetch_market_context(
             if (
                 isinstance(companies, list)
                 and companies
+                and len(companies) > 0
                 and "error" not in companies[0]
             ):
-                prioritized_tickers.extend(
-                    [c.get("ticker") for c in companies if c.get("ticker")]
-                )
+                if sector:
+                    yield {
+                        "status": "loading",
+                        "message": "- 📈 Danh sách cổ phiếu trong ngành: ",
+                    }
+                else:
+                    yield {
+                        "status": "loading",
+                        "message": "- 📈 Danh sách cổ phiếu theo tiêu chí lợi nhuận: ",
+                    }
 
-        # 1. Get trending news FIRST to extract related tickers
+                sampled_companies = random.sample(companies, min(30, len(companies)))
+                tickers = [
+                    c.get("ticker") for c in sampled_companies if c.get("ticker")
+                ]
+                companies_tickers = ", ".join(tickers)
+                yield {"status": "loading", "message": f"{companies_tickers}\n"}
+                prioritized_tickers.extend(tickers)
+
+        # Parse tickers mentioned in the task string and add to prioritized list
+        if task:
+            # Get all valid symbols to match against
+            all_symbols = get_all_symbols()
+            if isinstance(all_symbols, dict) and "error" not in all_symbols:
+                # Extract potential ticker symbols from task using Unicode-aware boundaries
+                # Matches 3-10 uppercase alphanumeric chars, avoiding Vietnamese word boundaries
+                potential_tickers = re.findall(
+                    r"(?<![A-Za-z\u00C0-\u024F\u1E00-\u1EFF])([A-Z0-9]{3,10})(?![A-Za-z\u00C0-\u024F\u1E00-\u1EFF])",
+                    task.upper(),
+                )
+                if len(potential_tickers) > 0:
+                    yield {
+                        "status": "loading",
+                        "message": "- 📈 Danh sách cổ phiếu trong yêu cầu: ",
+                    }
+                    first = True
+                    for ticker in potential_tickers:
+                        if ticker in all_symbols:
+                            if not first:
+                                yield {"status": "loading", "message": ", "}
+                            yield {"status": "loading", "message": ticker}
+                            prioritized_tickers.append(ticker)
+                            first = False
+                    yield {"status": "loading", "message": "\n"}
+
+        # 1. Get trending news to extract related tickers
+        yield {"status": "loading", "message": "- 📰 Danh sách tin tức: "}
         news = get_trending_news(language=1) if general_task else []
         if isinstance(news, list):
+            yield {"status": "loading", "message": f"{len(news)} tin tức\n"}
             context["trending_news"] = news
+        else:
+            news_error = news.get("error", "N/A")
+            yield {"status": "loading", "message": f"(Lỗi: {news_error})\n"}
 
         # 2. Get top tickers (9 positive, 9 negative from All)
         if general_task:
             top_result = get_top_tickers(top_pos=9, top_neg=9, group="all")
             if isinstance(top_result, list):
-                prioritized_tickers.extend(
-                    [t["ticker"] for t in top_result if t.get("ticker")]
-                )
+                tickers = [t["ticker"] for t in top_result if t.get("ticker")]
+                if len(tickers) > 0:
+                    top_tickers = ", ".join(tickers)
+                    yield {
+                        "status": "loading",
+                        "message": f"- 📈 Danh sách cổ phiếu được đánh giá: {top_tickers}\n",
+                    }
+                    prioritized_tickers.extend(tickers)
 
         # 3. Get coverage universe and filter BUY-rated stocks
         if general_task:
             coverage = get_coverage_universe()
             if coverage and isinstance(coverage, list):
                 buy_stocks = [s for s in coverage if s.get("rating") == "BUY"][:30]
-                prioritized_tickers.extend(
-                    [s.get("ticker") for s in buy_stocks if s.get("ticker")]
-                )
+                buy_tickers = [s.get("ticker") for s in buy_stocks if s.get("ticker")]
+                if len(buy_tickers) > 0:
+                    buy_tickers_str = ", ".join(buy_tickers)
+                    yield {
+                        "status": "loading",
+                        "message": f"- 📈 Danh sách cổ phiếu được đề xuất: {buy_tickers_str}\n",
+                    }
+                    prioritized_tickers.extend(buy_tickers)
 
         # 4. Add tickers from trending news
         if general_task:
             if isinstance(news, list):
-                prioritized_tickers.extend(
-                    [n.get("ticker") for n in news if n.get("ticker")]
-                )
+                news_tickers = [n.get("ticker") for n in news if n.get("ticker")]
+                if len(news_tickers) > 0:
+                    news_tickers_str = ", ".join(news_tickers)
+                    yield {
+                        "status": "loading",
+                        "message": f"- 📈 Danh sách cổ phiếu trong tin tức: {news_tickers_str}\n",
+                    }
+                    prioritized_tickers.extend(news_tickers)
 
         # Ensure uniqueness (preserve priority order) and apply final limit
         tickers = list(dict.fromkeys(prioritized_tickers))[:MAX_PREFETCH]
 
+        # Helper function to fetch all data for a single ticker
+        def fetch_ticker_data(ticker: str) -> dict:
+            """Fetch all information for a single ticker."""
+            seven_days_ago = (datetime.now() - timedelta(days=7)).strftime("%Y%m%d")
+            today = datetime.now().strftime("%Y%m%d")
+            current_year = datetime.now().year
+
+            stock_data = {"ticker": ticker, "loaded": []}
+
+            # Company info
+            try:
+                company = get_company_info(ticker)
+                if company and "error" not in company:
+                    stock_data["company"] = company
+                    stock_data["loaded"].append("Thông tin công ty")
+            except:
+                pass
+
+            # Technical indicators
+            try:
+                tech = get_technical_indicators(ticker, "ONE_DAY")
+                if tech and "error" not in tech:
+                    stock_data["technical"] = tech
+                    stock_data["loaded"].append("Chỉ báo kỹ thuật")
+            except:
+                pass
+
+            # Latest OHLCV price
+            try:
+                ohlcv = get_latest_ohlcv(ticker)
+                if ohlcv and "error" not in ohlcv:
+                    stock_data["price"] = ohlcv
+            except:
+                pass
+
+            # Financial ratios (P/E, P/B)
+            try:
+                ratios_resp = get_financial_ratios(ticker)
+                if ratios_resp and "ratios" in ratios_resp:
+                    stock_data["financials"] = ratios_resp["ratios"]
+                    stock_data["loaded"].append("Chỉ số tài chính")
+            except:
+                pass
+
+            # Annual return - Last 10 years
+            try:
+                returns_resp = get_annual_return(ticker, 10)
+                if returns_resp and "returns" in returns_resp:
+                    stock_data["returns"] = [
+                        r
+                        for r in returns_resp["returns"]
+                        if r.get("year") and r.get("year") >= current_year - 9
+                    ]
+                    stock_data["loaded"].append("Lợi nhuận hàng năm")
+            except:
+                pass
+
+            # Stock news - Last 7 days
+            try:
+                news_resp = get_stock_news(ticker, seven_days_ago, today)
+                if news_resp and "news" in news_resp and news_resp["news"]:
+                    stock_data["news"] = news_resp["news"]
+                    stock_data["loaded"].append("Tin tức")
+            except:
+                pass
+
+            # Stock events - Last 7 days
+            try:
+                events_resp = get_stock_events(ticker, seven_days_ago, today)
+                if events_resp and "events" in events_resp and events_resp["events"]:
+                    stock_data["events"] = events_resp["events"]
+                    stock_data["loaded"].append("Sự kiện")
+            except:
+                pass
+
+            # Short financial
+            try:
+                short_fin_resp = get_short_financial(ticker)
+                if (
+                    short_fin_resp
+                    and "financials" in short_fin_resp
+                    and short_fin_resp["financials"]
+                ):
+                    stock_data["quarterlyFinancials"] = short_fin_resp["financials"]
+                    stock_data["loaded"].append("Báo cáo tài chính ngắn hạn")
+            except:
+                pass
+
+            return stock_data
+
         # 6. Fetch details for each ticker (parallel execution)
-        if tickers:
+        if tickers and len(tickers) > 0:
+            yield {"status": "loading", "message": "\n\n🔄 Đang tải dữ liệu...\n"}
+            yield {
+                "status": "loading",
+                "message": f"- 📑 Danh sách {len(tickers)} cổ phiếu được tải: {', '.join(tickers)}\n\n",
+            }
+
             with ThreadPoolExecutor(max_workers=5) as executor:
-                # Fetch company info
-                company_futures = {
-                    ticker: executor.submit(get_company_info, ticker)
-                    for ticker in tickers
-                }
-                # Fetch technical indicators
-                tech_futures = {
-                    ticker: executor.submit(get_technical_indicators, ticker, "ONE_DAY")
-                    for ticker in tickers
-                }
-                # Fetch OHLCV (latest price)
-                ohlcv_futures = {
-                    ticker: executor.submit(get_latest_ohlcv, ticker)
-                    for ticker in tickers
-                }
-                # Fetch financial ratios
-                ratio_futures = {
-                    ticker: executor.submit(get_financial_ratios, ticker)
-                    for ticker in tickers
-                }
-                # Fetch annual return
-                return_futures = {
-                    ticker: executor.submit(get_annual_return, ticker, 10)
-                    for ticker in tickers
-                }
-                # Fetch stock news (last 7 days)
-                seven_days_ago = (datetime.now() - timedelta(days=7)).strftime("%Y%m%d")
-                today = datetime.now().strftime("%Y%m%d")
-                news_futures = {
-                    ticker: executor.submit(
-                        get_stock_news, ticker, seven_days_ago, today
-                    )
-                    for ticker in tickers
-                }
-                # Fetch stock events (last 7 days)
-                events_futures = {
-                    ticker: executor.submit(
-                        get_stock_events, ticker, seven_days_ago, today
-                    )
-                    for ticker in tickers
-                }
-                # Fetch short financial
-                short_fin_futures = {
-                    ticker: executor.submit(get_short_financial, ticker)
+                # Submit all ticker data fetching in parallel
+                ticker_futures = {
+                    ticker: executor.submit(fetch_ticker_data, ticker)
                     for ticker in tickers
                 }
 
+                # Collect results as they complete
                 for ticker in tickers:
-                    stock_data = {"ticker": ticker}
-
-                    # Company info
                     try:
-                        company = company_futures[ticker].result(timeout=10)
-                        if company and "error" not in company:
-                            stock_data["company"] = company
-                    except:
-                        pass
-
-                    # Technical indicators
-                    try:
-                        tech = tech_futures[ticker].result(timeout=10)
-                        if tech and "error" not in tech:
-                            stock_data["technical"] = tech
-                    except:
-                        pass
-
-                    # Latest OHLCV price
-                    try:
-                        ohlcv = ohlcv_futures[ticker].result(timeout=10)
-                        if ohlcv and "error" not in ohlcv:
-                            stock_data["price"] = ohlcv
-                    except:
-                        pass
-
-                    # Financial ratios (P/E, P/B)
-                    try:
-                        ratios_resp = ratio_futures[ticker].result(timeout=10)
-                        if ratios_resp and "ratios" in ratios_resp:
-                            stock_data["financials"] = ratios_resp["ratios"]
-                    except:
-                        pass
-
-                    # Annual return - Last 10 years
-                    try:
-                        returns_resp = return_futures[ticker].result(timeout=10)
-                        if returns_resp and "returns" in returns_resp:
-                            current_year = datetime.now().year
-                            stock_data["returns"] = [
-                                r
-                                for r in returns_resp["returns"]
-                                if r.get("year") and r.get("year") >= current_year - 9
-                            ]
-                    except:
-                        pass
-
-                    # Stock news - Last 7 days
-                    try:
-                        news_resp = news_futures[ticker].result(timeout=10)
-                        if news_resp and "news" in news_resp and news_resp["news"]:
-                            stock_data["news"] = news_resp["news"]
-                    except:
-                        pass
-
-                    # Stock events - Last 7 days
-                    try:
-                        events_resp = events_futures[ticker].result(timeout=10)
-                        if (
-                            events_resp
-                            and "events" in events_resp
-                            and events_resp["events"]
-                        ):
-                            stock_data["events"] = events_resp["events"]
-                    except:
-                        pass
-
-                    # Short financial
-                    try:
-                        short_fin_resp = short_fin_futures[ticker].result(timeout=10)
-                        if (
-                            short_fin_resp
-                            and "financials" in short_fin_resp
-                            and short_fin_resp["financials"]
-                        ):
-                            stock_data["quarterlyFinancials"] = short_fin_resp[
-                                "financials"
-                            ]
-                    except:
-                        pass
-
-                    context["stocks_data"].append(stock_data)
+                        stock_data = ticker_futures[ticker].result(timeout=60)
+                        loaded_items = stock_data.pop("loaded", [])
+                        if loaded_items:
+                            yield {
+                                "status": "loading",
+                                "message": f"   - Đã tải thông tin cổ phiếu {ticker}: {', '.join(loaded_items)}\n",
+                            }
+                        else:
+                            yield {
+                                "status": "loading",
+                                "message": f"   - Đã tải thông tin cổ phiếu {ticker}\n",
+                            }
+                        context["stocks_data"].append(stock_data)
+                    except Exception:
+                        yield {
+                            "status": "loading",
+                            "message": f"   - ⚠️ Lỗi khi tải thông tin cổ phiếu {ticker}\n",
+                        }
     except Exception as e:
+        yield {
+            "status": "loading",
+            "message": f"\n\n<span style='color: red;'>(Lỗi: {str(e)})</span>\n\n",
+        }
         context["error"] = str(e)
 
-    return context
+    yield {"status": "success", "data": context}
 
 
 def format_context_for_prompt(context: dict) -> str:
@@ -424,33 +501,35 @@ class TradingAgent:
     ):
         # Pre-fetch market context
         yield json.dumps(
-            {"type": "reasoning", "chunk": "🔄 Đang tải dữ liệu thị trường...\n\n"}
+            {"type": "reasoning", "chunk": "🔎 Đang tổng hợp thông tin...\n"}
         ) + "\n"
 
-        market_context = fetch_market_context(
-            general_task=task is None and sector is None,
+        market_context = None
+        async for update in fetch_market_context(
+            task=task,
             sector=sector,
             portfolio_stocks=stocks,
             whitelist=whitelist,
             dividend_rate=dividend_rate,
             return_rate=return_rate,
-        )
+        ):
+            if update.get("status") == "loading":
+                yield json.dumps(
+                    {"type": "reasoning", "chunk": update.get("message")}
+                ) + "\n"
+            else:
+                market_context = update.get("data")
+
         context_text = format_context_for_prompt(market_context)
 
         if task is None and sector and sector_name:
             companies = get_companies_by_sector(sector)
-            task = f"Phân tích tổng quan ngành {sector_name}, ví dụ các mã CK: {', '.join(c.get("ticker") for c in companies if c.get("ticker"))}"
+            companies_tickers = ", ".join(
+                c.get("ticker") for c in companies if c.get("ticker")
+            )
+            task = f"Phân tích tổng quan ngành {sector_name}, ví dụ các mã CK: {companies_tickers}"
         elif task is None and sector is None:
             task = "Phân tích tổng quan thị trường"
-
-        tickers_list = [s["ticker"] for s in market_context.get("stocks_data", [])]
-        news_count = len(market_context.get("trending_news") or [])
-        yield json.dumps(
-            {
-                "type": "reasoning",
-                "chunk": f"✅ Đã tải {len(tickers_list)} mã cổ phiếu: {', '.join(tickers_list)}\n\n📰 {news_count} tin tức trending\n\n",
-            }
-        ) + "\n"
 
         # Build tool names for prompt
         tool_names = [tool.__name__ for tool in VIETCAP_TOOLS]
@@ -606,6 +685,10 @@ VII. YÊU CẦU NGƯỜI DÙNG
 ────────────────────────────────
 {task if task else "Không có"}
 """
+
+        yield json.dumps(
+            {"type": "reasoning", "chunk": "🧮 Đang phân tích...\n\n"}
+        ) + "\n"
 
         # Collect tool calls for reasoning
         tool_call_log = []

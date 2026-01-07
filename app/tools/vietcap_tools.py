@@ -171,21 +171,20 @@ def _filter_companies_by_criteria(
 
         # Calculate dividend rate if dividend_per_share is available
         calculated_dividend_rate = None
-        if dividend_per_share is not None and dividend_per_share > 0:
+        if dividend_per_share is not None:
             calculated_dividend_rate = dividend_per_share / 10000
 
         # Apply dividend_rate filter if specified
         if dividend_rate is not None:
-            if calculated_dividend_rate is None:
-                continue  # Skip if no dividend data
-            if calculated_dividend_rate < dividend_rate:
+            if (
+                calculated_dividend_rate is not None
+                and calculated_dividend_rate < dividend_rate
+            ):
                 continue
 
         # Apply return_rate filter if specified
         if return_rate is not None:
-            if projected_tsr is None:
-                continue  # Skip if no return data
-            if projected_tsr < return_rate:
+            if projected_tsr is not None and projected_tsr < return_rate:
                 continue
 
         # Add calculated dividend rate to the company data

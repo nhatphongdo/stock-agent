@@ -2,31 +2,23 @@
 let priceChart = null;
 let candleSeries = null;
 let volumeSeries = null;
-let indicatorSeries = []; // Array to hold indicator line series
 let indicatorValues = {}; // Store raw indicator values mapping time -> {key: value}
-let cachedChartData = null; // Cache chart data to avoid re-fetching
+let indicatorConfigs = {}; // Store indicator config mapping indicator key -> config
 let indicatorSeriesMap = new Map(); // Map indicator key -> array of series
+let indicatorDropdownInitialized = false;
 let currentChartSymbol = null;
 let currentChartStart = null; // Current chart start date (YYYY-MM-DD)
 let currentChartEnd = null; // Current chart end date (YYYY-MM-DD)
-let chartListenersInitialized = false; // Flag to prevent duplicate event listeners
 
 // Store available symbols from latest analysis
 let availableAnalysisSymbols = [];
 let symbolSelectorInitialized = false;
 
 // Current timeframe and interval values
-let currentTimeframe = "6M";
+let currentTimeframe = "1Y";
 let currentInterval = "1D";
 let timeframeDropdownInitialized = false;
 let intervalDropdownInitialized = false;
-
-// Generate ID mappings for this chart (no prefix)
-const INDICATOR_ID_TO_KEY = generateIndicatorIdToKey("");
-const ALL_INDICATOR_IDS = getAllIndicatorIds("");
-
-// Flag to track if dropdown has been initialized after becoming visible
-let indicatorDropdownInitialized = false;
 
 // Auto-reload state
 let autoReloadEnabled = false;
@@ -231,7 +223,6 @@ function initTimeframeDropdown() {
 
       clearAllPatternVisualizations();
       clearPatternListUI();
-      cachedChartData = null;
       indicatorSeriesMap.clear();
       renderAdvancedChart(
         currentChartSymbol,
@@ -318,7 +309,6 @@ function initIntervalDropdown() {
 
       clearAllPatternVisualizations();
       clearPatternListUI();
-      cachedChartData = null;
       indicatorSeriesMap.clear();
       renderAdvancedChart(
         currentChartSymbol,
@@ -429,7 +419,6 @@ function closeAllDropdowns(exceptId = null) {
 
 // Initialize indicator dropdown toggle
 function initIndicatorDropdown() {
-  // Skip if already initialized
   if (indicatorDropdownInitialized) return;
 
   const trigger = document.getElementById("indicator-dropdown-trigger");
@@ -438,8 +427,78 @@ function initIndicatorDropdown() {
 
   if (!trigger || !panel) return;
 
-  // Mark as initialized
-  indicatorDropdownInitialized = true;
+  // Render Dynamic Content
+  renderDynamicIndicators();
+
+  // Helper to render indicators
+  async function renderDynamicIndicators() {
+    const listContainer = document.getElementById("indicator-list-container");
+    if (!listContainer) return;
+
+    // Show loading state
+    listContainer.innerHTML =
+      '<div class="p-4 text-center text-xs text-slate-500">Đang tải danh sách chỉ báo...</div>';
+
+    const data = await fetchAvailableIndicators();
+    if (!data || !data.indicators) {
+      listContainer.innerHTML =
+        '<div class="p-4 text-center text-xs text-red-500">Không thể tải danh sách chỉ báo</div>';
+      return;
+    }
+
+    const html = generateIndicatorDropdownHTML(data.indicators, "");
+    listContainer.innerHTML = html;
+
+    // Setup search filtering
+    const searchInput = /** @type {HTMLInputElement | null} */ (
+      document.getElementById("indicator-search")
+    );
+    if (searchInput) {
+      searchInput.addEventListener("input", (e) => {
+        const query = /** @type {HTMLInputElement} */ (e.target).value
+          .toLowerCase()
+          .trim();
+        filterIndicatorList(panel, query);
+      });
+    }
+  }
+
+  /**
+   * Filter indicator list based on search query
+   * @param {HTMLElement} panel - The dropdown panel element
+   * @param {string} query - The search query string
+   */
+  function filterIndicatorList(panel, query) {
+    const items = panel.querySelectorAll(".indicator-item");
+    const categories = panel.querySelectorAll(".indicator-category");
+
+    // Show all items if query is empty
+    if (!query) {
+      items.forEach((item) => {
+        /** @type {HTMLElement} */ (item).style.display = "";
+      });
+      categories.forEach((cat) => {
+        /** @type {HTMLElement} */ (cat).style.display = "";
+      });
+      return;
+    }
+
+    // Filter items
+    items.forEach((item) => {
+      const searchText = item.getAttribute("data-search") || "";
+      const matches = searchText.includes(query);
+      /** @type {HTMLElement} */ (item).style.display = matches ? "" : "none";
+    });
+
+    // Hide categories with no visible items
+    categories.forEach((cat) => {
+      const visibleItems = cat.querySelectorAll(
+        '.indicator-item:not([style*="display: none"])',
+      );
+      /** @type {HTMLElement} */ (cat).style.display =
+        visibleItems.length > 0 ? "" : "none";
+    });
+  }
 
   // Toggle dropdown on button click
   trigger.addEventListener("click", (e) => {
@@ -467,15 +526,12 @@ function initIndicatorDropdown() {
     }
   });
 
-  // Update badge count when any indicator checkbox changes
+  // Update badge count
   const updateBadge = () => {
     const badge = document.getElementById("indicator-count-badge");
-    const count = ALL_INDICATOR_IDS.filter((id) => {
-      const el = /** @type {HTMLInputElement | null} */ (
-        document.getElementById(id)
-      );
-      return el?.checked;
-    }).length;
+    const count = panel.querySelectorAll(
+      'input[type="checkbox"]:checked',
+    ).length;
 
     if (badge) {
       badge.textContent = count.toString();
@@ -483,10 +539,17 @@ function initIndicatorDropdown() {
     }
   };
 
-  // Add change listeners to all indicator checkboxes
-  ALL_INDICATOR_IDS.forEach((id) => {
-    document.getElementById(id)?.addEventListener("change", updateBadge);
+  // Delegated event listener for all indicator checkboxes
+  panel.addEventListener("change", (e) => {
+    const target = /** @type {HTMLElement} */ (e.target);
+    if (target && target.classList.contains("indicator-checkbox")) {
+      const checkbox = /** @type {HTMLInputElement} */ (target);
+      updateBadge();
+      toggleIndicator(checkbox.id, checkbox.checked);
+    }
   });
+
+  indicatorDropdownInitialized = true;
 }
 
 // Flag to track if expand button has been initialized
@@ -628,9 +691,6 @@ async function fetchAndUpdateChartData() {
       v: d.volume,
     }));
 
-    // Update cached data
-    cachedChartData = data;
-
     // Convert to Lightweight Charts format
     const chartData = data.map((d) => ({
       time: Math.floor(d.x.getTime() / 1000),
@@ -691,8 +751,7 @@ function initAdvancedChart(symbol) {
   displayedPatternMarkers.clear();
   markersPrimitive = null;
 
-  // Clear cached data when switching symbols
-  cachedChartData = null;
+  // Clear data when switching symbols
   indicatorSeriesMap.clear();
 
   // Clear pattern list UI
@@ -708,19 +767,6 @@ function initAdvancedChart(symbol) {
     toggle.setAttribute("aria-pressed", "true");
   }
   startAutoReload();
-
-  // Add event listeners for indicator checkboxes (only once)
-  if (!chartListenersInitialized) {
-    chartListenersInitialized = true;
-
-    // Add event listeners for all indicator checkboxes - use toggle instead of full re-render
-    ALL_INDICATOR_IDS.forEach((id) => {
-      document.getElementById(id)?.addEventListener("change", (e) => {
-        const checkbox = /** @type {HTMLInputElement} */ (e.target);
-        toggleIndicator(id, checkbox.checked);
-      });
-    });
-  }
 }
 
 /**
@@ -729,8 +775,8 @@ function initAdvancedChart(symbol) {
  * @param {boolean} enabled - Whether the indicator should be shown
  */
 function toggleIndicator(indicatorId, enabled) {
-  // If chart or cached data not available, fall back to full re-render
-  if (!priceChart || !cachedChartData || cachedChartData.length === 0) {
+  // If chart is not available, fall back to full re-render
+  if (!priceChart) {
     const timeframe =
       /** @type {HTMLSelectElement | null} */ (
         document.getElementById("chart-timeframe")
@@ -743,12 +789,13 @@ function toggleIndicator(indicatorId, enabled) {
     return;
   }
 
-  const indicatorKey = INDICATOR_ID_TO_KEY[indicatorId];
+  const checkbox = document.getElementById(indicatorId);
+  const indicatorKey = checkbox?.dataset.key;
   if (!indicatorKey) return;
 
   if (enabled) {
     // Add the indicator
-    addIndicatorToChart(indicatorId, indicatorKey, cachedChartData);
+    addIndicatorToChart(indicatorId, indicatorKey);
   } else {
     // Remove the indicator
     removeIndicatorFromChart(indicatorId, indicatorKey);
@@ -756,52 +803,53 @@ function toggleIndicator(indicatorId, enabled) {
 }
 
 /**
- * Add a single indicator to the chart
+ * Add a single indicator to the chart (using backend API)
  * @param {string} indicatorId - The checkbox ID of the indicator
  * @param {string} indicatorKey - The config key for the indicator
- * @param {Array} data - The chart data
  */
-function addIndicatorToChart(indicatorId, indicatorKey, data) {
-  if (!priceChart || !candleSeries) return;
+async function addIndicatorToChart(indicatorId, indicatorKey) {
+  if (!priceChart || !candleSeries || !currentChartSymbol) return;
 
-  // Get price range for scaling oscillators
-  const prices = data.map((d) => d.c);
-  const minPrice = Math.min(...prices);
-  const maxPrice = Math.max(...prices);
-  const priceRange = maxPrice - minPrice;
-  const priceMid = (maxPrice + minPrice) / 2;
+  // Fetch indicator data from backend API
+  const apiResponse = await fetchIndicatorsFromAPI(
+    currentChartSymbol,
+    currentChartStart,
+    currentChartEnd,
+    currentInterval,
+    [indicatorKey],
+  );
 
-  // Create context for shared renderer
+  if (!apiResponse || !apiResponse.indicators) {
+    console.warn(`Failed to fetch indicator ${indicatorKey} from API`);
+    return;
+  }
+
+  const apiData = apiResponse.indicators[indicatorKey];
+  if (!apiData || apiData.error) {
+    console.warn(`Indicator ${indicatorKey} returned error:`, apiData?.error);
+    return;
+  }
+
+  // Create context for API-based renderer
   const ctx = {
     addLineSeries: (seriesData, options, pane = 0) => {
       const series = priceChart.addSeries(
         LightweightCharts.LineSeries,
-        { ...LINE_SERIES_DEFAULTS, ...options },
+        options,
         pane,
       );
       series.setData(seriesData);
-      indicatorSeries.push(series);
       return series;
     },
-    getTime: (i) => Math.floor(data[i].x.getTime() / 1000),
     indicatorValues,
-    priceInfo: { minPrice, maxPrice, priceRange, priceMid },
+    indicatorConfigs,
     candleSeries,
   };
 
-  const config = SHARED_INDICATOR_CONFIG[indicatorKey];
-  const result = renderIndicator(indicatorKey, ctx, data, config);
-
+  const result = renderIndicatorFromAPI(indicatorKey, apiData, ctx);
   if (!result) return;
 
-  // Handle result based on type
-  if (Array.isArray(result) && result.length > 0) {
-    // Regular indicators return array of series
-    indicatorSeriesMap.set(indicatorId, { type: "series", series: result });
-  } else if (!Array.isArray(result) && result.type === "priceLines") {
-    // Pivot/Fib return price lines object
-    indicatorSeriesMap.set(indicatorId, result);
-  }
+  indicatorSeriesMap.set(indicatorId, result);
 }
 
 /**
@@ -815,30 +863,29 @@ function removeIndicatorFromChart(indicatorId, indicatorKey) {
   const stored = indicatorSeriesMap.get(indicatorId);
   if (!stored) return;
 
-  if (stored.type === "series") {
-    // Remove each line series
-    stored.series.forEach((series) => {
+  stored.forEach((item) => {
+    if (item.type === "series") {
+      // Remove each line series
       try {
-        priceChart.removeSeries(series);
-        // Also remove from indicatorSeries array
-        const idx = indicatorSeries.indexOf(series);
-        if (idx > -1) {
-          indicatorSeries.splice(idx, 1);
-        }
+        priceChart.removeSeries(item.series);
       } catch (e) {
         console.warn("Failed to remove series:", e);
       }
-    });
-  } else if (stored.type === "priceLines") {
-    // Remove price lines from candle series
-    stored.lines.forEach((priceLine) => {
+    } else if (item.type === "priceLines") {
+      // Remove price lines from candle series
       try {
-        candleSeries.removePriceLine(priceLine);
+        candleSeries.removePriceLine(item.series);
       } catch (e) {
         console.warn("Failed to remove price line:", e);
       }
-    });
+    }
+  });
+
+  // Remove from stored value and configs
+  for (const time of Object.keys(indicatorValues)) {
+    delete indicatorValues[time][indicatorKey];
   }
+  delete indicatorConfigs[indicatorKey];
 
   // Clear from map
   indicatorSeriesMap.delete(indicatorId);
@@ -864,8 +911,8 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
   }
   candleSeries = null;
   volumeSeries = null;
-  indicatorSeries = [];
   indicatorValues = {};
+  indicatorConfigs = {};
   indicatorSeriesMap.clear();
 
   // Calculate date range from timeframe
@@ -911,24 +958,18 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
     chartContainer.append(skeletonContent.children[0]);
   }
 
-  let data;
+  let chartData;
   try {
     const response = await fetch(
       `/chart/${symbol}?start=${currentChartStart}&end=${currentChartEnd}&interval=${apiInterval}`,
     );
     if (response.ok) {
       const result = await response.json();
-      // Convert API data to chart format
-      data = result.data.map((d) => ({
-        x: new Date(d.time),
-        o: d.open,
-        h: d.high,
-        l: d.low,
-        c: d.close,
-        v: d.volume,
+      // Convert data to Lightweight Charts format (Unix timestamp in seconds)
+      chartData = result.data.map((d) => ({
+        ...d,
+        time: Math.floor(new Date(d.time).getTime() / 1000),
       }));
-      // Cache the chart data for indicator toggle functionality
-      cachedChartData = data;
     } else {
       throw new Error("API error");
     }
@@ -979,19 +1020,11 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
     },
   });
 
-  // Convert data to Lightweight Charts format (Unix timestamp in seconds)
-  const chartData = data.map((d) => ({
-    time: Math.floor(d.x.getTime() / 1000),
-    open: d.o,
-    high: d.h,
-    low: d.l,
-    close: d.c,
-  }));
-
-  const volumeData = data.map((d) => ({
-    time: Math.floor(d.x.getTime() / 1000),
-    value: d.v,
-    color: d.c >= d.o ? "rgba(16, 185, 129, 0.6)" : "rgba(239, 68, 68, 0.6)",
+  const volumeData = chartData.map((d) => ({
+    time: d.time,
+    value: d.volume,
+    color:
+      d.close >= d.open ? "rgba(16, 185, 129, 0.6)" : "rgba(239, 68, 68, 0.6)",
   }));
 
   // Add Candlestick Series
@@ -1029,10 +1062,15 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
   // =====================
   // ADD ENABLED INDICATORS
   // =====================
-  Object.keys(INDICATOR_ID_TO_KEY).forEach((indicatorId) => {
-    if (isIndicatorEnabled(indicatorId)) {
-      const indicatorKey = INDICATOR_ID_TO_KEY[indicatorId];
-      addIndicatorToChart(indicatorId, indicatorKey, data);
+  const indicatorCheckboxes = document.querySelectorAll(
+    '#indicator-dropdown-panel input[type="checkbox"]:checked',
+  );
+  indicatorCheckboxes.forEach((c) => {
+    const checkbox = /** @type {HTMLInputElement} */ (c);
+    const indicatorId = checkbox.id;
+    const indicatorKey = checkbox.dataset.key;
+    if (checkbox.checked && indicatorKey) {
+      addIndicatorToChart(indicatorId, indicatorKey);
     }
   });
 
@@ -1089,20 +1127,9 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
       // Add indicator values using shared utility
       tooltipContent += renderTooltipIndicators(
         indicatorValues,
+        indicatorConfigs,
         param.time,
-        SHARED_INDICATOR_CONFIG,
       );
-
-      // Add volume indicators if exists
-      const volIndicators = renderTooltipIndicators(
-        indicatorValues,
-        param.time,
-        SHARED_INDICATOR_CONFIG,
-        true,
-      );
-      if (volIndicators) {
-        tooltipContent += volIndicators;
-      }
 
       chartTooltip.innerHTML = tooltipContent;
       chartTooltip.style.display = "block";

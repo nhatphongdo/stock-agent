@@ -4,13 +4,17 @@
 
 // --- State ---
 let lastFetchedTechnicalSymbol = null;
+// Flag to track if analysis chart expand button has been initialized
+let analysisChartExpandInitialized = false;
+// Flag to track if analysis indicator dropdown has been initialized
+let analysisIndicatorDropdownInitialized = false;
 
 /**
  * Reset analysis state when stock changes
  */
 function resetAnalysisState() {
   lastFetchedTechnicalSymbol = null;
-  // Reset initialization flags so event listeners are re-attached to new DOM elements
+  // Reset initialization flags so event listeners are re-attached to new DOM elements;
   analysisIndicatorDropdownInitialized = false;
   analysisChartExpandInitialized = false;
   clearAnalysisDisplay();
@@ -61,18 +65,14 @@ let analysisCandleSeries = null;
 let analysisVolumeSeries = null;
 let analysisIndicatorSeries = []; // Array to hold indicator line series
 let analysisIndicatorValues = {}; // Store raw indicator values for tooltip
+let analysisIndicatorConfigs = {}; // Store indicator config mapping indicator key -> config
 let lastAnalysisOHLCVData = null; // Store last OHLCV data for re-rendering
 let analysisSupportResistanceLines = []; // Store summary key_levels lines
 let lastIndicatorsData = null; // Store indicators data for pivot/fib chart indicators
 let lastSummaryKeyLevels = null; // Store last summary key_levels for re-rendering
 let analysisIndicatorSeriesMap = new Map(); // Map indicator key -> array of series
-
-// Generate ID mappings for this chart (analysis prefix)
-const ANALYSIS_INDICATOR_ID_TO_KEY = generateIndicatorIdToKey("analysis");
-const ANALYSIS_INDICATOR_IDS = getAllIndicatorIds("analysis");
-
-// Flag to track if dropdown has been initialized after becoming visible
-let analysisIndicatorDropdownInitialized = false;
+let analysisChartStart = null; // Store chart date range for API calls
+let analysisChartEnd = null; // Store chart date range for API calls
 
 // Initialize analysis indicator dropdown toggle
 function initAnalysisIndicatorDropdown() {
@@ -87,8 +87,81 @@ function initAnalysisIndicatorDropdown() {
 
   if (!trigger || !panel) return;
 
-  // Mark as initialized
-  analysisIndicatorDropdownInitialized = true;
+  // Render Dynamic Content
+  renderDynamicIndicators();
+
+  // Helper to render indicators
+  async function renderDynamicIndicators() {
+    const listContainer = document.getElementById(
+      "analysis-indicator-list-container",
+    );
+    if (!listContainer) return;
+
+    // Show loading state
+    listContainer.innerHTML =
+      '<div class="p-4 text-center text-xs text-slate-500">Đang tải danh sách chỉ báo...</div>';
+
+    const data = await fetchAvailableIndicators();
+    if (!data || !data.indicators) {
+      listContainer.innerHTML =
+        '<div class="p-4 text-center text-xs text-red-500">Không thể tải danh sách chỉ báo</div>';
+      return;
+    }
+
+    const html = generateIndicatorDropdownHTML(data.indicators, "analysis");
+    listContainer.innerHTML = html;
+
+    // Setup search filtering
+    const searchInput = /** @type {HTMLInputElement | null} */ (
+      document.getElementById("analysis-indicator-search")
+    );
+    if (searchInput) {
+      searchInput.addEventListener("input", (e) => {
+        const query = /** @type {HTMLInputElement} */ (e.target).value
+          .toLowerCase()
+          .trim();
+        filterAnalysisIndicatorList(panel, query);
+      });
+    }
+  }
+
+  /**
+   * Filter indicator list based on search query
+   * @param {HTMLElement} panel - The dropdown panel element
+   * @param {string} query - The search query string
+   */
+  function filterAnalysisIndicatorList(panel, query) {
+    const items = panel.querySelectorAll(".indicator-item");
+    const categories = panel.querySelectorAll(".indicator-category");
+
+    // Show all items if query is empty
+    if (!query) {
+      items.forEach((item) => {
+        /** @type {HTMLElement} */ (item).style.display = "";
+      });
+      categories.forEach((cat) => {
+        /** @type {HTMLElement} */ (cat).style.display = "";
+      });
+      return;
+    }
+
+    // Filter items
+    items.forEach((item) => {
+      const searchText = item.getAttribute("data-search") || "";
+      const matches = searchText.includes(query);
+      /** @type {HTMLElement} */ (item).style.display = matches ? "" : "none";
+    });
+
+    // Hide categories with no visible items
+    categories.forEach((cat) => {
+      const visibleItems = cat.querySelectorAll(
+        '.indicator-item:not([style*="display: none"])',
+      );
+      /** @type {HTMLElement} */ (cat).style.display =
+        visibleItems.length > 0 ? "" : "none";
+    });
+  }
+
   // Toggle dropdown on button click
   trigger.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -109,12 +182,9 @@ function initAnalysisIndicatorDropdown() {
   // Update badge count when any indicator checkbox changes
   const updateBadge = () => {
     const badge = document.getElementById("analysis-indicator-count-badge");
-    const count = ANALYSIS_INDICATOR_IDS.filter((id) => {
-      const el = /** @type {HTMLInputElement | null} */ (
-        document.getElementById(id)
-      );
-      return el?.checked;
-    }).length;
+    const count = panel.querySelectorAll(
+      "input.indicator-checkbox:checked",
+    ).length;
 
     if (badge) {
       badge.textContent = count.toString();
@@ -122,25 +192,21 @@ function initAnalysisIndicatorDropdown() {
     }
   };
 
-  // Add change listeners to all indicator checkboxes
-  ANALYSIS_INDICATOR_IDS.forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener("change", (e) => {
-        updateBadge();
-        // Toggle individual indicator instead of re-rendering
-        const checkbox = /** @type {HTMLInputElement} */ (e.target);
-        toggleAnalysisIndicator(id, checkbox.checked);
-      });
+  // Delegated event listener for all indicator checkboxes
+  panel.addEventListener("change", (e) => {
+    const target = /** @type {HTMLElement} */ (e.target);
+    if (target && target.classList.contains("indicator-checkbox")) {
+      const checkbox = /** @type {HTMLInputElement} */ (target);
+      updateBadge();
+      toggleAnalysisIndicator(checkbox.id, checkbox.checked);
     }
   });
+
+  analysisIndicatorDropdownInitialized = true;
 
   // Initialize expand button
   initAnalysisChartExpandButton();
 }
-
-// Flag to track if analysis chart expand button has been initialized
-let analysisChartExpandInitialized = false;
 
 // Initialize analysis chart expand/fullscreen button
 function initAnalysisChartExpandButton() {
@@ -278,16 +344,13 @@ function toggleAnalysisIndicator(indicatorId, enabled) {
     return;
   }
 
-  const indicatorKey = ANALYSIS_INDICATOR_ID_TO_KEY[indicatorId];
+  const checkbox = document.getElementById(indicatorId);
+  const indicatorKey = checkbox?.dataset.key;
   if (!indicatorKey) return;
 
   if (enabled) {
     // Add the indicator
-    addAnalysisIndicatorToChart(
-      indicatorId,
-      indicatorKey,
-      lastAnalysisOHLCVData,
-    );
+    addAnalysisIndicatorToChart(indicatorId, indicatorKey);
   } else {
     // Remove the indicator
     removeAnalysisIndicatorFromChart(indicatorId, indicatorKey);
@@ -298,77 +361,56 @@ function toggleAnalysisIndicator(indicatorId, enabled) {
  * Add a single indicator to the analysis chart
  * @param {string} indicatorId - The checkbox ID of the indicator
  * @param {string} indicatorKey - The config key for the indicator
- * @param {Array} ohlcv_data - The chart data
  */
-function addAnalysisIndicatorToChart(indicatorId, indicatorKey, ohlcv_data) {
-  if (!analysisChart || !analysisCandleSeries) return;
+async function addAnalysisIndicatorToChart(indicatorId, indicatorKey) {
+  if (!analysisChart || !analysisCandleSeries || !lastFetchedTechnicalSymbol)
+    return;
 
-  // Convert ohlcv_data to format expected by indicator functions
-  const indicatorData = ohlcv_data.map((d) => ({
-    x: new Date(d.time * 1000),
-    o: d.open,
-    h: d.high,
-    l: d.low,
-    c: d.close,
-    v: d.volume,
-  }));
+  // Fetch indicator data from backend API
+  const isShortTerm = document
+    .getElementById("tech-card-short")
+    .classList.contains("active");
+  const apiResponse = await fetchIndicatorsFromAPI(
+    lastFetchedTechnicalSymbol,
+    analysisChartStart,
+    analysisChartEnd,
+    isShortTerm ? "1D" : "1W",
+    [indicatorKey],
+  );
 
-  // Get price range for scaling oscillators
-  const prices = indicatorData.map((d) => d.c);
-  const minPrice = Math.min(...prices);
-  const maxPrice = Math.max(...prices);
-  const priceRange = maxPrice - minPrice;
-  const priceMid = (maxPrice + minPrice) / 2;
+  if (!apiResponse || !apiResponse.indicators) {
+    console.warn(`Failed to fetch indicator ${indicatorKey} from API`);
+    return;
+  }
 
-  // Create context for shared renderer
+  const apiData = apiResponse.indicators[indicatorKey];
+  if (!apiData || apiData.error) {
+    console.warn(`Indicator ${indicatorKey} returned error:`, apiData?.error);
+    return;
+  }
+
+  // Create context for API-based renderer
   const ctx = {
     addLineSeries: (seriesData, options, pane = 0) => {
       const series = analysisChart.addSeries(
         LightweightCharts.LineSeries,
-        { ...LINE_SERIES_DEFAULTS, ...options },
+        options,
         pane,
       );
       series.setData(seriesData);
       analysisIndicatorSeries.push(series);
       return series;
     },
-    getTime: (i) => ohlcv_data[i].time,
     indicatorValues: analysisIndicatorValues,
-    priceInfo: { minPrice, maxPrice, priceRange, priceMid },
+    indicatorConfigs: analysisIndicatorConfigs,
     candleSeries: analysisCandleSeries,
   };
 
-  const config = SHARED_INDICATOR_CONFIG[indicatorKey];
-
-  // For pivot/fib, use data from lastIndicatorsData if available
-  let extraData = null;
-  if (indicatorKey === "pivot" && lastIndicatorsData?.pivot_points) {
-    extraData = lastIndicatorsData.pivot_points;
-  } else if (indicatorKey === "fib" && lastIndicatorsData?.fibonacci) {
-    extraData = lastIndicatorsData.fibonacci;
-  }
-
-  const result = renderIndicator(
-    indicatorKey,
-    ctx,
-    indicatorData,
-    config,
-    extraData,
-  );
+  const result = renderIndicatorFromAPI(indicatorKey, apiData, ctx);
 
   if (!result) return;
 
-  // Handle result based on type
-  if (!Array.isArray(result) && result.type === "priceLines") {
-    // Pivot/Fib return price lines object
-    analysisIndicatorSeriesMap.set(indicatorId, result);
-  } else if (Array.isArray(result) && result.length > 0) {
-    // Regular indicators return array of series
-    analysisIndicatorSeriesMap.set(indicatorId, {
-      type: "series",
-      series: result,
-    });
-  }
+  analysisIndicatorSeriesMap.set(indicatorId, result);
 }
 
 /**
@@ -382,30 +424,29 @@ function removeAnalysisIndicatorFromChart(indicatorId, indicatorKey) {
   const stored = analysisIndicatorSeriesMap.get(indicatorId);
   if (!stored) return;
 
-  if (stored.type === "series") {
-    // Remove each line series
-    stored.series.forEach((series) => {
+  stored.forEach((item) => {
+    if (item.type === "series") {
+      // Remove each line series
       try {
-        analysisChart.removeSeries(series);
-        // Also remove from indicatorSeries array
-        const idx = analysisIndicatorSeries.indexOf(series);
-        if (idx > -1) {
-          analysisIndicatorSeries.splice(idx, 1);
-        }
+        analysisChart.removeSeries(item.series);
       } catch (e) {
         console.warn("Failed to remove series:", e);
       }
-    });
-  } else if (stored.type === "priceLines") {
-    // Remove price lines from candle series
-    stored.lines.forEach((priceLine) => {
+    } else if (item.type === "priceLines") {
+      // Remove price lines from candle series
       try {
-        analysisCandleSeries.removePriceLine(priceLine);
+        analysisCandleSeries.removePriceLine(item.series);
       } catch (e) {
         console.warn("Failed to remove price line:", e);
       }
-    });
+    }
+  });
+
+  // Remove from stored value and configs
+  for (const time of Object.keys(analysisIndicatorValues)) {
+    delete analysisIndicatorValues[time][indicatorKey];
   }
+  delete analysisIndicatorConfigs[indicatorKey];
 
   // Clear from map
   analysisIndicatorSeriesMap.delete(indicatorId);
@@ -599,8 +640,12 @@ async function renderAnalysisChart(ohlcv_data) {
     timeScale: { ...theme.timeScale, timeVisible: false },
   });
 
-  // Convert data to Lightweight Charts format (Unix timestamp in seconds)
-  const volumeData = ohlcv_data.map((d) => ({
+  // Convert data to Lightweight Charts format
+  const ohlcvData = ohlcv_data.map((d) => ({
+    ...d,
+    time: Math.floor(new Date(d.time).getTime() / 1000),
+  }));
+  const volumeData = ohlcvData.map((d) => ({
     time: d.time,
     value: d.volume,
     color:
@@ -622,7 +667,7 @@ async function renderAnalysisChart(ohlcv_data) {
       wickDownColor: CONFIG.COLORS.DOWN,
     },
   );
-  analysisCandleSeries.setData(ohlcv_data);
+  analysisCandleSeries.setData(ohlcvData);
 
   analysisVolumeSeries = analysisChart.addSeries(
     LightweightCharts.HistogramSeries,
@@ -638,9 +683,23 @@ async function renderAnalysisChart(ohlcv_data) {
   // Store OHLCV data for re-rendering when indicators change
   lastAnalysisOHLCVData = ohlcv_data;
 
+  // Extract date range for API calls
+  if (ohlcv_data.length > 0) {
+    const firstTime = new Date(ohlcv_data[0].time);
+    const lastTime = new Date(ohlcv_data[ohlcv_data.length - 1].time);
+    // Convert to local time ISO string (not UTC)
+    const toLocalISOString = (date) => {
+      const offset = date.getTimezoneOffset() * 60000;
+      return new Date(date.getTime() - offset).toISOString().slice(0, -1);
+    };
+    analysisChartStart = toLocalISOString(firstTime).split("T")[0];
+    analysisChartEnd = toLocalISOString(lastTime).split("T")[0];
+  }
+
   // Reset indicator series
   analysisIndicatorSeries = [];
   analysisIndicatorValues = {};
+  analysisIndicatorConfigs = {};
   analysisIndicatorSeriesMap.clear();
 
   // Draw support/resistance levels from summary key_levels
@@ -648,12 +707,17 @@ async function renderAnalysisChart(ohlcv_data) {
   drawSummaryKeyLevels();
 
   // Add all enabled indicators using the shared addAnalysisIndicatorToChart function
-  ANALYSIS_INDICATOR_IDS.forEach((indicatorId) => {
-    if (isAnalysisIndicatorEnabled(indicatorId)) {
-      const indicatorKey = ANALYSIS_INDICATOR_ID_TO_KEY[indicatorId];
-      if (indicatorKey) {
-        addAnalysisIndicatorToChart(indicatorId, indicatorKey, ohlcv_data);
-      }
+  const checkedInputs = document.querySelectorAll(
+    "#analysis-indicator-dropdown-panel input.indicator-checkbox:checked",
+  );
+
+  // Add all enabled indicators
+  checkedInputs.forEach((input) => {
+    const checkbox = /** @type {HTMLInputElement} */ (input);
+    const indicatorId = checkbox.id;
+    const indicatorKey = checkbox.dataset.key;
+    if (checkbox.checked && indicatorKey) {
+      addAnalysisIndicatorToChart(indicatorId, indicatorKey);
     }
   });
 
@@ -720,20 +784,9 @@ async function renderAnalysisChart(ohlcv_data) {
       // Add indicator values to tooltip
       tooltipContent += renderTooltipIndicators(
         analysisIndicatorValues,
+        analysisIndicatorConfigs,
         param.time,
-        SHARED_INDICATOR_CONFIG,
       );
-
-      // Add volume indicators if exists
-      const volIndicators = renderTooltipIndicators(
-        analysisIndicatorValues,
-        param.time,
-        SHARED_INDICATOR_CONFIG,
-        true,
-      );
-      if (volIndicators) {
-        tooltipContent += volIndicators;
-      }
 
       tooltip.innerHTML = tooltipContent;
 
@@ -1088,12 +1141,12 @@ async function fetchTechnicalAnalysis(symbol, companyName) {
 
             if (cardShort && cardLong) {
               const activeShortClass =
-                "cursor-pointer transition-all duration-300 p-4 rounded-3xl border-2 border-indigo-400/60 bg-gradient-to-br from-indigo-100 via-indigo-50 to-purple-100 dark:from-indigo-600/30 dark:via-indigo-500/20 dark:to-purple-600/20 backdrop-blur-xl shadow-[0_8px_32px_rgba(99,102,241,0.3)] scale-[1.03] z-10";
+                "cursor-pointer transition-all duration-300 p-4 rounded-3xl border-2 border-indigo-400/60 bg-gradient-to-br from-indigo-100 via-indigo-50 to-purple-100 dark:from-indigo-600/30 dark:via-indigo-500/20 dark:to-purple-600/20 backdrop-blur-xl shadow-[0_8px_32px_rgba(99,102,241,0.3)] scale-[1.03] z-10 active";
               const inactiveShortClass =
                 "cursor-pointer transition-all duration-300 p-4 rounded-3xl border border-slate-200 dark:border-white/10 bg-gradient-to-br from-slate-100 via-white to-slate-50 dark:from-slate-800/60 dark:via-slate-900/40 dark:to-slate-800/40 backdrop-blur-md shadow-sm opacity-60 hover:opacity-100 hover:scale-[1.01]";
 
               const activeLongClass =
-                "cursor-pointer transition-all duration-300 p-4 rounded-3xl border-2 border-emerald-400/60 bg-gradient-to-br from-emerald-100 via-emerald-50 to-teal-100 dark:from-emerald-600/30 dark:via-emerald-500/20 dark:to-teal-600/20 backdrop-blur-xl shadow-[0_8px_32px_rgba(16,185,129,0.3)] scale-[1.03] z-10";
+                "cursor-pointer transition-all duration-300 p-4 rounded-3xl border-2 border-emerald-400/60 bg-gradient-to-br from-emerald-100 via-emerald-50 to-teal-100 dark:from-emerald-600/30 dark:via-emerald-500/20 dark:to-teal-600/20 backdrop-blur-xl shadow-[0_8px_32px_rgba(16,185,129,0.3)] scale-[1.03] z-10 active";
               const inactiveLongClass =
                 "cursor-pointer transition-all duration-300 p-4 rounded-3xl border border-slate-200 dark:border-white/10 bg-gradient-to-br from-slate-100 via-white to-slate-50 dark:from-slate-800/60 dark:via-slate-900/40 dark:to-slate-800/40 backdrop-blur-md shadow-sm opacity-60 hover:opacity-100 hover:scale-[1.01]";
 
@@ -1919,6 +1972,32 @@ function toggleSummaryCard() {
       .classList.add("card-truncate");
     if (shortCardIcon) shortCardIcon.style.transform = "rotate(180deg)";
     if (longCardIcon) longCardIcon.style.transform = "rotate(180deg)";
+  }
+}
+
+/**
+ * Toggle AI Summary section collapsed/expanded state
+ */
+function toggleAISummary() {
+  const content = /** @type {HTMLElement} */ (
+    document.getElementById("tech-analysis-content")
+  );
+  const icon = /** @type {HTMLElement} */ (
+    document.getElementById("ai-summary-collapse-icon")
+  );
+
+  if (!content) return;
+
+  const isCollapsed = content.style.display === "none";
+
+  if (isCollapsed) {
+    // Expand
+    content.style.display = "";
+    if (icon) icon.style.transform = "rotate(0deg)";
+  } else {
+    // Collapse
+    content.style.display = "none";
+    if (icon) icon.style.transform = "rotate(180deg)";
   }
 }
 

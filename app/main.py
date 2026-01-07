@@ -32,8 +32,12 @@ from app.tools.vietcap_tools import (
     get_latest_price_batch,
     get_company_list,
 )
-from app.tools.technical_indicators import get_price_patterns
+from app.tools.technical_indicators import get_price_patterns, create_ohlcv_dataframe
 from app.tools.price_patterns import get_chart_patterns, get_support_resistance
+from app.tools.indicator_calculation import (
+    calculate_indicators,
+    get_available_indicators,
+)
 
 # Load environment variables early
 load_dotenv()
@@ -340,6 +344,66 @@ async def get_chart_data(symbol: str, start: str, end: str, interval: str = "1D"
     if "error" in result:
         raise HTTPException(status_code=404, detail=result["error"])
     return result
+
+
+class IndicatorRequest(BaseModel):
+    indicators: List[str]  # List of indicator keys to calculate
+    seriesIncluded: bool = True  # Whether to return full series or just last value
+
+
+@app.post("/indicators/{symbol}")
+async def get_indicators(
+    symbol: str,
+    start: str,
+    end: str,
+    request: IndicatorRequest,
+    interval: str = "1D",
+):
+    """
+    Calculate technical indicators for a stock symbol.
+
+    Args:
+        symbol: Stock ticker symbol (e.g., 'VNM')
+        start: Start date in YYYY-MM-DD format
+        end: End date in YYYY-MM-DD format
+        interval: Data interval ('1D' for daily, '1H' for hourly. Valid: 5m, 15m, 30m, 1H, 1D, 1W, 1M)
+        request: IndicatorRequest with list of indicators to calculate
+
+    Returns:
+        Dictionary with calculated indicator data including series for charting
+    """
+    # Fetch OHLCV data
+    ohlcv_result = get_stock_ohlcv(symbol.upper(), start, end, interval)
+    if "error" in ohlcv_result:
+        raise HTTPException(status_code=404, detail=ohlcv_result["error"])
+
+    candles = ohlcv_result.get("data", [])
+    if not candles:
+        raise HTTPException(status_code=404, detail="No data found")
+
+    # Convert to DataFrame
+    df = create_ohlcv_dataframe(candles)
+
+    # Calculate requested indicators with series_included parameter
+    indicators_data = calculate_indicators(
+        df, request.indicators, series_included=request.seriesIncluded
+    )
+
+    return {
+        "symbol": symbol.upper(),
+        "start": start,
+        "end": end,
+        "interval": interval,
+        "indicators": indicators_data,
+    }
+
+
+@app.get("/indicators/available")
+async def get_available_indicators_endpoint():
+    """
+    Returns list of all available indicators with their metadata.
+    """
+    return {"indicators": get_available_indicators()}
 
 
 @app.get("/price/{symbol}")

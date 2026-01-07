@@ -27,7 +27,7 @@
         <!-- Short Term Summary -->
         <div
           id="tech-card-short"
-          class="cursor-pointer transition-all duration-300 p-4 rounded-3xl border-2 border-indigo-400/60 bg-gradient-to-br from-indigo-100 via-indigo-50 to-purple-100 dark:from-indigo-600/30 dark:via-indigo-500/20 dark:to-purple-600/20 backdrop-blur-xl shadow-[0_8px_32px_rgba(99,102,241,0.3)] scale-[1.03]"
+          class="cursor-pointer transition-all duration-300 p-4 rounded-3xl border-2 border-indigo-400/60 bg-gradient-to-br from-indigo-100 via-indigo-50 to-purple-100 dark:from-indigo-600/30 dark:via-indigo-500/20 dark:to-purple-600/20 backdrop-blur-xl shadow-[0_8px_32px_rgba(99,102,241,0.3)] scale-[1.03] active"
         >
           <div class="w-full flex items-center justify-between mb-3 gap-2">
             <div class="flex-1 flex items-center gap-2 min-w-0">
@@ -217,289 +217,35 @@
           <!-- Dropdown Panel -->
           <div
             id="analysis-indicator-dropdown-panel"
-            class="hidden absolute top-full right-0 mt-2 w-72 max-h-[400px] overflow-y-auto p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-50 custom-scrollbar chart-dropdown-panel"
+            class="hidden absolute top-full right-0 mt-2 w-96 max-h-[400px] overflow-y-auto p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-50 custom-scrollbar chart-dropdown-panel"
           >
-            <!-- Moving Averages Group -->
-            <div class="mb-3">
-              <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
-                Đường trung bình
-              </div>
-              <div class="space-y-1">
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
+            <!-- Search Input (Static) -->
+            <div class="sticky top-0 bg-white dark:bg-slate-900 pb-2 z-10">
+              <div class="relative">
+                <input
+                  type="text"
+                  id="analysis-indicator-search"
+                  placeholder="Tìm kiếm chỉ báo"
+                  class="w-full px-3 py-2 pl-9 text-xs border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <svg
+                  class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-ma"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-blue-500"
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
-                  <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">SMA (20)</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">Simple MA</span>
-                </label>
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-ema"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-orange-500"
-                  />
-                  <span class="w-2 h-2 rounded-full bg-orange-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">EMA (9)</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">Exponential MA</span>
-                </label>
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-wma"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-cyan-500"
-                  />
-                  <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">WMA (20)</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">Weighted MA</span>
-                </label>
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-vwap"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-violet-500"
-                  />
-                  <span class="w-2 h-2 rounded-full bg-violet-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">VWAP</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">Vol Weighted Price</span>
-                </label>
+                </svg>
               </div>
             </div>
-
-            <!-- Bands Group -->
-            <div class="mb-3">
-              <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
-                Dải giá
-              </div>
-              <div class="space-y-1">
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-bb"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-purple-500"
-                  />
-                  <span class="w-2 h-2 rounded-full bg-purple-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Bollinger Bands</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">BB (20,2)</span>
-                </label>
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-atr"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-pink-500"
-                  />
-                  <span class="w-2 h-2 rounded-full bg-pink-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">ATR (14)</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">Avg True Range</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Oscillators Group -->
-            <div class="mb-3">
-              <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
-                Dao động
-              </div>
-              <div class="space-y-1">
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-rsi"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-amber-500"
-                  />
-                  <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">RSI (14)</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">Relative Strength</span>
-                </label>
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-macd"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-blue-500"
-                  />
-                  <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">MACD</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">12, 26, 9</span>
-                </label>
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-stoch"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-emerald-500"
-                  />
-                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Stochastic</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">%K, %D</span>
-                </label>
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-williams"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-cyan-500"
-                  />
-                  <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Williams %R</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">14 periods</span>
-                </label>
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-cci"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-violet-500"
-                  />
-                  <span class="w-2 h-2 rounded-full bg-violet-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">CCI (20)</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">Commodity Channel</span>
-                </label>
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-roc"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-orange-500"
-                  />
-                  <span class="w-2 h-2 rounded-full bg-orange-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">ROC (10)</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">Rate of Change</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Trend Group -->
-            <div class="mb-3">
-              <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
-                Xu hướng
-              </div>
-              <div class="space-y-1">
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-adx"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-green-500"
-                  />
-                  <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">ADX (14)</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">+DI / -DI</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Volume Group -->
-            <div>
-              <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
-                Khối lượng
-              </div>
-              <div class="space-y-1">
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-vol-sma"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-violet-500"
-                  />
-                  <span class="w-2 h-2 rounded-full bg-violet-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Vol SMA (20)</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">Volume Average</span>
-                </label>
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-obv"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-cyan-500"
-                  />
-                  <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">OBV</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">On Balance Vol</span>
-                </label>
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-mfi"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-amber-500"
-                  />
-                  <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">MFI (14)</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">Money Flow Index</span>
-                </label>
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-cmf"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-pink-500"
-                  />
-                  <span class="w-2 h-2 rounded-full bg-pink-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">CMF (20)</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">Chaikin Money Flow</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Support/Resistance Group -->
-            <div>
-              <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 px-1">
-                Hỗ trợ/Kháng cự
-              </div>
-              <div class="space-y-1">
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-pivot"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-indigo-500"
-                  />
-                  <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Pivot S/R</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">P, R1-R3, S1-S3</span>
-                </label>
-                <label
-                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    id="analysis-indicator-fib"
-                    class="w-3.5 h-3.5 rounded border-slate-300 accent-amber-500"
-                  />
-                  <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                  <span class="text-xs font-medium text-slate-700 dark:text-slate-300">Fibonacci</span>
-                  <span class="text-[10px] text-slate-400 ml-auto">0%-100% Retracement</span>
-                </label>
-              </div>
-            </div>
+            <!-- Indicator List Container (Dynamically populated) -->
+            <div id="analysis-indicator-list-container"></div>
           </div>
         </div>
 
@@ -572,7 +318,7 @@
           <div class="space-y-4">
             <!-- RSI -->
             <div class="space-y-1.5">
-              <div class="flex justify-between text-sm font-medium">
+              <div class="flex justify-between text-sm font-medium gap-1">
                 <span class="text-slate-500 indicator-tooltip"
                   >RSI (14)<span class="tooltip-icon"><i data-lucide="info"></i></span
                   ><span class="tooltip-content"
@@ -582,7 +328,7 @@
                 >
                 <span
                   id="tech-rsi-value"
-                  class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-5 indicator-tooltip"
+                  class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-10 h-5 indicator-tooltip"
                   ><span class="tooltip-content">Chỉ số RSI hiện tại. > 70: Quá mua, < 30: Quá bán</span></span
                 >
               </div>
@@ -723,7 +469,7 @@
               ></div>
             </div>
             <!-- Williams %R -->
-            <div class="flex justify-between text-sm font-medium">
+            <div class="flex justify-between text-sm font-medium gap-1">
               <span class="text-slate-500 indicator-tooltip"
                 >Williams %R<span class="tooltip-icon"><i data-lucide="info"></i></span
                 ><span class="tooltip-content"
@@ -733,7 +479,7 @@
               >
               <span
                 id="tech-willr"
-                class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-5 indicator-tooltip"
+                class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-10 h-5 indicator-tooltip"
                 ><span class="tooltip-content"
                   >Vị trí giá hiện tại trong phạm vi cao/thấp. < -80: Quá bán, > -20: Quá mua</span
                 ></span
@@ -760,7 +506,7 @@
           </h5>
           <div class="space-y-4">
             <div id="tech-ma-list" class="space-y-2 text-sm">
-              <div class="flex justify-between">
+              <div class="flex justify-between gap-1">
                 <span class="text-slate-500 indicator-tooltip"
                   >SMA20:<span class="tooltip-icon"><i data-lucide="info"></i></span
                   ><span class="tooltip-content"
@@ -775,7 +521,7 @@
                   ></span
                 >
               </div>
-              <div class="flex justify-between">
+              <div class="flex justify-between gap-1">
                 <span class="text-slate-500 indicator-tooltip"
                   >SMA50:<span class="tooltip-icon"><i data-lucide="info"></i></span
                   ><span class="tooltip-content"
@@ -790,7 +536,7 @@
                   ></span
                 >
               </div>
-              <div class="flex justify-between">
+              <div class="flex justify-between gap-1">
                 <span class="text-slate-500 indicator-tooltip"
                   >SMA100:<span class="tooltip-icon"><i data-lucide="info"></i></span
                   ><span class="tooltip-content"
@@ -805,7 +551,7 @@
                   ></span
                 >
               </div>
-              <div class="flex justify-between">
+              <div class="flex justify-between gap-1">
                 <span class="text-slate-500 indicator-tooltip"
                   >SMA200:<span class="tooltip-icon"><i data-lucide="info"></i></span
                   ><span class="tooltip-content"
@@ -820,7 +566,7 @@
                   ></span
                 >
               </div>
-              <div class="flex justify-between">
+              <div class="flex justify-between gap-1">
                 <span class="text-slate-500 indicator-tooltip"
                   >EMA20:<span class="tooltip-icon"><i data-lucide="info"></i></span
                   ><span class="tooltip-content"
@@ -835,7 +581,7 @@
                   ></span
                 >
               </div>
-              <div class="flex justify-between">
+              <div class="flex justify-between gap-1">
                 <span class="text-slate-500 indicator-tooltip"
                   >EMA50:<span class="tooltip-icon"><i data-lucide="info"></i></span
                   ><span class="tooltip-content"
@@ -852,7 +598,7 @@
               </div>
             </div>
             <div class="pt-3 border-t border-slate-200 dark:border-white/5">
-              <div class="flex justify-between text-sm font-medium mb-1">
+              <div class="flex justify-between text-sm font-medium mb-1 gap-1">
                 <span class="text-slate-500 indicator-tooltip"
                   >ADX<span class="tooltip-icon"><i data-lucide="info"></i></span
                   ><span class="tooltip-content"
@@ -862,7 +608,7 @@
                 >
                 <span
                   id="tech-adx-val"
-                  class="font-bold text-indigo-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-5 indicator-tooltip"
+                  class="font-bold text-indigo-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-10 h-5 indicator-tooltip"
                   ><span class="tooltip-content"
                     >Chỉ số ADX đo sức mạnh của xu hướng. > 25: Xu hướng mạnh, < 20: Không rõ xu hướng</span
                   ></span
@@ -871,7 +617,7 @@
               <div class="flex items-center gap-2 mb-2">
                 <span
                   id="tech-adx-dmp"
-                  class="text-sm font-bold text-emerald-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-4 indicator-tooltip"
+                  class="text-sm font-bold text-emerald-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-10 h-4 indicator-tooltip"
                   ><span class="tooltip-content"
                     >Directional Movement Positive (+DI). Khi nằm trên -DI báo hiệu áp lực tăng giá</span
                   ></span
@@ -879,7 +625,7 @@
                 <span class="text-slate-300">/</span>
                 <span
                   id="tech-adx-dmn"
-                  class="text-sm font-bold text-rose-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-10 h-4 indicator-tooltip"
+                  class="text-sm font-bold text-rose-500 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-10 h-4 indicator-tooltip"
                   ><span class="tooltip-content"
                     >Directional Movement Negative (-DI). Khi nằm trên +DI báo hiệu áp lực giảm giá</span
                   ></span
@@ -910,7 +656,7 @@
             >
           </h5>
           <div class="space-y-3 text-sm">
-            <div class="flex justify-between">
+            <div class="flex justify-between gap-1">
               <span class="text-slate-500 indicator-tooltip"
                 >BB Trên:<span class="tooltip-icon"><i data-lucide="info"></i></span
                 ><span class="tooltip-content"
@@ -925,7 +671,7 @@
                 ></span
               >
             </div>
-            <div class="flex justify-between">
+            <div class="flex justify-between gap-1">
               <span class="text-slate-500 indicator-tooltip"
                 >BB Giữa:<span class="tooltip-icon"><i data-lucide="info"></i></span
                 ><span class="tooltip-content"
@@ -940,7 +686,7 @@
                 ></span
               >
             </div>
-            <div class="flex justify-between">
+            <div class="flex justify-between gap-1">
               <span class="text-slate-500 indicator-tooltip"
                 >BB Dưới:<span class="tooltip-icon"><i data-lucide="info"></i></span
                 ><span class="tooltip-content"
@@ -959,7 +705,7 @@
               id="tech-bb-signal"
               class="text-sm font-bold flex items-center justify-center skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-full w-24 h-6"
             ></div>
-            <div class="pt-2 border-t border-slate-200 dark:border-white/5 flex justify-between">
+            <div class="pt-2 border-t border-slate-200 dark:border-white/5 flex justify-between gap-1">
               <span class="text-slate-500 indicator-tooltip"
                 >ATR:<span class="tooltip-icon"><i data-lucide="info"></i></span
                 ><span class="tooltip-content"
@@ -994,7 +740,7 @@
             >
           </h5>
           <div class="space-y-3 text-sm">
-            <div class="flex justify-between">
+            <div class="flex justify-between gap-1">
               <span class="text-slate-500 indicator-tooltip"
                 >OBV:<span class="tooltip-icon"><i data-lucide="info"></i></span
                 ><span class="tooltip-content"
@@ -1004,13 +750,13 @@
               >
               <span
                 id="tech-obv-trend"
-                class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-14 h-5 indicator-tooltip"
+                class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-16 h-5 indicator-tooltip"
                 ><span class="tooltip-content"
                   >Xu hướng của On-Balance Volume. OBV tăng xác nhận sự tích lũy của dòng tiền</span
                 ></span
               >
             </div>
-            <div class="flex justify-between">
+            <div class="flex justify-between gap-1">
               <span class="text-slate-500 indicator-tooltip"
                 >CMF:<span class="tooltip-icon"><i data-lucide="info"></i></span
                 ><span class="tooltip-content"
@@ -1019,7 +765,7 @@
               >
               <span
                 id="tech-cmf"
-                class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md w-14 h-5 text-right indicator-tooltip"
+                class="font-bold text-slate-700 dark:text-slate-200 skeleton-shimmer text-transparent bg-slate-200/50 dark:bg-slate-800/50 rounded-md min-w-16 h-5 text-right indicator-tooltip"
                 ><span class="tooltip-content"
                   >Chaikin Money Flow đo lường lực mua/bán tích lũy. CMF > 0: Dòng tiền đang vào</span
                 ></span
@@ -1049,7 +795,7 @@
             >
           </h5>
           <div class="space-y-2 text-sm">
-            <div class="flex justify-between font-bold text-indigo-500 mb-1">
+            <div class="flex justify-between font-bold text-indigo-500 mb-1 gap-1">
               <span class="text-slate-500 font-medium">Pivot</span
               ><span
                 id="tech-pivot"
@@ -1059,7 +805,7 @@
                 ></span
               >
             </div>
-            <div class="flex justify-between">
+            <div class="flex justify-between gap-1">
               <span class="text-slate-500">Kháng cự 1</span
               ><span
                 id="tech-pivot-r1"
@@ -1067,7 +813,7 @@
                 ><span class="tooltip-content">Mức kháng cự 1. Vùng giá phe bán thường trực chờ</span></span
               >
             </div>
-            <div class="flex justify-between">
+            <div class="flex justify-between gap-1">
               <span class="text-slate-500">Kháng cự 2</span
               ><span
                 id="tech-pivot-r2"
@@ -1075,7 +821,7 @@
                 ><span class="tooltip-content">Mức kháng cự 2. Vùng giá mục tiêu nếu vượt qua R1</span></span
               >
             </div>
-            <div class="flex justify-between">
+            <div class="flex justify-between gap-1">
               <span class="text-slate-500">Kháng cự 3</span
               ><span
                 id="tech-pivot-r3"
@@ -1083,7 +829,7 @@
                 ><span class="tooltip-content">Mức kháng cự 3. Ngưỡng kháng cự mạnh nhất trong ngày</span></span
               >
             </div>
-            <div class="flex justify-between">
+            <div class="flex justify-between gap-1">
               <span class="text-slate-500">Hỗ trợ 1</span
               ><span
                 id="tech-pivot-s1"
@@ -1091,7 +837,7 @@
                 ><span class="tooltip-content">Mức hỗ trợ 1. Vùng giá phe mua thường trực chờ</span></span
               >
             </div>
-            <div class="flex justify-between">
+            <div class="flex justify-between gap-1">
               <span class="text-slate-500">Hỗ trợ 2</span
               ><span
                 id="tech-pivot-s2"
@@ -1099,7 +845,7 @@
                 ><span class="tooltip-content">Mức hỗ trợ 2. Vùng giá mục tiêu nếu xuyên thủng S1</span></span
               >
             </div>
-            <div class="flex justify-between">
+            <div class="flex justify-between gap-1">
               <span class="text-slate-500">Hỗ trợ 3</span
               ><span
                 id="tech-pivot-s3"
@@ -1126,7 +872,7 @@
             >
           </h5>
           <div class="space-y-2 text-sm pt-1">
-            <div class="flex justify-between">
+            <div class="flex justify-between gap-1">
               <span class="text-slate-500">Mức 0.0%</span
               ><span
                 id="tech-fib-0"
@@ -1134,7 +880,7 @@
                 ><span class="tooltip-content">Mức thấp nhất trong phạm vi xu hướng đang xét</span></span
               >
             </div>
-            <div class="flex justify-between text-yellow-500 font-medium">
+            <div class="flex justify-between gap-1 text-yellow-500 font-medium">
               <span class="text-slate-500 font-normal">Mức 23.6%</span
               ><span
                 id="tech-fib-236"
@@ -1142,7 +888,7 @@
                 ><span class="tooltip-content">Ngưỡng hồi quy Fibonacci 23.6%. Mức điều chỉnh nông</span></span
               >
             </div>
-            <div class="flex justify-between text-amber-500 font-medium">
+            <div class="flex justify-between gap-1 text-amber-500 font-medium">
               <span class="text-slate-500 font-normal">Mức 38.2%</span
               ><span
                 id="tech-fib-382"
@@ -1152,7 +898,7 @@
                 ></span
               >
             </div>
-            <div class="flex justify-between text-indigo-500 font-bold">
+            <div class="flex justify-between gap-1 text-indigo-500 font-bold">
               <span class="text-slate-500 font-normal">Mức 50.0%</span
               ><span
                 id="tech-fib-500"
@@ -1162,7 +908,7 @@
                 ></span
               >
             </div>
-            <div class="flex justify-between text-emerald-500 font-medium">
+            <div class="flex justify-between gap-1 text-emerald-500 font-medium">
               <span class="text-slate-500 font-normal">Mức 61.8%</span
               ><span
                 id="tech-fib-618"
@@ -1172,7 +918,7 @@
                 ></span
               >
             </div>
-            <div class="flex justify-between text-teal-500 font-medium">
+            <div class="flex justify-between gap-1 text-teal-500 font-medium">
               <span class="text-slate-500 font-normal">Mức 78.6%</span
               ><span
                 id="tech-fib-786"
@@ -1180,7 +926,7 @@
                 ><span class="tooltip-content">Ngưỡng hồi quy Fibonacci 78.6%. Mức điều chỉnh sâu</span></span
               >
             </div>
-            <div class="flex justify-between">
+            <div class="flex justify-between gap-1">
               <span class="text-slate-500">Mức 100.0%</span
               ><span
                 id="tech-fib-100"
@@ -1196,44 +942,61 @@
       <div class="lg:col-span-2 space-y-4">
         <!-- AI Core Analysis -->
         <div
+          id="ai-summary-section"
           class="p-6 bg-white/40 dark:bg-slate-900/50 backdrop-blur-xl rounded-3xl border border-white/50 dark:border-white/10 shadow-2xl relative overflow-hidden"
         >
           <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 pointer-events-none"></div>
-          <div class="flex items-center gap-2 mb-4 border-b border-slate-200 dark:border-white/10 pb-3">
-            <div
-              class="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm border border-indigo-100 dark:border-transparent"
-            >
-              <i data-lucide="brain-circuit" class="w-5 h-5"></i>
-            </div>
-            <h4 class="font-bold text-slate-800 dark:text-white text-lg">Tổng hợp từ AI</h4>
-            <div class="flex-1 text-right flex items-center justify-end gap-2 text-xs flex-wrap">
+          <!-- Header with collapse button at bottom center of border line -->
+          <div class="relative mb-4">
+            <div class="flex items-center gap-2 border-b border-slate-200 dark:border-white/10 pb-4">
               <div
-                id="tech-recommendation-badge"
-                class="inline-flex items-center text-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all border border-transparent opacity-0"
-              ></div>
-              <span
-                id="tech-gauge-ma"
-                class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg shadow-sm text-[11px] font-semibold text-slate-600 dark:text-slate-300 skeleton-shimmer text-transparent min-w-[70px] h-6 indicator-tooltip"
-                ><span class="tooltip-content">Điểm tổng hợp từ các chỉ báo xu hướng (MA)</span
-                ><i data-lucide="trending-up" class="w-3 h-3"></i><span class="gauge-text">MA: --</span></span
+                class="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm border border-indigo-100 dark:border-transparent"
               >
-              <span
-                id="tech-gauge-osc"
-                class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg shadow-sm text-[11px] font-semibold text-slate-600 dark:text-slate-300 skeleton-shimmer text-transparent min-w-[70px] h-6 indicator-tooltip"
-                ><span class="tooltip-content">Điểm tổng hợp từ các chỉ báo động lượng (RSI, Stochastic...)</span
-                ><i data-lucide="activity" class="w-3 h-3"></i><span class="gauge-text">OSC: --</span></span
-              >
-              <span
-                id="tech-gauge-summary"
-                class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/40 dark:to-purple-900/40 border border-indigo-200 dark:border-indigo-500/30 rounded-lg shadow-sm text-[11px] font-bold text-indigo-600 dark:text-indigo-400 skeleton-shimmer text-transparent min-w-[80px] h-6 indicator-tooltip"
-                ><span class="tooltip-content">Khuyến nghị tổng hợp từ sự kết hợp của tất cả các chỉ báo</span
-                ><i data-lucide="bar-chart-2" class="w-3 h-3"></i><span class="gauge-text">--</span></span
-              >
+                <i data-lucide="brain-circuit" class="w-5 h-5"></i>
+              </div>
+              <h4 class="font-bold text-slate-800 dark:text-white text-lg">Tổng hợp từ AI</h4>
+              <div class="flex-1 text-right flex items-center justify-end gap-2 text-xs flex-wrap">
+                <div
+                  id="tech-recommendation-badge"
+                  class="inline-flex items-center text-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all border border-transparent opacity-0"
+                ></div>
+                <span
+                  id="tech-gauge-ma"
+                  class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg shadow-sm text-[11px] font-semibold text-slate-600 dark:text-slate-300 skeleton-shimmer text-transparent min-w-[70px] h-6 indicator-tooltip"
+                  ><span class="tooltip-content">Điểm tổng hợp từ các chỉ báo xu hướng (MA)</span
+                  ><i data-lucide="trending-up" class="w-3 h-3"></i><span class="gauge-text">MA: --</span></span
+                >
+                <span
+                  id="tech-gauge-osc"
+                  class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg shadow-sm text-[11px] font-semibold text-slate-600 dark:text-slate-300 skeleton-shimmer text-transparent min-w-[70px] h-6 indicator-tooltip"
+                  ><span class="tooltip-content">Điểm tổng hợp từ các chỉ báo động lượng (RSI, Stochastic...)</span
+                  ><i data-lucide="activity" class="w-3 h-3"></i><span class="gauge-text">OSC: --</span></span
+                >
+                <span
+                  id="tech-gauge-summary"
+                  class="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/40 dark:to-purple-900/40 border border-indigo-200 dark:border-indigo-500/30 rounded-lg shadow-sm text-[11px] font-bold text-indigo-600 dark:text-indigo-400 skeleton-shimmer text-transparent min-w-[80px] h-6 indicator-tooltip"
+                  ><span class="tooltip-content">Khuyến nghị tổng hợp từ sự kết hợp của tất cả các chỉ báo</span
+                  ><i data-lucide="bar-chart-2" class="w-3 h-3"></i><span class="gauge-text">--</span></span
+                >
+              </div>
             </div>
+            <!-- Collapse button positioned at center of header bottom border -->
+            <button
+              onclick="toggleAISummary()"
+              id="ai-summary-collapse-btn"
+              class="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-1/2 z-10 w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shadow-sm"
+              title="Thu gọn/Mở rộng"
+            >
+              <i
+                data-lucide="chevron-up"
+                class="w-4 h-4 text-slate-500 dark:text-slate-400 transition-transform duration-300"
+                id="ai-summary-collapse-icon"
+              ></i>
+            </button>
           </div>
           <div
             id="tech-analysis-content"
-            class="text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed max-h-[480px] overflow-y-auto custom-scrollbar pr-2 markdown-content prose prose-sm dark:prose-invert max-w-none"
+            class="text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed max-h-[480px] overflow-y-auto custom-scrollbar pr-2 markdown-content prose prose-sm dark:prose-invert max-w-none transition-all duration-300"
           >
             <div class="flex items-center gap-2 text-slate-400 mb-2">
               <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>

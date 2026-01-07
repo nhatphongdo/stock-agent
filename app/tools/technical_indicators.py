@@ -1,14 +1,12 @@
 """
-Technical Indicators utility module using pandas-ta library.
-Provides wrapper functions for calculating technical indicators from OHLCV data.
+Technical Indicators utility module using pandas library.
 """
 
 import pandas as pd
-import pandas_ta as ta
 from typing import Optional
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
 from app.tools.vietcap_tools import get_stock_ohlcv
+from app.tools.indicator_calculation import calculate_indicators
 
 
 def create_ohlcv_dataframe(ohlcv_data: list) -> pd.DataFrame:
@@ -34,154 +32,151 @@ def create_ohlcv_dataframe(ohlcv_data: list) -> pd.DataFrame:
 def calculate_all_indicators(
     df: pd.DataFrame,
     timeframe: str = "short_term",
+    config: "IndicatorConfig" = None,
 ) -> dict:
     """
-    Calculate all technical indicators for a given DataFrame.
+    Calculate technical indicators used for analysis for a given DataFrame.
 
     Args:
         df: DataFrame with OHLCV data (columns: open, high, low, close, volume)
         timeframe: 'short_term' (daily) or 'long_term' (weekly)
+        config: Optional IndicatorConfig instance with custom parameters
 
     Returns:
         Dictionary containing all calculated indicators
     """
-    if df.empty:
-        return {}
-
-    # Ensure we have the required columns
-    required_cols = ["open", "high", "low", "close", "volume"]
-    if not all(col in df.columns for col in required_cols):
-        return {"error": "Missing required OHLCV columns"}
 
     indicators = {}
 
     # ==========================================================================
-    # 1. TREND INDICATORS
+    # Calculate indicators that not required series
     # ==========================================================================
-
+    no_series_indicators = calculate_indicators(
+        df,
+        [
+            "ma_20",
+            "ma_50",
+            "ma_100",
+            "ma_200",
+            "ema_20",
+            "ema_50",
+            "bb",
+            "adx",
+            "williams",
+            "roc",
+            "mom",
+            "atr",
+            "vol_sma_20",
+            "cmf",
+            "pivot",
+            "fib",
+        ],
+        None,
+        False,
+    )
     # Simple Moving Averages
-    indicators["sma20"] = _get_last_value(ta.sma(df["close"], length=20))
-    indicators["sma50"] = _get_last_value(ta.sma(df["close"], length=50))
-    indicators["sma100"] = _get_last_value(ta.sma(df["close"], length=100))
-    indicators["sma200"] = _get_last_value(ta.sma(df["close"], length=200))
+    indicators["sma20"] = no_series_indicators.get("ma_20", {}).get("lastValue")
+    indicators["sma50"] = no_series_indicators.get("ma_50", {}).get("lastValue")
+    indicators["sma100"] = no_series_indicators.get("ma_100", {}).get("lastValue")
+    indicators["sma200"] = no_series_indicators.get("ma_200", {}).get("lastValue")
 
     # Exponential Moving Averages
-    indicators["ema20"] = _get_last_value(ta.ema(df["close"], length=20))
-    indicators["ema50"] = _get_last_value(ta.ema(df["close"], length=50))
-
-    # MACD (12, 26, 9)
-    macd_result = ta.macd(df["close"], fast=12, slow=26, signal=9)
-    if macd_result is not None and not macd_result.empty:
-        indicators["macd"] = {
-            "line": _get_last_value(macd_result.iloc[:, 0]),  # MACD line
-            "signal": _get_last_value(macd_result.iloc[:, 1]),  # Signal line
-            "histogram": _get_last_value(macd_result.iloc[:, 2]),  # Histogram
-            "series": [
-                {"time": t.strftime("%Y-%m-%d"), "value": float(v)}
-                for t, v in macd_result.iloc[:, 0].dropna().tail(100).items()
-            ],
-        }
-    else:
-        indicators["macd"] = {
-            "line": None,
-            "signal": None,
-            "histogram": None,
-            "series": [],
-        }
+    indicators["ema20"] = no_series_indicators.get("ema_20", {}).get("lastValue")
+    indicators["ema50"] = no_series_indicators.get("ema_50", {}).get("lastValue")
 
     # ADX - Average Directional Index (for trend strength)
-    adx_result = ta.adx(df["high"], df["low"], df["close"], length=14)
-    if adx_result is not None and not adx_result.empty:
-        indicators["adx"] = {
-            "adx": _get_last_value(adx_result.iloc[:, 0]),  # ADX
-            "dmp": _get_last_value(adx_result.iloc[:, 1]),  # +DI
-            "dmn": _get_last_value(adx_result.iloc[:, 2]),  # -DI
-        }
-    else:
-        indicators["adx"] = {"adx": None, "dmp": None, "dmn": None}
-
-    # ==========================================================================
-    # 2. MOMENTUM INDICATORS
-    # ==========================================================================
-
-    # RSI (14)
-    rsi_series = ta.rsi(df["close"], length=14)
-    indicators["rsi"] = {
-        "value": _get_last_value(rsi_series),
-        "series": (
-            [
-                {"time": t.strftime("%Y-%m-%d"), "value": float(v)}
-                for t, v in rsi_series.dropna().tail(100).items()
-            ]
-            if rsi_series is not None and not rsi_series.empty
-            else []
-        ),
+    adx = no_series_indicators.get("adx", {}).get("lastValue", {})
+    indicators["adx"] = {
+        "adx": adx.get("adx"),
+        "dmp": adx.get("plusDI"),
+        "dmn": adx.get("minusDI"),
     }
 
-    # Stochastic Oscillator (14, 3, 3)
-    stoch_result = ta.stoch(df["high"], df["low"], df["close"], k=14, d=3, smooth_k=3)
-    if stoch_result is not None and not stoch_result.empty:
-        indicators["stochastic"] = {
-            "k": _get_last_value(stoch_result.iloc[:, 0]),  # %K
-            "d": _get_last_value(stoch_result.iloc[:, 1]),  # %D
-            "series": [
-                {"time": t.strftime("%Y-%m-%d"), "value": float(v)}
-                for t, v in stoch_result.iloc[:, 0].dropna().tail(100).items()
-            ],
-        }
-    else:
-        indicators["stochastic"] = {"k": None, "d": None, "series": []}
-
     # Williams %R (14)
-    indicators["willr"] = _get_last_value(
-        ta.willr(df["high"], df["low"], df["close"], length=14)
-    )
+    indicators["willr"] = no_series_indicators.get("williams", {}).get("lastValue")
 
     # ROC - Rate of Change (10)
-    indicators["roc"] = _get_last_value(ta.roc(df["close"], length=10))
+    indicators["roc"] = no_series_indicators.get("roc", {}).get("lastValue")
 
     # Momentum (10)
-    indicators["momentum"] = _get_last_value(ta.mom(df["close"], length=10))
-
-    # ==========================================================================
-    # 3. VOLATILITY INDICATORS
-    # ==========================================================================
+    indicators["momentum"] = no_series_indicators.get("mom", {}).get("lastValue")
 
     # Bollinger Bands (20, 2)
-    bb_result = ta.bbands(df["close"], length=20, std=2)
-    if bb_result is not None and not bb_result.empty:
-        indicators["bollinger_bands"] = {
-            "lower": _get_last_value(bb_result.iloc[:, 0]),
-            "middle": _get_last_value(bb_result.iloc[:, 1]),
-            "upper": _get_last_value(bb_result.iloc[:, 2]),
-            "bandwidth": _get_last_value(bb_result.iloc[:, 3]),
-            "percent_b": _get_last_value(bb_result.iloc[:, 4]),
-        }
-    else:
-        indicators["bollinger_bands"] = {
-            "lower": None,
-            "middle": None,
-            "upper": None,
-            "bandwidth": None,
-            "percent_b": None,
-        }
+    bb = no_series_indicators.get("bb", {}).get("lastValue", {})
+    indicators["bollinger_bands"] = {
+        "lower": bb.get("lower"),
+        "middle": bb.get("middle"),
+        "upper": bb.get("upper"),
+        "bandwidth": bb.get("bandwidth"),
+        "percent_b": bb.get("percentage"),
+    }
 
     # ATR - Average True Range (14)
-    indicators["atr"] = _get_last_value(
-        ta.atr(df["high"], df["low"], df["close"], length=14)
-    )
-
-    # ==========================================================================
-    # 4. VOLUME INDICATORS
-    # ==========================================================================
+    indicators["atr"] = no_series_indicators.get("atr", {}).get("lastValue")
 
     # Volume SMA (20)
-    indicators["volume_sma20"] = _get_last_value(ta.sma(df["volume"], length=20))
+    indicators["volume_sma20"] = no_series_indicators.get("vol_sma_20", {}).get(
+        "lastValue"
+    )
 
+    # CMF - Chaikin Money Flow (20)
+    indicators["cmf"] = no_series_indicators.get("cmf", {}).get("lastValue")
+
+    # Classic Pivot Points
+    indicators["pivot_points"] = no_series_indicators.get("pivot", {}).get("lastValue")
+
+    # Fibonacci Retracement levels
+    indicators["fibonacci"] = no_series_indicators.get("fib", {}).get("lastValue")
+
+    # ==========================================================================
+    # Chart-required series data (for frontend visualization)
+    # ==========================================================================
+    series_indicators = calculate_indicators(
+        df, ["rsi", "macd", "stoch", "obv"], None, True
+    )
+    # MACD (12, 26, 9)
+    macd = series_indicators.get("macd", {})
+    indicators["macd"] = {
+        "line": macd.get("lastValue", {}).get("line"),
+        "signal": macd.get("lastValue", {}).get("signal"),
+        "histogram": macd.get("lastValue", {}).get("histogram"),
+        "series": [
+            {
+                "time": datetime.fromtimestamp(item.get("time")).strftime("%Y-%m-%d"),
+                "value": float(item.get("value")),
+            }
+            for item in macd.get("series", {}).get("line", [])[-100:]
+        ],
+    }
+    # Stochastic Oscillator (14, 3, 3)
+    stoch = series_indicators.get("stoch", {})
+    indicators["stochastic"] = {
+        "k": stoch.get("lastValue", {}).get("k"),
+        "d": stoch.get("lastValue", {}).get("d"),
+        "series": [
+            {
+                "time": datetime.fromtimestamp(item.get("time")).strftime("%Y-%m-%d"),
+                "value": float(item.get("value")),
+            }
+            for item in stoch.get("series", {}).get("k", [])[-100:]
+        ],
+    }
+    # RSI (14)
+    rsi = series_indicators.get("rsi", {})
+    indicators["rsi"] = {
+        "value": rsi.get("lastValue"),
+        "series": [
+            {
+                "time": datetime.fromtimestamp(item.get("time")).strftime("%Y-%m-%d"),
+                "value": float(item.get("value")),
+            }
+            for item in rsi.get("series", {}).get("value", [])[-100:]
+        ],
+    }
     # OBV - On Balance Volume
-    obv_series = ta.obv(df["close"], df["volume"])
-    indicators["obv"] = _get_last_value(obv_series)
-
+    obv = series_indicators.get("obv", {})
+    obv_series = obv.get("series", [])
+    indicators["obv"] = obv.get("lastValue")
     # OBV change (last 5 periods)
     if obv_series is not None and len(obv_series) >= 5:
         obv_values = obv_series.dropna().tail(5).tolist()
@@ -194,107 +189,30 @@ def calculate_all_indicators(
     else:
         indicators["obv_trend"] = "neutral"
 
-    # CMF - Chaikin Money Flow (20)
-    indicators["cmf"] = _get_last_value(
-        ta.cmf(df["high"], df["low"], df["close"], df["volume"], length=20)
-    )
-
-    # ==========================================================================
-    # 5. SUPPORT / RESISTANCE
-    # ==========================================================================
-
-    # Classic Pivot Points
-    pivot_points = calculate_pivot_points(
-        high=df["high"].iloc[-1],
-        low=df["low"].iloc[-1],
-        close=df["close"].iloc[-1],
-    )
-    indicators["pivot_points"] = pivot_points
-
-    # Fibonacci Retracement levels (based on recent high/low)
-    lookback = 50 if timeframe == "short_term" else 100
-    recent_high = df["high"].tail(lookback).max()
-    recent_low = df["low"].tail(lookback).min()
-    indicators["fibonacci"] = calculate_fibonacci_levels(recent_high, recent_low)
-
     # Recent high/low
-    indicators["recent_high"] = recent_high
-    indicators["recent_low"] = recent_low
+    indicators["recent_high"] = float(df["high"].max())
+    indicators["recent_low"] = float(df["low"].min())
 
     # Current price info
-    indicators["current_price"] = df["close"].iloc[-1]
-    indicators["price_change"] = df["close"].iloc[-1] - df["close"].iloc[-2]
-    indicators["price_change_pct"] = (
+    indicators["current_price"] = float(df["close"].iloc[-1])
+    indicators["price_change"] = float(df["close"].iloc[-1] - df["close"].iloc[-2])
+    indicators["price_change_pct"] = float(
         (df["close"].iloc[-1] - df["close"].iloc[-2]) / df["close"].iloc[-2] * 100
     )
 
     # MA Position Analysis
     current_price = df["close"].iloc[-1]
     indicators["price_vs_sma20"] = _compare_price_to_ma(
-        current_price, indicators["sma20"]
+        current_price, indicators.get("sma20")
     )
     indicators["price_vs_sma50"] = _compare_price_to_ma(
-        current_price, indicators["sma50"]
+        current_price, indicators.get("sma50")
     )
     indicators["price_vs_sma200"] = _compare_price_to_ma(
-        current_price, indicators["sma200"]
+        current_price, indicators.get("sma200")
     )
 
     return indicators
-
-
-def calculate_pivot_points(high: float, low: float, close: float) -> dict:
-    """
-    Calculate Classic Pivot Points.
-
-    Args:
-        high: Previous period high
-        low: Previous period low
-        close: Previous period close
-
-    Returns:
-        Dictionary with pivot, support and resistance levels
-    """
-    pivot = (high + low + close) / 3
-    r1 = 2 * pivot - low
-    s1 = 2 * pivot - high
-    r2 = pivot + (high - low)
-    s2 = pivot - (high - low)
-    r3 = high + 2 * (pivot - low)
-    s3 = low - 2 * (high - pivot)
-
-    return {
-        "pivot": round(pivot, 2),
-        "r1": round(r1, 2),
-        "r2": round(r2, 2),
-        "r3": round(r3, 2),
-        "s1": round(s1, 2),
-        "s2": round(s2, 2),
-        "s3": round(s3, 2),
-    }
-
-
-def calculate_fibonacci_levels(high: float, low: float) -> dict:
-    """
-    Calculate Fibonacci Retracement levels.
-
-    Args:
-        high: Range high price
-        low: Range low price
-
-    Returns:
-        Dictionary with Fibonacci retracement levels
-    """
-    diff = high - low
-    return {
-        "level_0": round(high, 2),
-        "level_236": round(high - diff * 0.236, 2),
-        "level_382": round(high - diff * 0.382, 2),
-        "level_500": round(high - diff * 0.5, 2),
-        "level_618": round(high - diff * 0.618, 2),
-        "level_786": round(high - diff * 0.786, 2),
-        "level_100": round(low, 2),
-    }
 
 
 def generate_method_evaluations(
@@ -555,14 +473,6 @@ def generate_method_evaluations(
         )
 
     return methods
-
-
-def _get_last_value(series: Optional[pd.Series]) -> Optional[float]:
-    """Get the last non-null value from a pandas Series."""
-    if series is None or series.empty:
-        return None
-    last_val = series.dropna().iloc[-1] if not series.dropna().empty else None
-    return round(float(last_val), 2) if last_val is not None else None
 
 
 def _compare_price_to_ma(price: float, ma: Optional[float]) -> Optional[str]:
