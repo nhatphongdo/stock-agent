@@ -180,7 +180,7 @@ async function addPortfolioStock() {
   const prc = parseFloat(newStockPrice.value);
 
   if (!sym || isNaN(prc)) {
-    alert("Vui lòng nhập đầy đủ thông tin");
+    showAlert("Vui lòng nhập đầy đủ thông tin", { type: "warning" });
     return;
   }
 
@@ -200,8 +200,9 @@ async function addPortfolioStock() {
       cancelEditStock();
       fetchPortfolioStocks();
     } else {
-      alert(
+      showAlert(
         editingStockId ? "Lỗi khi cập nhật cổ phiếu" : "Lỗi khi thêm cổ phiếu",
+        { type: "error" },
       );
     }
   } catch (error) {
@@ -213,7 +214,14 @@ async function addPortfolioStock() {
  * Remove a stock from the portfolio
  */
 async function removePortfolioStock(stockId) {
-  if (!confirm("Bạn có chắc muốn xóa mã này khỏi danh mục?")) return;
+  const confirmed = await showConfirm(
+    "Bạn có chắc muốn xóa mã này khỏi danh mục?",
+    {
+      type: "danger",
+      confirmText: "Xóa",
+    },
+  );
+  if (!confirmed) return;
 
   try {
     const response = await fetch(`/stocks/${stockId}`, {
@@ -223,10 +231,254 @@ async function removePortfolioStock(stockId) {
     if (response.ok) {
       fetchPortfolioStocks();
     } else {
-      alert("Lỗi khi xóa cổ phiếu");
+      showAlert("Lỗi khi xóa cổ phiếu", { type: "error" });
     }
   } catch (error) {
     console.error("Error removing stock:", error);
+  }
+}
+
+// --- XLSX Import Functionality ---
+
+/** @type {Array<{symbol: string, avgPrice: number}>} */
+let pendingImportData = [];
+let importConfirmOverlay = null;
+
+/**
+ * Trigger file input for XLSX import
+ */
+function triggerXLSXImport() {
+  const fileInput = /** @type {HTMLInputElement} */ (
+    document.getElementById("xlsx-file-input")
+  );
+  if (fileInput) {
+    fileInput.value = ""; // Reset to allow re-selecting same file
+    fileInput.click();
+  }
+}
+
+/**
+ * Handle XLSX file selection
+ * @param {Event} event
+ */
+function handleXLSXFileSelected(event) {
+  const input = /** @type {HTMLInputElement} */ (event.target);
+  const file = input.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = new Uint8Array(
+        /** @type {ArrayBuffer} */ (e.target?.result),
+      );
+      const workbook = XLSX.read(data, { type: "array" });
+
+      // Try to find "Portfolio" sheet or use first sheet
+      let sheetName = workbook.SheetNames.find(
+        (name) => name.toLowerCase() === "portfolio",
+      );
+      if (!sheetName) {
+        sheetName = workbook.SheetNames[0];
+      }
+
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+      // Parse and aggregate data
+      const aggregatedStocks = parseXLSXData(jsonData);
+
+      if (aggregatedStocks.length === 0) {
+        showAlert("Không tìm thấy dữ liệu hợp lệ trong file XLSX", {
+          type: "warning",
+        });
+        return;
+      }
+
+      // Store pending data and show confirmation dialog
+      pendingImportData = aggregatedStocks;
+      showImportConfirmDialog(file.name, aggregatedStocks);
+    } catch (error) {
+      console.error("Error parsing XLSX:", error);
+      showAlert("Lỗi khi đọc file XLSX. Vui lòng kiểm tra định dạng file.", {
+        type: "error",
+      });
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/**
+ * Parse XLSX data and aggregate stocks with weighted average
+ * Expected columns: A=Symbol, E=Shares, F=Buy Price, M=Status (only "OPEN")
+ * @param {Array<Array<any>>} rows
+ * @returns {Array<{symbol: string, avgPrice: number}>}
+ */
+function parseXLSXData(rows) {
+  // Map to accumulate: symbol -> { totalValue, totalShares }
+  /** @type {Map<string, {totalValue: number, totalShares: number}>} */
+  const stockMap = new Map();
+
+  // Skip header row (index 0), start from row 1
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || row.length === 0) continue;
+
+    // Column indices: A=0, E=4, F=5, M=12
+    const symbol = String(row[0] || "")
+      .trim()
+      .toUpperCase();
+    const existingSymbol = !!symbolsMap[symbol];
+    const shares = parseFloat(row[4]) || 0;
+    const buyPrice = parseFloat(row[5]) || 0;
+    const status = String(row[12] || "")
+      .trim()
+      .toUpperCase();
+
+    // Skip if not OPEN or invalid data
+    if (
+      status !== "OPEN" ||
+      !symbol ||
+      !existingSymbol ||
+      shares <= 0 ||
+      buyPrice <= 0
+    ) {
+      continue;
+    }
+
+    // Aggregate
+    const existing = stockMap.get(symbol);
+    if (existing) {
+      existing.totalValue += buyPrice * shares;
+      existing.totalShares += shares;
+    } else {
+      stockMap.set(symbol, {
+        totalValue: buyPrice * shares,
+        totalShares: shares,
+      });
+    }
+  }
+
+  // Calculate weighted average for each symbol
+  /** @type {Array<{symbol: string, avgPrice: number}>} */
+  const result = [];
+  stockMap.forEach((value, symbol) => {
+    const avgPrice = value.totalValue / value.totalShares;
+    result.push({ symbol, avgPrice: Math.round(avgPrice) });
+  });
+
+  return result;
+}
+
+/**
+ * Show the import confirmation dialog
+ * @param {string} fileName
+ * @param {Array<{symbol: string, avgPrice: number}>} stocks
+ */
+function showImportConfirmDialog(fileName, stocks) {
+  importConfirmOverlay = document.getElementById("import-confirm-overlay");
+  const fileNameEl = document.getElementById("import-file-name");
+  const stockCountEl = document.getElementById("import-stock-count");
+
+  if (fileNameEl) fileNameEl.textContent = fileName;
+  if (stockCountEl)
+    stockCountEl.innerHTML = `Tìm thấy <strong>${
+      stocks.length
+    }</strong> mã cổ phiếu: <i>${[
+      ...new Set(stocks.map((stock) => stock.symbol)),
+    ].join(", ")}</i>`;
+
+  if (importConfirmOverlay) {
+    importConfirmOverlay.classList.add("show");
+    lucide.createIcons({ root: importConfirmOverlay });
+  }
+}
+
+/**
+ * Cancel the import and close dialog
+ */
+function cancelImport() {
+  pendingImportData = [];
+  if (importConfirmOverlay) {
+    importConfirmOverlay.classList.remove("show");
+  }
+}
+
+/**
+ * Confirm import with specified mode
+ * @param {'append' | 'replace'} mode
+ */
+async function confirmImport(mode) {
+  if (!currentUser || pendingImportData.length === 0) {
+    cancelImport();
+    return;
+  }
+
+  // Close dialog first
+  if (importConfirmOverlay) {
+    importConfirmOverlay.classList.remove("show");
+  }
+
+  try {
+    // Get existing stocks to check for duplicates
+    const existingResponse = await fetch(`/users/${currentUser.id}/stocks`);
+    const existingStocks = await existingResponse.json();
+
+    // Create a map of existing stocks: symbol -> [ids]
+    const existingMap = {};
+    existingStocks.forEach((stock) => {
+      existingMap[stock.stock_name.toUpperCase()] =
+        existingMap[stock.stock_name.toUpperCase()] || [];
+      existingMap[stock.stock_name.toUpperCase()].push(stock.id);
+    });
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const stock of pendingImportData) {
+      const existing = existingMap[stock.symbol];
+
+      // Add new stock
+      const response = await fetch(`/users/${currentUser.id}/stocks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          stock_name: stock.symbol,
+          avg_price: stock.avgPrice,
+        }),
+      });
+      if (response.ok) successCount++;
+      else errorCount++;
+
+      // Remove old portfolio stocks if mode is "replace" and there are old records
+      if (existing && existing.length > 0 && mode === "replace") {
+        for (const id of existing) {
+          await fetch(`/stocks/${id}`, {
+            method: "DELETE",
+          });
+        }
+      }
+    }
+
+    // Clear pending data
+    pendingImportData = [];
+
+    // Refresh portfolio table
+    fetchPortfolioStocks();
+
+    // Show result
+    showAlert(
+      errorCount > 0
+        ? `Cập nhật hoàn tất: <strong>${successCount}</strong> thành công, <strong>${errorCount}</strong> lỗi`
+        : `Cập nhật hoàn tất: <strong>${successCount}</strong> thành công`,
+      {
+        type: errorCount > 0 ? "warning" : "success",
+      },
+    );
+  } catch (error) {
+    console.error("Error importing stocks:", error);
+    showAlert("Lỗi khi cập nhật dữ liệu", { type: "error" });
+    pendingImportData = [];
   }
 }
 

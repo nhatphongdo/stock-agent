@@ -134,3 +134,20 @@ declare const lucide: {
 
 declare let selectedStock: string;
 declare function selectStock(symbol: string): void;
+
+// SheetJS library - XLSX parser
+declare const XLSX: {
+  read: (
+    data: ArrayBuffer | Uint8Array | string,
+    options?: { type?: string },
+  ) => {
+    SheetNames: string[];
+    Sheets: Record<string, unknown>;
+  };
+  utils: {
+    sheet_to_json: <T = unknown[]>(
+      worksheet: unknown,
+      options?: { header?: number | string[] | "A" },
+    ) => T[];
+  };
+};

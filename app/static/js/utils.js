@@ -601,3 +601,185 @@ function formatDate(timestamp) {
     year: "numeric",
   });
 }
+
+// ==========================================
+// Custom Dialog System
+// ==========================================
+
+/**
+ * Dialog type configurations
+ */
+const DIALOG_CONFIG = {
+  info: {
+    icon: "info",
+    iconClass: "custom-dialog-icon-info",
+    title: "Thông báo",
+  },
+  success: {
+    icon: "check-circle",
+    iconClass: "custom-dialog-icon-success",
+    title: "Thành công",
+  },
+  warning: {
+    icon: "alert-triangle",
+    iconClass: "custom-dialog-icon-warning",
+    title: "Cảnh báo",
+  },
+  error: {
+    icon: "x-circle",
+    iconClass: "custom-dialog-icon-error",
+    title: "Lỗi",
+  },
+  danger: {
+    icon: "alert-triangle",
+    iconClass: "custom-dialog-icon-danger",
+    title: "Xác nhận",
+  },
+};
+
+/**
+ * Show a custom alert dialog (replacement for native alert)
+ * @param {string} message - The message to display
+ * @param {Object} options - Options for the dialog
+ * @param {string} [options.type="info"] - Type of dialog: 'info' | 'success' | 'warning' | 'error' (default: 'info')
+ * @param {string} [options.title] - Custom title (optional)
+ * @returns {Promise<void>} Resolves when dialog is closed
+ */
+function showAlert(message, options = {}) {
+  return new Promise((resolve) => {
+    const { type = "info", title } = options;
+    const config = DIALOG_CONFIG[type] || DIALOG_CONFIG.info;
+
+    const overlay = document.getElementById("custom-dialog-overlay");
+    const iconContainer = document.getElementById("custom-dialog-icon");
+    const titleEl = document.getElementById("custom-dialog-title");
+    const messageEl = document.getElementById("custom-dialog-message");
+    const buttonsEl = document.getElementById("custom-dialog-buttons");
+
+    // Set icon
+    iconContainer.className = `w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${config.iconClass}`;
+    iconContainer.innerHTML = `<i data-lucide="${config.icon}" class="w-8 h-8"></i>`;
+
+    // Set title and message
+    titleEl.textContent = title || config.title;
+    messageEl.innerHTML = message;
+
+    // Set buttons
+    buttonsEl.innerHTML = `
+      <button class="modal-btn modal-btn-primary w-full ring-1 ring-inset ring-white/1" id="custom-dialog-ok">
+        OK
+      </button>
+    `;
+
+    // Show dialog
+    overlay.classList.add("show");
+    lucide.createIcons({ root: overlay });
+
+    // Close handler
+    const closeDialog = () => {
+      overlay.classList.remove("show");
+      resolve();
+    };
+
+    // Button click handler
+    document.getElementById("custom-dialog-ok").onclick = closeDialog;
+
+    // Overlay click to close
+    overlay.onclick = (e) => {
+      if (e.target === overlay) {
+        closeDialog();
+      }
+    };
+
+    // Escape key to close
+    const escHandler = (e) => {
+      if (e.key === "Escape") {
+        closeDialog();
+        document.removeEventListener("keydown", escHandler);
+      }
+    };
+    document.addEventListener("keydown", escHandler);
+  });
+}
+
+/**
+ * Show a custom confirm dialog (replacement for native confirm)
+ * @param {string} message - The message to display
+ * @param {Object} options - Options for the dialog
+ * @param {string} [options.type="warning"] - Type of dialog: 'warning' | 'danger' | 'info' (default: 'warning')
+ * @param {string} [options.title] - Custom title (optional)
+ * @param {string} [options.confirmText="Xác nhận"] - Confirm button text (default: 'Xác nhận')
+ * @param {string} [options.cancelText="Hủy"] - Cancel button text (default: 'Hủy')
+ * @returns {Promise<boolean>} Resolves true on confirm, false on cancel
+ */
+function showConfirm(message, options = {}) {
+  return new Promise((resolve) => {
+    const {
+      type = "warning",
+      title,
+      confirmText = "Xác nhận",
+      cancelText = "Hủy",
+    } = options;
+    const config = DIALOG_CONFIG[type] || DIALOG_CONFIG.warning;
+
+    const overlay = document.getElementById("custom-dialog-overlay");
+    const iconContainer = document.getElementById("custom-dialog-icon");
+    const titleEl = document.getElementById("custom-dialog-title");
+    const messageEl = document.getElementById("custom-dialog-message");
+    const buttonsEl = document.getElementById("custom-dialog-buttons");
+
+    // Set icon
+    iconContainer.className = `w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${config.iconClass}`;
+    iconContainer.innerHTML = `<i data-lucide="${config.icon}" class="w-8 h-8"></i>`;
+
+    // Set title and message
+    titleEl.textContent = title || config.title;
+    messageEl.innerHTML = message;
+
+    // Determine button style based on type
+    const confirmBtnClass =
+      type === "danger" ? "modal-btn-danger" : "modal-btn-primary";
+
+    // Set buttons
+    buttonsEl.innerHTML = `
+      <button class="modal-btn ${confirmBtnClass} w-full ring-1 ring-inset ring-white/1" id="custom-dialog-confirm">
+        ${confirmText}
+      </button>
+      <button class="modal-btn modal-btn-secondary w-full ring-1 ring-inset ring-white/1" id="custom-dialog-cancel">
+        ${cancelText}
+      </button>
+    `;
+
+    // Show dialog
+    overlay.classList.add("show");
+    lucide.createIcons({ root: overlay });
+
+    // Close handler
+    const closeDialog = (result) => {
+      overlay.classList.remove("show");
+      document.removeEventListener("keydown", escHandler);
+      resolve(result);
+    };
+
+    // Button click handlers
+    document.getElementById("custom-dialog-confirm").onclick = () =>
+      closeDialog(true);
+    document.getElementById("custom-dialog-cancel").onclick = () =>
+      closeDialog(false);
+
+    // Overlay click to cancel
+    overlay.onclick = (e) => {
+      if (e.target === overlay) {
+        closeDialog(false);
+      }
+    };
+
+    // Escape key to cancel
+    const escHandler = (e) => {
+      if (e.key === "Escape") {
+        closeDialog(false);
+      }
+    };
+    document.addEventListener("keydown", escHandler);
+  });
+}
