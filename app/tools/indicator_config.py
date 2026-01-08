@@ -568,8 +568,23 @@ def _create_default_styling() -> Dict[str, Any]:
     # ------------------------------------------------------------------
     # OVERLAP (Pane 0)
     # ------------------------------------------------------------------
-    config["ma"] = single_color(BLUE)
-    config["ema"] = single_color(ORANGE)
+    # MA with different colors per length
+    config["ma"] = single_color(BLUE)  # Default fallback
+    config["ma_5"] = single_color(SKY)
+    config["ma_10"] = single_color(BLUE)
+    config["ma_20"] = single_color(INDIGO)
+    config["ma_50"] = single_color(PURPLE)
+    config["ma_100"] = single_color(CYAN)
+    config["ma_200"] = single_color(TEAL)
+
+    # EMA with different colors per length
+    config["ema"] = single_color(ORANGE)  # Default fallback
+    config["ema_5"] = single_color(YELLOW)
+    config["ema_10"] = single_color(ORANGE)
+    config["ema_20"] = single_color(AMBER)
+    config["ema_50"] = single_color(ROSE)
+    config["ema_100"] = single_color(PINK)
+    config["ema_200"] = single_color(RED)
     config["wma"] = single_color(CYAN)
     config["dema"] = single_color(PURPLE)
     config["tema"] = single_color(PINK)
@@ -1029,7 +1044,16 @@ def _create_default_styling() -> Dict[str, Any]:
     # ------------------------------------------------------------------
     # VOLUME (Pane 1) - Shared usually 1
     # ------------------------------------------------------------------
-    config["vol_sma"] = single_color(TEAL, pane=1, value_format=NUMBER)
+    # VOL_SMA with different colors per length
+    config["vol_sma"] = single_color(
+        TEAL, pane=1, value_format=NUMBER
+    )  # Default fallback
+    config["vol_sma_5"] = single_color(LIME, pane=1, value_format=NUMBER)
+    config["vol_sma_10"] = single_color(GREEN, pane=1, value_format=NUMBER)
+    config["vol_sma_20"] = single_color(TEAL, pane=1, value_format=NUMBER)
+    config["vol_sma_50"] = single_color(CYAN, pane=1, value_format=NUMBER)
+    config["vol_sma_100"] = single_color(SKY, pane=1, value_format=NUMBER)
+    config["vol_sma_200"] = single_color(BLUE, pane=1, value_format=NUMBER)
     config["obv"] = single_color(TEAL, pane=1, value_format=NUMBER)
     config["mfi"] = single_color(AMBER, pane=1, value_format=NUMBER)
     config["cmf"] = single_color(TEAL, pane=1, value_format=NUMBER)

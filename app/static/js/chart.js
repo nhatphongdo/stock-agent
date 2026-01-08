@@ -23,7 +23,7 @@ let intervalDropdownInitialized = false;
 // Auto-reload state
 let autoReloadEnabled = false;
 let autoReloadIntervalId = null;
-const AUTO_RELOAD_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+const AUTO_RELOAD_INTERVAL_MS = 1 * 60 * 1000; // every minute
 
 /**
  * Render symbol list items based on search filter
