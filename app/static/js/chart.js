@@ -545,7 +545,7 @@ function initIndicatorDropdown() {
     if (target && target.classList.contains("indicator-checkbox")) {
       const checkbox = /** @type {HTMLInputElement} */ (target);
       updateBadge();
-      toggleIndicator(checkbox.id, checkbox.checked);
+      toggleIndicator();
     }
   });
 
@@ -770,125 +770,29 @@ function initAdvancedChart(symbol) {
 }
 
 /**
- * Toggle a single indicator on/off without re-rendering the entire chart
- * @param {string} indicatorId - The checkbox ID of the indicator
- * @param {boolean} enabled - Whether the indicator should be shown
+ * Handle indicator checkbox change - clear and reload all indicators
+ * Uses batch API pattern from chart-indicator.js
  */
-function toggleIndicator(indicatorId, enabled) {
+function toggleIndicator() {
   // If chart is not available, fall back to full re-render
   if (!priceChart) {
-    const timeframe =
-      /** @type {HTMLSelectElement | null} */ (
-        document.getElementById("chart-timeframe")
-      )?.value || "1M";
-    const interval =
-      /** @type {HTMLSelectElement | null} */ (
-        document.getElementById("chart-interval")
-      )?.value || "1D";
-    renderAdvancedChart(currentChartSymbol, timeframe, interval);
+    renderAdvancedChart(currentChartSymbol, currentTimeframe, currentInterval);
     return;
   }
 
-  const checkbox = document.getElementById(indicatorId);
-  const indicatorKey = checkbox?.dataset.key;
-  if (!indicatorKey) return;
-
-  if (enabled) {
-    // Add the indicator
-    addIndicatorToChart(indicatorId, indicatorKey);
-  } else {
-    // Remove the indicator
-    removeIndicatorFromChart(indicatorId, indicatorKey);
-  }
-}
-
-/**
- * Add a single indicator to the chart (using backend API)
- * @param {string} indicatorId - The checkbox ID of the indicator
- * @param {string} indicatorKey - The config key for the indicator
- */
-async function addIndicatorToChart(indicatorId, indicatorKey) {
-  if (!priceChart || !candleSeries || !currentChartSymbol) return;
-
-  // Fetch indicator data from backend API
-  const apiResponse = await fetchIndicatorsFromAPI(
-    currentChartSymbol,
-    currentChartStart,
-    currentChartEnd,
-    currentInterval,
-    [indicatorKey],
-  );
-
-  if (!apiResponse || !apiResponse.indicators) {
-    console.warn(`Failed to fetch indicator ${indicatorKey} from API`);
-    return;
-  }
-
-  const apiData = apiResponse.indicators[indicatorKey];
-  if (!apiData || apiData.error) {
-    console.warn(`Indicator ${indicatorKey} returned error:`, apiData?.error);
-    return;
-  }
-
-  // Create context for API-based renderer
-  const ctx = {
-    addLineSeries: (seriesData, options, pane = 0) => {
-      const series = priceChart.addSeries(
-        LightweightCharts.LineSeries,
-        options,
-        pane,
-      );
-      series.setData(seriesData);
-      return series;
-    },
+  // Use batch pattern: clear all and reload all selected
+  handleIndicatorChange({
+    chart: priceChart,
+    candleSeries,
+    seriesMap: indicatorSeriesMap,
     indicatorValues,
     indicatorConfigs,
-    candleSeries,
-  };
-
-  const result = renderIndicatorFromAPI(indicatorKey, apiData, ctx);
-  if (!result) return;
-
-  indicatorSeriesMap.set(indicatorId, result);
-}
-
-/**
- * Remove a single indicator from the chart
- * @param {string} indicatorId - The checkbox ID of the indicator
- * @param {string} indicatorKey - The config key for the indicator
- */
-function removeIndicatorFromChart(indicatorId, indicatorKey) {
-  if (!priceChart) return;
-
-  const stored = indicatorSeriesMap.get(indicatorId);
-  if (!stored) return;
-
-  stored.forEach((item) => {
-    if (item.type === "series") {
-      // Remove each line series
-      try {
-        priceChart.removeSeries(item.series);
-      } catch (e) {
-        console.warn("Failed to remove series:", e);
-      }
-    } else if (item.type === "priceLines") {
-      // Remove price lines from candle series
-      try {
-        candleSeries.removePriceLine(item.series);
-      } catch (e) {
-        console.warn("Failed to remove price line:", e);
-      }
-    }
+    symbol: currentChartSymbol,
+    start: currentChartStart,
+    end: currentChartEnd,
+    interval: currentInterval,
+    panelSelector: "#indicator-dropdown-panel",
   });
-
-  // Remove from stored value and configs
-  for (const time of Object.keys(indicatorValues)) {
-    delete indicatorValues[time][indicatorKey];
-  }
-  delete indicatorConfigs[indicatorKey];
-
-  // Clear from map
-  indicatorSeriesMap.delete(indicatorId);
 }
 
 // Helper to check if indicator is enabled
@@ -1060,18 +964,19 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
   priceChart.panes()[1]?.setHeight(150);
 
   // =====================
-  // ADD ENABLED INDICATORS
+  // ADD ENABLED INDICATORS (Batch Load)
   // =====================
-  const indicatorCheckboxes = document.querySelectorAll(
-    '#indicator-dropdown-panel input[type="checkbox"]:checked',
-  );
-  indicatorCheckboxes.forEach((c) => {
-    const checkbox = /** @type {HTMLInputElement} */ (c);
-    const indicatorId = checkbox.id;
-    const indicatorKey = checkbox.dataset.key;
-    if (checkbox.checked && indicatorKey) {
-      addIndicatorToChart(indicatorId, indicatorKey);
-    }
+  handleIndicatorChange({
+    chart: priceChart,
+    candleSeries,
+    seriesMap: indicatorSeriesMap,
+    indicatorValues,
+    indicatorConfigs,
+    symbol,
+    start: currentChartStart,
+    end: currentChartEnd,
+    interval,
+    panelSelector: "#indicator-dropdown-panel",
   });
 
   // Create tooltip using shared utility

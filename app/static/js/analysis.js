@@ -198,7 +198,7 @@ function initAnalysisIndicatorDropdown() {
     if (target && target.classList.contains("indicator-checkbox")) {
       const checkbox = /** @type {HTMLInputElement} */ (target);
       updateBadge();
-      toggleAnalysisIndicator(checkbox.id, checkbox.checked);
+      toggleAnalysisIndicator();
     }
   });
 
@@ -327,11 +327,21 @@ function isAnalysisIndicatorEnabled(indicatorId) {
 }
 
 /**
- * Toggle a single analysis indicator on/off without re-rendering the entire chart
- * @param {string} indicatorId - The checkbox ID of the indicator
- * @param {boolean} enabled - Whether the indicator should be shown
+ * Get analysis chart interval based on active timeframe tab
+ * @returns {string} - Interval string for API
  */
-function toggleAnalysisIndicator(indicatorId, enabled) {
+function getAnalysisChartInterval() {
+  const isShortTerm = document
+    .getElementById("tech-card-short")
+    ?.classList.contains("active");
+  return isShortTerm ? "1D" : "1W";
+}
+
+/**
+ * Handle analysis indicator checkbox change - clear and reload all indicators
+ * Uses batch API pattern from chart-indicator.js
+ */
+function toggleAnalysisIndicator() {
   // If chart or cached data not available, fall back to full re-render
   if (
     !analysisChart ||
@@ -344,112 +354,20 @@ function toggleAnalysisIndicator(indicatorId, enabled) {
     return;
   }
 
-  const checkbox = document.getElementById(indicatorId);
-  const indicatorKey = checkbox?.dataset.key;
-  if (!indicatorKey) return;
-
-  if (enabled) {
-    // Add the indicator
-    addAnalysisIndicatorToChart(indicatorId, indicatorKey);
-  } else {
-    // Remove the indicator
-    removeAnalysisIndicatorFromChart(indicatorId, indicatorKey);
-  }
-}
-
-/**
- * Add a single indicator to the analysis chart
- * @param {string} indicatorId - The checkbox ID of the indicator
- * @param {string} indicatorKey - The config key for the indicator
- */
-async function addAnalysisIndicatorToChart(indicatorId, indicatorKey) {
-  if (!analysisChart || !analysisCandleSeries || !lastFetchedTechnicalSymbol)
-    return;
-
-  // Fetch indicator data from backend API
-  const isShortTerm = document
-    .getElementById("tech-card-short")
-    .classList.contains("active");
-  const apiResponse = await fetchIndicatorsFromAPI(
-    lastFetchedTechnicalSymbol,
-    analysisChartStart,
-    analysisChartEnd,
-    isShortTerm ? "1D" : "1W",
-    [indicatorKey],
-  );
-
-  if (!apiResponse || !apiResponse.indicators) {
-    console.warn(`Failed to fetch indicator ${indicatorKey} from API`);
-    return;
-  }
-
-  const apiData = apiResponse.indicators[indicatorKey];
-  if (!apiData || apiData.error) {
-    console.warn(`Indicator ${indicatorKey} returned error:`, apiData?.error);
-    return;
-  }
-
-  // Create context for API-based renderer
-  const ctx = {
-    addLineSeries: (seriesData, options, pane = 0) => {
-      const series = analysisChart.addSeries(
-        LightweightCharts.LineSeries,
-        options,
-        pane,
-      );
-      series.setData(seriesData);
-      analysisIndicatorSeries.push(series);
-      return series;
-    },
+  // Use batch pattern: clear all and reload all selected
+  handleIndicatorChange({
+    chart: analysisChart,
+    candleSeries: analysisCandleSeries,
+    seriesMap: analysisIndicatorSeriesMap,
     indicatorValues: analysisIndicatorValues,
     indicatorConfigs: analysisIndicatorConfigs,
-    candleSeries: analysisCandleSeries,
-  };
-
-  const result = renderIndicatorFromAPI(indicatorKey, apiData, ctx);
-
-  if (!result) return;
-
-  analysisIndicatorSeriesMap.set(indicatorId, result);
-}
-
-/**
- * Remove a single indicator from the analysis chart
- * @param {string} indicatorId - The checkbox ID of the indicator
- * @param {string} indicatorKey - The config key for the indicator
- */
-function removeAnalysisIndicatorFromChart(indicatorId, indicatorKey) {
-  if (!analysisChart) return;
-
-  const stored = analysisIndicatorSeriesMap.get(indicatorId);
-  if (!stored) return;
-
-  stored.forEach((item) => {
-    if (item.type === "series") {
-      // Remove each line series
-      try {
-        analysisChart.removeSeries(item.series);
-      } catch (e) {
-        console.warn("Failed to remove series:", e);
-      }
-    } else if (item.type === "priceLines") {
-      // Remove price lines from candle series
-      try {
-        analysisCandleSeries.removePriceLine(item.series);
-      } catch (e) {
-        console.warn("Failed to remove price line:", e);
-      }
-    }
+    indicatorSeriesArray: analysisIndicatorSeries,
+    symbol: lastFetchedTechnicalSymbol,
+    start: analysisChartStart,
+    end: analysisChartEnd,
+    interval: getAnalysisChartInterval(),
+    panelSelector: "#analysis-indicator-dropdown-panel",
   });
-
-  // Remove from stored value and configs
-  for (const time of Object.keys(analysisIndicatorValues)) {
-    delete analysisIndicatorValues[time][indicatorKey];
-  }
-  delete analysisIndicatorConfigs[indicatorKey];
-
-  // Clear from map
-  analysisIndicatorSeriesMap.delete(indicatorId);
 }
 
 // Sparkline charts storage
@@ -706,19 +624,19 @@ async function renderAnalysisChart(ohlcv_data) {
   analysisSupportResistanceLines = [];
   drawSummaryKeyLevels();
 
-  // Add all enabled indicators using the shared addAnalysisIndicatorToChart function
-  const checkedInputs = document.querySelectorAll(
-    "#analysis-indicator-dropdown-panel input.indicator-checkbox:checked",
-  );
-
-  // Add all enabled indicators
-  checkedInputs.forEach((input) => {
-    const checkbox = /** @type {HTMLInputElement} */ (input);
-    const indicatorId = checkbox.id;
-    const indicatorKey = checkbox.dataset.key;
-    if (checkbox.checked && indicatorKey) {
-      addAnalysisIndicatorToChart(indicatorId, indicatorKey);
-    }
+  // Add all enabled indicators using batch load
+  handleIndicatorChange({
+    chart: analysisChart,
+    candleSeries: analysisCandleSeries,
+    seriesMap: analysisIndicatorSeriesMap,
+    indicatorValues: analysisIndicatorValues,
+    indicatorConfigs: analysisIndicatorConfigs,
+    indicatorSeriesArray: analysisIndicatorSeries,
+    symbol: lastFetchedTechnicalSymbol,
+    start: analysisChartStart,
+    end: analysisChartEnd,
+    interval: getAnalysisChartInterval(),
+    panelSelector: "#analysis-indicator-dropdown-panel",
   });
 
   // Create tooltip using shared utility
