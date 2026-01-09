@@ -34,6 +34,7 @@ function saveConversation() {
 
 /**
  * Loads the conversation from sessionStorage.
+ * Collapses all old messages except the latest conversation.
  */
 function loadConversation() {
   if (!messagesContainer || !chatContainer) initChatElements();
@@ -41,10 +42,184 @@ function loadConversation() {
   if (saved) {
     messagesContainer.innerHTML = saved;
     lucide.createIcons({ root: messagesContainer });
+
+    // Re-attach click handlers for any existing collapsed sections
+    reattachCollapsedSectionHandlers();
+
+    // Collapse old messages, keeping only the latest conversation visible
+    collapseOldMessages();
+
     chatContainer.scrollTop = chatContainer.scrollHeight;
     // Extract symbols from loaded conversation
     extractAndUpdateSymbols();
   }
+}
+
+/**
+ * Attaches click handler for a collapsed section toggle button.
+ * @param {Element} section - The collapsed section element
+ */
+function attachCollapsedSectionToggle(section) {
+  const toggleBtn = section.querySelector(".collapsed-section-toggle");
+  const header = section.querySelector(".collapsed-section-header");
+  const content = section.querySelector(".collapsed-section-content");
+
+  if (!toggleBtn || !header || !content) return;
+
+  toggleBtn.addEventListener("click", () => {
+    const isExpanded = toggleBtn.getAttribute("aria-expanded") === "true";
+    toggleBtn.setAttribute("aria-expanded", String(!isExpanded));
+    content.classList.toggle("expanded");
+    header.classList.toggle("expanded");
+  });
+}
+
+/**
+ * Re-attaches click handlers for collapsed sections after loading from sessionStorage.
+ * Event handlers are lost when HTML is saved/restored, so we need to re-attach them.
+ */
+function reattachCollapsedSectionHandlers() {
+  if (!messagesContainer) return;
+
+  messagesContainer
+    .querySelectorAll(".collapsed-section")
+    .forEach((section) => {
+      const toggleBtn = section.querySelector(".collapsed-section-toggle");
+      if (toggleBtn) {
+        // Clone to remove any stale handlers, then re-attach
+        toggleBtn.replaceWith(toggleBtn.cloneNode(true));
+        attachCollapsedSectionToggle(section);
+      }
+    });
+}
+
+/**
+ * Collapses old messages into an expandable section.
+ * Uses only ONE collapsed section - appends to existing if present.
+ * Messages are sorted from old (top) to new (bottom) within the section.
+ */
+function collapseOldMessages() {
+  if (!messagesContainer) return;
+
+  // Get all direct children
+  const allChildren = Array.from(messagesContainer.children);
+
+  // Find existing collapsed section (if any)
+  const existingSection = allChildren.find((el) =>
+    el.classList.contains("collapsed-section"),
+  );
+
+  // Messages to collapse = all except collapsed section and welcome message
+  const messagesToCollapse = allChildren.filter((el) => {
+    if (el.classList.contains("collapsed-section")) return false;
+    if (el.querySelector("#welcome-text")) return false;
+    return true;
+  });
+
+  // Check if there are any user messages to collapse
+  const hasUserMessages = messagesToCollapse.some((el) =>
+    el.classList.contains("user-bubble-container"),
+  );
+  if (!hasUserMessages) return;
+
+  // If existing section, append messages to it
+  if (existingSection) {
+    const content = existingSection.querySelector(".collapsed-section-content");
+    if (content) {
+      // Append new messages at the bottom (maintaining old→new order)
+      messagesToCollapse.forEach((msg) => {
+        content.appendChild(msg);
+      });
+
+      // Update count and timestamp in header
+      updateCollapsedSectionHeader(existingSection, content);
+    }
+    return;
+  }
+
+  // No existing section - create new one
+  const collapsedSection = document.createElement("div");
+  collapsedSection.className = "collapsed-section";
+
+  // Create header
+  const header = document.createElement("div");
+  header.className = "collapsed-section-header";
+
+  // Create content container
+  const content = document.createElement("div");
+  content.className = "collapsed-section-content";
+
+  // Move messages to content container (maintaining order)
+  messagesToCollapse.forEach((msg) => {
+    content.appendChild(msg);
+  });
+
+  // Add header from template
+  const template = /** @type {HTMLTemplateElement} */ (
+    document.getElementById("collapsed-section-template")
+  );
+  if (template) {
+    const clone = document.importNode(template.content, true);
+    header.appendChild(clone);
+  } else {
+    console.error("Template 'collapsed-section-template' not found");
+  }
+
+  // Assemble section
+  collapsedSection.appendChild(header);
+  collapsedSection.appendChild(content);
+
+  // Update header with count and timestamp
+  updateCollapsedSectionHeader(collapsedSection, content);
+
+  // Insert at the beginning (after welcome if exists)
+  const welcomeMsg = messagesContainer
+    .querySelector("#welcome-text")
+    ?.closest(".flex");
+  if (welcomeMsg) {
+    welcomeMsg.after(collapsedSection);
+  } else if (messagesContainer.firstChild) {
+    messagesContainer.insertBefore(
+      collapsedSection,
+      messagesContainer.firstChild,
+    );
+  } else {
+    messagesContainer.appendChild(collapsedSection);
+  }
+
+  // Add click handler
+  attachCollapsedSectionToggle(collapsedSection);
+  lucide.createIcons({ root: collapsedSection });
+}
+
+/**
+ * Updates the collapsed section header with current count and latest timestamp.
+ * @param {Element} section - The collapsed section element
+ * @param {Element} content - The content container with messages
+ */
+function updateCollapsedSectionHeader(section, content) {
+  const allMsgs = Array.from(content.children);
+  const userMsgs = allMsgs.filter((el) =>
+    el.classList.contains("user-bubble-container"),
+  );
+
+  // Get timestamp from the last user message
+  const lastUserMsg = /** @type {HTMLElement|undefined} */ (
+    userMsgs[userMsgs.length - 1]
+  );
+  const timestamp =
+    lastUserMsg?.dataset?.timestamp ||
+    new Date().toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  // Update text and time
+  const textEl = section.querySelector(".collapsed-section-text");
+  const timeEl = section.querySelector(".collapsed-section-time");
+  if (textEl)
+    textEl.textContent = `Cuộc hội thoại trước (${userMsgs.length} lượt hỏi đáp)`;
+  if (timeEl) timeEl.textContent = timestamp;
 }
 
 /**
@@ -141,6 +316,13 @@ function addMessage(sender, content) {
   const messageDiv = document.createElement("div");
   messageDiv.className = "flex gap-4 justify-end group user-bubble-container";
 
+  // Add timestamp to user message for collapse button display
+  const timestamp = new Date().toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  messageDiv.dataset.timestamp = timestamp;
+
   const template = /** @type {HTMLTemplateElement} */ (
     document.getElementById("user-message-template")
   );
@@ -182,6 +364,8 @@ async function analyzeTask(
   let task = null;
 
   // Determine analysis type and set task/message
+  // Collapse old messages before adding new user message
+  collapseOldMessages();
   if (sectorCode && sectorName) {
     // Sector analysis
     addMessage("user", `✨ Phân tích tổng quan ngành ${sectorName}`);

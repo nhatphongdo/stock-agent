@@ -158,3 +158,108 @@
 .skeleton-bar:last-child {
   margin-bottom: 0;
 }
+
+/* Collapsed Old Messages Section */
+.collapsed-section {
+  margin-bottom: 1.5rem;
+}
+
+.collapsed-section-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.collapsed-section-toggle {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.collapsed-section-toggle:hover .collapsed-section-label {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.collapsed-section-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(99, 102, 241, 0.3) 50%,
+    transparent
+  );
+}
+
+.collapsed-section-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgb(99, 102, 241);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.dark .collapsed-section-label {
+  background: rgba(30, 41, 59, 0.5);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: rgb(165, 180, 252);
+}
+
+.collapsed-chevron {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.collapsed-section-header.expanded .collapsed-chevron {
+  transform: rotate(90deg);
+}
+
+.collapsed-section-text {
+  color: inherit;
+}
+
+.collapsed-section-time {
+  opacity: 0.6;
+  font-weight: 400;
+}
+
+.collapsed-section-content {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.3s ease,
+    padding 0.3s ease;
+  padding: 0;
+}
+
+.collapsed-section-content.expanded {
+  max-height: none;
+  overflow: visible;
+  opacity: 1;
+  padding: 1rem 0;
+}
+
+.collapsed-section-content > * {
+  margin-bottom: 1.5rem;
+}
+
+.collapsed-section-content > *:last-child {
+  margin-bottom: 0;
+}
