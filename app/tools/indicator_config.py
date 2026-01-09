@@ -541,6 +541,7 @@ def _create_default_styling() -> Dict[str, Any]:
         return f"{light_color}b3"
 
     # Line styles
+    HIDDEN = -1
     SOLID = 0
     DOTTED = 1
     DASHED = 2
@@ -634,8 +635,8 @@ def _create_default_styling() -> Dict[str, Any]:
             "upper": DASHED,
             "middle": SOLID,
             "lower": DASHED,
-            "bandwidth": DASHED,
-            "percentage": DASHED,
+            "bandwidth": HIDDEN,
+            "percentage": HIDDEN,
         },
         "valueFormat": PRICE,
     }
@@ -692,12 +693,12 @@ def _create_default_styling() -> Dict[str, Any]:
     }
 
     # ------------------------------------------------------------------
-    # MOMENTUM (Pane 1, 2...) - Usually separate panes
+    # MOMENTUM - Usually separated panes
     # ------------------------------------------------------------------
 
-    config["rsi"] = single_color(PURPLE, pane=0, value_format=NUMBER)
+    config["rsi"] = single_color(PURPLE, pane=2, value_format=NUMBER)
     config["macd"] = {
-        "pane": 0,
+        "pane": 2,
         "colors": {
             "dark": {
                 "line": get_dark_color(INDIGO),
@@ -710,7 +711,7 @@ def _create_default_styling() -> Dict[str, Any]:
         "valueFormat": NUMBER,
     }
     config["stoch"] = {
-        "pane": 0,
+        "pane": 2,
         "colors": {
             "dark": {"k": get_dark_color(GREEN), "d": get_dark_color(RED)},
             "light": {"k": GREEN, "d": RED},
@@ -718,13 +719,13 @@ def _create_default_styling() -> Dict[str, Any]:
         "lineStyles": {"k": SOLID, "d": DASHED},
         "valueFormat": NUMBER,
     }
-    config["williams"] = single_color(CYAN, pane=0, value_format=NUMBER)
-    config["cci"] = single_color(PURPLE, pane=0, value_format=NUMBER)
-    config["roc"] = single_color(ORANGE, pane=0, value_format=NUMBER)
+    config["williams"] = single_color(CYAN, pane=2, value_format=NUMBER)
+    config["cci"] = single_color(PURPLE, pane=2, value_format=NUMBER)
+    config["roc"] = single_color(ORANGE, pane=2, value_format=NUMBER)
 
-    # Other Momentums - Defaults to Pane 1 (Separate)
+    # Other Momentums - Defaults to separate pane
     config["stochrsi"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {"k": get_dark_color(BLUE), "d": get_dark_color(RED)},
             "light": {"k": BLUE, "d": RED},
@@ -732,11 +733,11 @@ def _create_default_styling() -> Dict[str, Any]:
         "lineStyles": {"k": SOLID, "d": DASHED},
         "valueFormat": PRICE,
     }
-    config["mom"] = single_color(BLUE, pane=1)
-    config["ao"] = single_color(GREEN, pane=1)
-    config["apo"] = single_color(ORANGE, pane=1)
+    config["mom"] = single_color(BLUE, pane=2)
+    config["ao"] = single_color(GREEN, pane=2)
+    config["apo"] = single_color(ORANGE, pane=2)
     config["ppo"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {
                 "ppo": get_dark_color(BLUE),
@@ -748,9 +749,9 @@ def _create_default_styling() -> Dict[str, Any]:
         "lineStyles": {"ppo": SOLID, "signal": DASHED, "histogram": SOLID},
         "valueFormat": PRICE,
     }
-    config["bias"] = single_color(CYAN, pane=1)
+    config["bias"] = single_color(CYAN, pane=2)
     config["brar"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {"ar": get_dark_color(PURPLE), "br": get_dark_color(ORANGE)},
             "light": {"ar": PURPLE, "br": ORANGE},
@@ -758,14 +759,14 @@ def _create_default_styling() -> Dict[str, Any]:
         "lineStyles": {"ar": SOLID, "br": DASHED},
         "valueFormat": PRICE,
     }
-    config["cfo"] = single_color(PINK, pane=1)
-    config["cg"] = single_color(YELLOW, pane=1)
-    config["cmo"] = single_color(GREEN, pane=1)
-    config["coppock"] = single_color(RED, pane=1)
-    config["cti"] = single_color(BLUE, pane=1)
-    config["er"] = single_color(ORANGE, pane=1)
+    config["cfo"] = single_color(PINK, pane=2)
+    config["cg"] = single_color(YELLOW, pane=2)
+    config["cmo"] = single_color(GREEN, pane=2)
+    config["coppock"] = single_color(RED, pane=2)
+    config["cti"] = single_color(BLUE, pane=2)
+    config["er"] = single_color(ORANGE, pane=2)
     config["eri"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {"bull": get_dark_color(GREEN), "bear": get_dark_color(RED)},
             "light": {"bull": GREEN, "bear": RED},
@@ -774,7 +775,7 @@ def _create_default_styling() -> Dict[str, Any]:
         "valueFormat": PRICE,
     }
     config["fisher"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {"fisher": get_dark_color(CYAN), "signal": get_dark_color(ORANGE)},
             "light": {"fisher": CYAN, "signal": ORANGE},
@@ -782,9 +783,9 @@ def _create_default_styling() -> Dict[str, Any]:
         "lineStyles": {"fisher": SOLID, "signal": DASHED},
         "valueFormat": PRICE,
     }
-    config["inertia"] = single_color(PURPLE, pane=1)
+    config["inertia"] = single_color(PURPLE, pane=2)
     config["kdj"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {
                 "k": get_dark_color(BLUE),
@@ -796,10 +797,10 @@ def _create_default_styling() -> Dict[str, Any]:
         "lineStyles": {"k": SOLID, "d": DASHED, "j": SOLID},
         "valueFormat": PRICE,
     }
-    config["pgo"] = single_color(RED, pane=1)
-    config["psl"] = single_color(GREEN, pane=1)
+    config["pgo"] = single_color(RED, pane=2)
+    config["psl"] = single_color(GREEN, pane=2)
     config["qqe"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {
                 "qqe": get_dark_color(BLUE),
@@ -812,7 +813,7 @@ def _create_default_styling() -> Dict[str, Any]:
         "valueFormat": PRICE,
     }
     config["rvgi"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {"rvgi": get_dark_color(BLUE), "signal": get_dark_color(RED)},
             "light": {"rvgi": BLUE, "signal": RED},
@@ -820,9 +821,9 @@ def _create_default_styling() -> Dict[str, Any]:
         "lineStyles": {"rvgi": SOLID, "signal": DASHED},
         "valueFormat": PRICE,
     }
-    config["slope"] = single_color(YELLOW, pane=1)
+    config["slope"] = single_color(YELLOW, pane=2)
     config["smi"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {
                 "smi": get_dark_color(BLUE),
@@ -834,10 +835,10 @@ def _create_default_styling() -> Dict[str, Any]:
         "lineStyles": {"smi": SOLID, "signal": DASHED, "oscillator": SOLID},
         "valueFormat": PRICE,
     }
-    config["squeeze"] = single_color(BLUE, pane=1)
-    config["stc"] = single_color(PURPLE, pane=1)
+    config["squeeze"] = single_color(BLUE, pane=2)
+    config["stc"] = single_color(PURPLE, pane=2)
     config["trix"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {"trix": get_dark_color(BLUE), "signal": get_dark_color(RED)},
             "light": {"trix": BLUE, "signal": RED},
@@ -846,7 +847,7 @@ def _create_default_styling() -> Dict[str, Any]:
         "valueFormat": PRICE,
     }
     config["tsi"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {"tsi": get_dark_color(CYAN), "signal": get_dark_color(RED)},
             "light": {"tsi": CYAN, "signal": RED},
@@ -854,9 +855,9 @@ def _create_default_styling() -> Dict[str, Any]:
         "lineStyles": {"tsi": SOLID, "signal": DASHED},
         "valueFormat": PRICE,
     }
-    config["rsx"] = single_color(PINK, pane=1)
+    config["rsx"] = single_color(PINK, pane=2)
     config["tmo"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {"main": get_dark_color(BLUE), "signal": get_dark_color(RED)},
             "light": {"main": BLUE, "signal": RED},
@@ -864,10 +865,10 @@ def _create_default_styling() -> Dict[str, Any]:
         "lineStyles": {"main": SOLID, "signal": DASHED},
         "valueFormat": PRICE,
     }
-    config["crsi"] = single_color(YELLOW, pane=1)
-    config["bop"] = single_color(BLUE, pane=1)
+    config["crsi"] = single_color(YELLOW, pane=2)
+    config["bop"] = single_color(BLUE, pane=2)
     config["stochf"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {"k": get_dark_color(GREEN), "d": get_dark_color(RED)},
             "light": {"k": GREEN, "d": RED},
@@ -876,7 +877,7 @@ def _create_default_styling() -> Dict[str, Any]:
         "valueFormat": PRICE,
     }
     config["kst"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {"kst": get_dark_color(BLUE), "signal": get_dark_color(RED)},
             "light": {"kst": BLUE, "signal": RED},
@@ -884,15 +885,15 @@ def _create_default_styling() -> Dict[str, Any]:
         "lineStyles": {"kst": SOLID, "signal": DASHED},
         "valueFormat": PRICE,
     }
-    config["rsi_fast"] = single_color(ORANGE, pane=1)
-    config["uo"] = single_color(CYAN, pane=1)
-    config["squeeze_pro"] = single_color(BLUE, pane=1)
+    config["rsi_fast"] = single_color(ORANGE, pane=2)
+    config["uo"] = single_color(CYAN, pane=2)
+    config["squeeze_pro"] = single_color(BLUE, pane=2)
 
     # ------------------------------------------------------------------
-    # TREND (Pane 1)
+    # TREND (Separated pane)
     # ------------------------------------------------------------------
     config["adx"] = {
-        "pane": 0,
+        "pane": 2,
         "colors": {
             "dark": {
                 "adx": get_dark_color(GREEN),
@@ -905,7 +906,7 @@ def _create_default_styling() -> Dict[str, Any]:
         "valueFormat": NUMBER,
     }
     config["aroon"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {"up": get_dark_color(GREEN), "down": get_dark_color(RED)},
             "light": {"up": GREEN, "down": RED},
@@ -913,12 +914,12 @@ def _create_default_styling() -> Dict[str, Any]:
         "lineStyles": {"up": SOLID, "down": DASHED},
         "valueFormat": PRICE,
     }
-    config["chop"] = single_color(BLUE, pane=1)
-    config["decay"] = single_color(ORANGE, pane=1)
-    config["dpo"] = single_color(CYAN, pane=1)
-    config["qstick"] = single_color(PURPLE, pane=1)
+    config["chop"] = single_color(BLUE, pane=2)
+    config["decay"] = single_color(ORANGE, pane=2)
+    config["dpo"] = single_color(CYAN, pane=2)
+    config["qstick"] = single_color(PURPLE, pane=2)
     config["rwi"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {"high": get_dark_color(GREEN), "low": get_dark_color(RED)},
             "light": {"high": GREEN, "low": RED},
@@ -926,9 +927,9 @@ def _create_default_styling() -> Dict[str, Any]:
         "lineStyles": {"high": SOLID, "low": DASHED},
         "valueFormat": PRICE,
     }
-    config["vhf"] = single_color(PINK, pane=1)
+    config["vhf"] = single_color(PINK, pane=2)
     config["vortex"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {"pos": get_dark_color(GREEN), "neg": get_dark_color(RED)},
             "light": {"pos": GREEN, "neg": RED},
@@ -938,7 +939,7 @@ def _create_default_styling() -> Dict[str, Any]:
     }
     config["alphatrend"] = single_color(BLUE, pane=0)
     config["amat"] = single_color(ORANGE, pane=0)
-    config["trendflex"] = single_color(CYAN, pane=1)
+    config["trendflex"] = single_color(CYAN, pane=2)
     config["cksp"] = {
         "pane": 0,
         "colors": {
@@ -948,7 +949,7 @@ def _create_default_styling() -> Dict[str, Any]:
         "lineStyles": {"long": SOLID, "short": DASHED},
         "valueFormat": PRICE,
     }
-    config["ttm_trend"] = single_color(YELLOW, pane=1)
+    config["ttm_trend"] = single_color(YELLOW, pane=2)
     config["psar"] = {
         "pane": 0,
         "colors": {
@@ -964,10 +965,10 @@ def _create_default_styling() -> Dict[str, Any]:
     }
 
     # ------------------------------------------------------------------
-    # VOLATILITY (Pane 0/1)
+    # VOLATILITY (Overlay or separated pane)
     # ------------------------------------------------------------------
-    config["atr"] = single_color(PINK, pane=0, value_format=NUMBER)
-    config["natr"] = single_color(RED, pane=1)
+    config["atr"] = single_color(PINK, pane=2, value_format=NUMBER)
+    config["natr"] = single_color(RED, pane=2)
     config["kc"] = {  # Keltner Channels
         "pane": 0,
         "colors": {
@@ -1021,10 +1022,10 @@ def _create_default_styling() -> Dict[str, Any]:
         "lineStyles": {"zg": SOLID, "sg": DASHED, "xg": SOLID, "atr": SOLID},
         "valueFormat": PRICE,
     }
-    config["massi"] = single_color(PURPLE, pane=1)
-    config["rvi"] = single_color(YELLOW, pane=1)
+    config["massi"] = single_color(PURPLE, pane=2)
+    config["rvi"] = single_color(YELLOW, pane=2)
     config["thermo"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {
                 "thermo": get_dark_color(BLUE),
@@ -1037,12 +1038,12 @@ def _create_default_styling() -> Dict[str, Any]:
         "lineStyles": {"thermo": SOLID, "ma": DASHED, "long": SOLID, "short": SOLID},
         "valueFormat": PRICE,
     }
-    config["ui"] = single_color(RED, pane=1)
-    config["true_range"] = single_color(GREEN, pane=1)
-    config["pdist"] = single_color(CYAN, pane=1)
+    config["ui"] = single_color(RED, pane=2)
+    config["true_range"] = single_color(GREEN, pane=2)
+    config["pdist"] = single_color(CYAN, pane=2)
 
     # ------------------------------------------------------------------
-    # VOLUME (Pane 1) - Shared usually 1
+    # VOLUME (Overlay on Pane 1 or separated pane)
     # ------------------------------------------------------------------
     # VOL_SMA with different colors per length
     config["vol_sma"] = single_color(
@@ -1055,14 +1056,14 @@ def _create_default_styling() -> Dict[str, Any]:
     config["vol_sma_100"] = single_color(SKY, pane=1, value_format=NUMBER)
     config["vol_sma_200"] = single_color(BLUE, pane=1, value_format=NUMBER)
     config["obv"] = single_color(TEAL, pane=1, value_format=NUMBER)
-    config["mfi"] = single_color(AMBER, pane=1, value_format=NUMBER)
-    config["cmf"] = single_color(TEAL, pane=1, value_format=NUMBER)
+    config["mfi"] = single_color(AMBER, pane=2, value_format=NUMBER)
+    config["cmf"] = single_color(TEAL, pane=2, value_format=NUMBER)
 
-    config["adosc"] = single_color(GREEN, pane=1)
-    config["efi"] = single_color(ORANGE, pane=1)
-    config["eom"] = single_color(BLUE, pane=1)
+    config["adosc"] = single_color(GREEN, pane=2)
+    config["efi"] = single_color(ORANGE, pane=2)
+    config["eom"] = single_color(BLUE, pane=2)
     config["pvo"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {
                 "pvo": get_dark_color(BLUE),
@@ -1089,7 +1090,7 @@ def _create_default_styling() -> Dict[str, Any]:
         "lineStyles": {"obv": SOLID, "min": DASHED, "max": SOLID, "ema": SOLID},
         "valueFormat": PRICE,
     }
-    config["tsv"] = single_color(PURPLE, pane=1)
+    config["tsv"] = single_color(PURPLE, pane=2)
     config["ad"] = single_color(GREEN, pane=1)
     config["nvi"] = single_color(BLUE, pane=1)
     config["pvi"] = single_color(ORANGE, pane=1)
@@ -1097,7 +1098,7 @@ def _create_default_styling() -> Dict[str, Any]:
     config["pvr"] = single_color(PURPLE, pane=1)
     config["pvt"] = single_color(PINK, pane=1)
     config["kvo"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {"kvo": get_dark_color(BLUE), "signal": get_dark_color(RED)},
             "light": {"kvo": BLUE, "signal": RED},
@@ -1109,17 +1110,17 @@ def _create_default_styling() -> Dict[str, Any]:
     # ------------------------------------------------------------------
     # STATISTICS (Pane 1)
     # ------------------------------------------------------------------
-    config["stdev"] = single_color(BLUE, pane=1)
-    config["variance"] = single_color(ORANGE, pane=1)
-    config["zscore"] = single_color(CYAN, pane=1)
-    config["skew"] = single_color(PURPLE, pane=1)
-    config["kurtosis"] = single_color(PINK, pane=1)
-    config["entropy"] = single_color(GREEN, pane=1)
-    config["mad"] = single_color(RED, pane=1)
+    config["stdev"] = single_color(BLUE, pane=2)
+    config["variance"] = single_color(ORANGE, pane=2)
+    config["zscore"] = single_color(CYAN, pane=2)
+    config["skew"] = single_color(PURPLE, pane=2)
+    config["kurtosis"] = single_color(PINK, pane=2)
+    config["entropy"] = single_color(GREEN, pane=2)
+    config["mad"] = single_color(RED, pane=2)
     config["median"] = single_color(YELLOW, pane=0)
     config["quantile"] = single_color(BLUE, pane=0)
     config["tos_stdevall"] = {
-        "pane": 1,
+        "pane": 2,
         "colors": {
             "dark": {
                 "lr": get_dark_color(BLUE),
@@ -1135,14 +1136,14 @@ def _create_default_styling() -> Dict[str, Any]:
     # ------------------------------------------------------------------
     # CYCLE (Pane 1)
     # ------------------------------------------------------------------
-    config["ebsw"] = single_color(ORANGE, pane=1)
-    config["reflex"] = single_color(CYAN, pane=1)
+    config["ebsw"] = single_color(ORANGE, pane=2)
+    config["reflex"] = single_color(CYAN, pane=2)
 
     # ------------------------------------------------------------------
     # PERFORMANCE (Pane 1)
     # ------------------------------------------------------------------
-    config["log_return"] = single_color(BLUE, pane=1)
-    config["percent_return"] = single_color(GREEN, pane=1)
+    config["log_return"] = single_color(BLUE, pane=2)
+    config["percent_return"] = single_color(GREEN, pane=2)
 
     # ------------------------------------------------------------------
     # MISC

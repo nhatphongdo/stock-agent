@@ -5,7 +5,11 @@ Technical Indicators utility module using pandas library.
 import pandas as pd
 from typing import Optional
 from datetime import datetime
-from app.tools.vietcap_tools import get_stock_ohlcv
+from app.tools.vietcap_tools import (
+    get_stock_ohlcv,
+    get_company_info,
+    get_annual_return,
+)
 from app.tools.indicator_calculation import calculate_indicators
 
 
@@ -70,6 +74,7 @@ def calculate_all_indicators(
             "cmf",
             "pivot",
             "fib",
+            "vwap",
         ],
         None,
         False,
@@ -127,6 +132,9 @@ def calculate_all_indicators(
 
     # Fibonacci Retracement levels
     indicators["fibonacci"] = no_series_indicators.get("fib", {}).get("lastValue")
+
+    # VWAP - Volume Weighted Average Price
+    indicators["vwap"] = no_series_indicators.get("vwap", {}).get("lastValue")
 
     # ==========================================================================
     # Chart-required series data (for frontend visualization)
@@ -195,10 +203,14 @@ def calculate_all_indicators(
 
     # Current price info
     indicators["current_price"] = float(df["close"].iloc[-1])
+    indicators["current_volume"] = float(df["volume"].iloc[-1])
     indicators["price_change"] = float(df["close"].iloc[-1] - df["close"].iloc[-2])
     indicators["price_change_pct"] = float(
         (df["close"].iloc[-1] - df["close"].iloc[-2]) / df["close"].iloc[-2] * 100
     )
+
+    # Close series for divergence detection (last 10 values)
+    indicators["close_series"] = df["close"].tail(10).tolist()
 
     # MA Position Analysis
     current_price = df["close"].iloc[-1]
@@ -213,266 +225,6 @@ def calculate_all_indicators(
     )
 
     return indicators
-
-
-def generate_method_evaluations(
-    indicators: dict, timeframe: str = "short_term"
-) -> list:
-    """
-    Generate detailed method evaluations based on calculated indicators.
-
-    Args:
-        indicators: Dictionary of calculated indicators
-        timeframe: 'short_term' or 'long_term'
-
-    Returns:
-        List of method evaluation dictionaries
-    """
-    methods = []
-    timeframe_label = "ngắn hạn (1D)" if timeframe == "short_term" else "dài hạn (1W)"
-
-    # 1. RSI Analysis
-    rsi_data = indicators.get("rsi", {})
-    rsi = rsi_data.get("value")
-    if rsi is not None:
-        if rsi < 30:
-            rsi_eval = (
-                f"RSI = {rsi:.1f}, trong vùng quá bán (<30). Có thể là cơ hội mua vào."
-            )
-            rsi_signal = "Bullish"
-        elif rsi > 70:
-            rsi_eval = (
-                f"RSI = {rsi:.1f}, trong vùng quá mua (>70). Có thể cân nhắc chốt lời."
-            )
-            rsi_signal = "Bearish"
-        else:
-            rsi_eval = f"RSI = {rsi:.1f}, trong vùng trung tính (30-70). Chưa có tín hiệu rõ ràng."
-            rsi_signal = "Neutral"
-
-        methods.append(
-            {
-                "name": "RSI Analysis",
-                "category": "Momentum",
-                "description": f"Phân tích chỉ số sức mạnh tương đối RSI(14) cho khung {timeframe_label}",
-                "evaluation": rsi_eval,
-                "signal": rsi_signal,
-                "value": round(rsi, 2),
-            }
-        )
-
-    # 2. MACD Analysis
-    macd = indicators.get("macd", {})
-    macd_line = macd.get("line")
-    macd_signal = macd.get("signal")
-    macd_hist = macd.get("histogram")
-
-    if macd_line is not None and macd_signal is not None:
-        if macd_line > macd_signal and macd_hist > 0:
-            macd_eval = f"MACD ({macd_line:.2f}) > Signal ({macd_signal:.2f}), Histogram dương. Xu hướng tăng."
-            macd_sig = "Bullish"
-        elif macd_line < macd_signal and macd_hist < 0:
-            macd_eval = f"MACD ({macd_line:.2f}) < Signal ({macd_signal:.2f}), Histogram âm. Xu hướng giảm."
-            macd_sig = "Bearish"
-        else:
-            macd_eval = f"MACD = {macd_line:.2f}, Signal = {macd_signal:.2f}. Chờ xác nhận xu hướng."
-            macd_sig = "Neutral"
-
-        methods.append(
-            {
-                "name": "MACD Analysis",
-                "category": "Trend",
-                "description": f"Phân tích đường MACD(12,26,9) cho khung {timeframe_label}",
-                "evaluation": macd_eval,
-                "signal": macd_sig,
-                "value": {"line": round(macd_line, 2), "signal": round(macd_signal, 2)},
-            }
-        )
-
-    # 3. Moving Average Analysis
-    current_price = indicators.get("current_price")
-    sma20 = indicators.get("sma20")
-    sma50 = indicators.get("sma50")
-    sma200 = indicators.get("sma200")
-
-    if current_price and sma20 and sma50:
-        above_sma20 = current_price > sma20
-        above_sma50 = current_price > sma50
-        above_sma200 = current_price > sma200 if sma200 else None
-
-        if above_sma20 and above_sma50:
-            ma_eval = f"Giá ({current_price:,.0f}) > SMA20 ({sma20:,.0f}) > SMA50 ({sma50:,.0f}). Xu hướng tăng mạnh."
-            ma_sig = "Bullish"
-        elif not above_sma20 and not above_sma50:
-            ma_eval = f"Giá ({current_price:,.0f}) < SMA20 ({sma20:,.0f}) < SMA50 ({sma50:,.0f}). Xu hướng giảm."
-            ma_sig = "Bearish"
-        else:
-            ma_eval = (
-                f"Giá ({current_price:,.0f}) đang ở giữa các đường MA. Vùng tích lũy."
-            )
-            ma_sig = "Neutral"
-
-        methods.append(
-            {
-                "name": "Moving Average Analysis",
-                "category": "Trend",
-                "description": f"Phân tích vị trí giá so với các đường MA (SMA20, SMA50, SMA200) cho khung {timeframe_label}",
-                "evaluation": ma_eval,
-                "signal": ma_sig,
-                "value": {"sma20": sma20, "sma50": sma50, "sma200": sma200},
-            }
-        )
-
-    # 4. Bollinger Bands Analysis
-    bb = indicators.get("bollinger_bands", {})
-    bb_upper = bb.get("upper")
-    bb_lower = bb.get("lower")
-    bb_pct = bb.get("percent_b")
-
-    if bb_upper and bb_lower and current_price:
-        if current_price > bb_upper:
-            bb_eval = f"Giá ({current_price:,.0f}) > BB Upper ({bb_upper:,.0f}). Có thể quá mua, cẩn thận breakout giả."
-            bb_sig = "Bearish"
-        elif current_price < bb_lower:
-            bb_eval = f"Giá ({current_price:,.0f}) < BB Lower ({bb_lower:,.0f}). Có thể quá bán, theo dõi hỗ trợ."
-            bb_sig = "Bullish"
-        else:
-            bb_eval = f"Giá nằm trong biên BB ({bb_lower:,.0f} - {bb_upper:,.0f}). Biến động bình thường."
-            bb_sig = "Neutral"
-
-        methods.append(
-            {
-                "name": "Bollinger Bands Analysis",
-                "category": "Volatility",
-                "description": f"Phân tích Bollinger Bands(20,2) cho khung {timeframe_label}",
-                "evaluation": bb_eval,
-                "signal": bb_sig,
-                "value": {"upper": bb_upper, "lower": bb_lower},
-            }
-        )
-
-    # 5. Stochastic Analysis
-    stoch = indicators.get("stochastic", {})
-    stoch_k = stoch.get("k")
-    stoch_d = stoch.get("d")
-
-    if stoch_k is not None:
-        if stoch_k < 20:
-            stoch_eval = (
-                f"%K = {stoch_k:.1f}, trong vùng quá bán (<20). Tín hiệu mua tiềm năng."
-            )
-            stoch_sig = "Bullish"
-        elif stoch_k > 80:
-            stoch_eval = (
-                f"%K = {stoch_k:.1f}, trong vùng quá mua (>80). Tín hiệu bán tiềm năng."
-            )
-            stoch_sig = "Bearish"
-        else:
-            stoch_eval = (
-                f"%K = {stoch_k:.1f}, %D = {stoch_d:.1f}. Trong vùng trung tính."
-            )
-            stoch_sig = "Neutral"
-
-        methods.append(
-            {
-                "name": "Stochastic Oscillator",
-                "category": "Momentum",
-                "description": f"Phân tích Stochastic(14,3,3) cho khung {timeframe_label}",
-                "evaluation": stoch_eval,
-                "signal": stoch_sig,
-                "value": {"k": stoch_k, "d": stoch_d},
-            }
-        )
-
-    # 6. ADX Analysis (Trend Strength)
-    adx_data = indicators.get("adx", {})
-    adx_val = adx_data.get("adx")
-    dmp = adx_data.get("dmp")
-    dmn = adx_data.get("dmn")
-
-    if adx_val is not None:
-        if adx_val > 25:
-            if dmp and dmn and dmp > dmn:
-                adx_eval = f"ADX = {adx_val:.1f} (>25), +DI > -DI. Xu hướng tăng mạnh."
-                adx_sig = "Bullish"
-            elif dmp and dmn and dmp < dmn:
-                adx_eval = f"ADX = {adx_val:.1f} (>25), -DI > +DI. Xu hướng giảm mạnh."
-                adx_sig = "Bearish"
-            else:
-                adx_eval = (
-                    f"ADX = {adx_val:.1f} (>25). Xu hướng mạnh nhưng chưa rõ hướng."
-                )
-                adx_sig = "Neutral"
-        else:
-            adx_eval = f"ADX = {adx_val:.1f} (<25). Thị trường đi ngang, không có xu hướng rõ ràng."
-            adx_sig = "Neutral"
-
-        methods.append(
-            {
-                "name": "ADX Trend Strength",
-                "category": "Trend",
-                "description": f"Phân tích sức mạnh xu hướng ADX(14) cho khung {timeframe_label}",
-                "evaluation": adx_eval,
-                "signal": adx_sig,
-                "value": adx_val,
-            }
-        )
-
-    # 7. Volume Analysis
-    volume_sma = indicators.get("volume_sma20")
-    obv_trend = indicators.get("obv_trend")
-    cmf = indicators.get("cmf")
-
-    if obv_trend:
-        if obv_trend == "increasing" and cmf and cmf > 0:
-            vol_eval = f"OBV tăng, CMF = {cmf:.3f} (>0). Dòng tiền vào tích cực, hỗ trợ xu hướng tăng."
-            vol_sig = "Bullish"
-        elif obv_trend == "decreasing" and cmf and cmf < 0:
-            vol_eval = f"OBV giảm, CMF = {cmf:.3f} (<0). Dòng tiền rút ra, cảnh báo xu hướng giảm."
-            vol_sig = "Bearish"
-        else:
-            cmf_str = f"{cmf:.3f}" if cmf is not None else "N/A"
-            vol_eval = f"OBV {obv_trend}, CMF = {cmf_str}. Khối lượng trung tính."
-            vol_sig = "Neutral"
-
-        methods.append(
-            {
-                "name": "Volume Analysis",
-                "category": "Volume",
-                "description": f"Phân tích khối lượng OBV và CMF(20) cho khung {timeframe_label}",
-                "evaluation": vol_eval,
-                "signal": vol_sig,
-                "value": {"obv_trend": obv_trend, "cmf": cmf},
-            }
-        )
-
-    # 8. Support/Resistance Analysis
-    pivot = indicators.get("pivot_points", {})
-    fib = indicators.get("fibonacci", {})
-
-    if pivot and current_price:
-        pivot_val = pivot.get("pivot")
-        r1 = pivot.get("r1")
-        s1 = pivot.get("s1")
-
-        if current_price > pivot_val:
-            sr_eval = f"Giá ({current_price:,.0f}) > Pivot ({pivot_val:,.0f}). Kháng cự gần nhất: R1 = {r1:,.0f}."
-            sr_sig = "Bullish"
-        else:
-            sr_eval = f"Giá ({current_price:,.0f}) < Pivot ({pivot_val:,.0f}). Hỗ trợ gần nhất: S1 = {s1:,.0f}."
-            sr_sig = "Bearish"
-
-        methods.append(
-            {
-                "name": "Support/Resistance Analysis",
-                "category": "Price Levels",
-                "description": f"Phân tích mức Pivot và Fibonacci cho khung {timeframe_label}",
-                "evaluation": sr_eval,
-                "signal": sr_sig,
-                "value": {"pivot": pivot_val, "fibonacci_618": fib.get("level_618")},
-            }
-        )
-
-    return methods
 
 
 def _compare_price_to_ma(price: float, ma: Optional[float]) -> Optional[str]:

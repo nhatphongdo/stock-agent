@@ -93,9 +93,15 @@ async function fetchAvailableIndicators() {
  * @returns {Object[]|null}
  */
 function renderIndicatorFromAPI(indicatorKey, apiData, ctx) {
-  if (!apiData || apiData.error) return null;
+  if (!apiData || apiData.error || !ctx.chart) return null;
 
   if (apiData.series) {
+    if (apiData.pane > ctx.chart.panes().length - 1) {
+      for (let i = ctx.chart.panes().length; i <= apiData.pane; i++) {
+        ctx.chart.addPane(false);
+      }
+    }
+
     const seriesList = [];
     const seriesKeys = Object.keys(apiData.series);
     const priceLines = apiData.priceLines || {};
@@ -114,6 +120,18 @@ function renderIndicatorFromAPI(indicatorKey, apiData, ctx) {
     let series = null;
     for (const key of seriesKeys) {
       const values = apiData.series[key];
+      if (lineStyles[key] === -1) {
+        if (!priceLines[key]) {
+          // Store value for tooltip
+          values.forEach(({ time, value }) => {
+            ctx.indicatorValues[time] = ctx.indicatorValues[time] || {};
+            ctx.indicatorValues[time][indicatorKey] =
+              ctx.indicatorValues[time][indicatorKey] || {};
+            ctx.indicatorValues[time][indicatorKey][key] = value;
+          });
+        }
+        continue;
+      }
       if (!priceLines[key]) {
         series = ctx.addLineSeries(
           values,
@@ -124,7 +142,7 @@ function renderIndicatorFromAPI(indicatorKey, apiData, ctx) {
           },
           apiData.pane,
         );
-        seriesList.push({ type: "series", series });
+        seriesList.push({ type: "series", series, pane: apiData.pane });
 
         // Store value for tooltip
         values.forEach(({ time, value }) => {
@@ -142,7 +160,7 @@ function renderIndicatorFromAPI(indicatorKey, apiData, ctx) {
           title: priceLines[key],
           pane: apiData.pane,
         });
-        seriesList.push({ type: "priceLines", series });
+        seriesList.push({ type: "priceLines", series, pane: apiData.pane });
       }
     }
 
@@ -235,14 +253,12 @@ function generateIndicatorDropdownHTML(indicators, prefix = "") {
 
 /**
  * Render indicator values for chart on specific pane tooltip
- * @param {Object} indicatorValues - Object mapping time -> indicator values
+ * @param {Object} values - Object mapping indicatorKey -> values for specific time
  * @param {Object} configs - Indicator config to use
- * @param {number | string} time - Unix timestamp
  * @param {number} pane - Pane number
  * @returns {string} - HTML string for indicator values
  */
-function renderPaneIndicatorsTooltip(indicatorValues, configs, time, pane) {
-  const values = indicatorValues[time];
+function renderPaneIndicatorsTooltip(values, configs, pane) {
   if (!values) return "";
 
   const indicatorKeys = Object.keys(values).filter(
@@ -282,14 +298,29 @@ function renderPaneIndicatorsTooltip(indicatorValues, configs, time, pane) {
 
 /**
  * Render all indicator values for tooltip (both price and volume)
- * @param {Object} indicatorValues - Object mapping time -> indicator values
+ * @param {Object} values - Object mapping indicatorKey -> values for specific time
  * @param {Object} configs - Indicator config to use
- * @param {number | string} time - Unix timestamp
  * @returns {string} - HTML string for indicator values
  */
-function renderTooltipIndicators(indicatorValues, configs, time) {
-  let html = renderPaneIndicatorsTooltip(indicatorValues, configs, time, 0);
-  html += renderPaneIndicatorsTooltip(indicatorValues, configs, time, 1);
+function renderTooltipIndicators(values, configs) {
+  if (!values) return "";
+
+  // Collect all unique panes from the available indicator values
+  const panes = new Set();
+  Object.keys(values).forEach((key) => {
+    const conf = configs[key];
+    if (conf && typeof conf.pane === "number") {
+      panes.add(conf.pane);
+    }
+  });
+
+  // Sort panes to ensure consistent order (0, 1, 2, ...)
+  const sortedPanes = Array.from(panes).sort((a, b) => a - b);
+
+  let html = "";
+  for (const pane of sortedPanes) {
+    html += renderPaneIndicatorsTooltip(values, configs, pane);
+  }
   return html;
 }
 
@@ -314,6 +345,7 @@ function createIndicatorContext(
   indicatorSeriesArray = null,
 ) {
   return {
+    chart,
     addLineSeries: (seriesData, options, pane = 0) => {
       const series = chart.addSeries(
         LightweightCharts.LineSeries,

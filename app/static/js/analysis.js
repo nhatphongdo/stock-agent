@@ -701,9 +701,8 @@ async function renderAnalysisChart(ohlcv_data) {
 
       // Add indicator values to tooltip
       tooltipContent += renderTooltipIndicators(
-        analysisIndicatorValues,
+        analysisIndicatorValues[param.time] || {},
         analysisIndicatorConfigs,
-        param.time,
       );
 
       tooltip.innerHTML = tooltipContent;
@@ -1551,6 +1550,7 @@ function updateIndicatorsDisplay(ind, meth, gauges, ohlcv_data) {
           ).firstElementChild;
           if (!clone) return;
 
+          // Signal colors
           const signalColor =
             m.signal === "Bullish"
               ? "emerald"
@@ -1564,9 +1564,23 @@ function updateIndicatorsDisplay(ind, meth, gauges, ohlcv_data) {
                 ? "trending-down"
                 : "minus";
 
+          // Confidence colors
+          const confidenceConfig = {
+            High: { color: "emerald", text: "Cao", icon: "check-circle" },
+            Medium: {
+              color: "amber",
+              text: "Trung bình",
+              icon: "alert-circle",
+            },
+            Low: { color: "slate", text: "Thấp", icon: "help-circle" },
+          };
+          const conf = confidenceConfig[m.confidence] || confidenceConfig.Low;
+
+          // Populate name
           const nameEl = clone.querySelector(".method-name");
           if (nameEl) nameEl.textContent = m.name;
 
+          // Populate signal badge
           const signalBadgeEl = clone.querySelector(".method-signal-badge");
           if (signalBadgeEl) {
             signalBadgeEl.classList.add(
@@ -1577,17 +1591,113 @@ function updateIndicatorsDisplay(ind, meth, gauges, ohlcv_data) {
             );
           }
 
+          // Populate signal icon
           const iconEl = clone.querySelector(".method-icon");
           if (iconEl) iconEl.setAttribute("data-lucide", signalIcon);
 
+          // Populate signal text
           const signalTextEl = clone.querySelector(".method-signal-text");
           if (signalTextEl) signalTextEl.textContent = m.signal;
 
+          // Populate confidence badge
+          const confidenceBadgeEl = clone.querySelector(
+            ".method-confidence-badge",
+          );
+          if (confidenceBadgeEl && m.confidence) {
+            confidenceBadgeEl.textContent = conf.text;
+            confidenceBadgeEl.classList.add(
+              `bg-${conf.color}-50`,
+              `dark:bg-${conf.color}-500/10`,
+              `text-${conf.color}-600`,
+              `dark:text-${conf.color}-400`,
+              `border-${conf.color}-200`,
+              `dark:border-${conf.color}-500/30`,
+            );
+          } else if (confidenceBadgeEl) {
+            /** @type {HTMLElement} */ (confidenceBadgeEl).style.display =
+              "none";
+          }
+
+          // Populate category
           const categoryEl = clone.querySelector(".method-category");
           if (categoryEl) categoryEl.textContent = m.category;
 
+          // Populate evaluation
           const evaluationEl = clone.querySelector(".method-evaluation");
           if (evaluationEl) evaluationEl.textContent = m.evaluation;
+
+          // Populate description
+          const descriptionEl = clone.querySelector(".method-description");
+          if (descriptionEl && m.description) {
+            descriptionEl.textContent = m.description;
+          } else {
+            const descContainer = clone.querySelector(
+              ".method-description-container",
+            );
+            if (descContainer)
+              /** @type {HTMLElement} */ (descContainer).style.display = "none";
+          }
+
+          // Populate value display
+          const valueContentEl = clone.querySelector(".method-value-content");
+          if (valueContentEl && m.value !== undefined && m.value !== null) {
+            if (typeof m.value === "object" && m.value !== null) {
+              // Object value - display as key-value pills
+              Object.entries(m.value).forEach(([key, val]) => {
+                if (val === undefined || val === null) return;
+                const pill = document.createElement("span");
+                pill.className =
+                  "inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300";
+                const formattedKey = key
+                  .replace(/_/g, " ")
+                  .replace(/([A-Z])/g, " $1")
+                  .trim();
+                const formattedVal =
+                  typeof val === "number"
+                    ? val > 1000
+                      ? formatPrice(val)
+                      : formatNumber(val, 2)
+                    : String(val);
+                pill.innerHTML = `<span class="font-semibold text-slate-500 dark:text-slate-400">${formattedKey}:</span> ${formattedVal}`;
+                valueContentEl.appendChild(pill);
+              });
+            } else {
+              // Simple value
+              const pill = document.createElement("span");
+              pill.className =
+                "inline-flex items-center text-[10px] px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 font-semibold";
+              const formattedVal =
+                typeof m.value === "number"
+                  ? m.value > 1000
+                    ? formatPrice(m.value)
+                    : formatNumber(m.value, 2)
+                  : String(m.value);
+              pill.textContent = formattedVal;
+              valueContentEl.appendChild(pill);
+            }
+          } else {
+            const valueContainer = clone.querySelector(
+              ".method-value-container",
+            );
+            if (valueContainer)
+              /** @type {HTMLElement} */ (valueContainer).style.display =
+                "none";
+          }
+
+          // Add click handler for expand/collapse
+          const card = clone;
+          const details = card.querySelector(".method-details");
+          const expandIcon = card.querySelector(".method-expand-icon");
+          card.addEventListener("click", () => {
+            if (details) {
+              const isHidden = details.classList.contains("hidden");
+              details.classList.toggle("hidden");
+              if (expandIcon) {
+                /** @type {HTMLElement} */ (expandIcon).style.transform =
+                  isHidden ? "rotate(180deg)" : "rotate(0deg)";
+              }
+            }
+          });
 
           fragment.appendChild(clone);
         });

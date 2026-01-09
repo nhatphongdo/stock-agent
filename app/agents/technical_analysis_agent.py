@@ -12,9 +12,9 @@ from app.tools.vietcap_tools import get_stock_ohlcv, get_company_info
 from app.tools.technical_indicators import (
     create_ohlcv_dataframe,
     calculate_all_indicators,
-    generate_method_evaluations,
     detect_candlestick_patterns,
 )
+from app.tools.analysis_methods import generate_method_evaluations
 from app.tools.price_patterns import (
     detect_chart_patterns,
     detect_support_resistance_zones,

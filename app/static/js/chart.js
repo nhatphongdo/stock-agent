@@ -10,6 +10,14 @@ let currentChartSymbol = null;
 let currentChartStart = null; // Current chart start date (YYYY-MM-DD)
 let currentChartEnd = null; // Current chart end date (YYYY-MM-DD)
 
+// Analysis method dropdown state
+let analysisMethodDropdownInitialized = false;
+let currentAnalysisMethod = null; // Currently selected method ID
+let analysisMethodMarkers = []; // Store visualization primitives
+let methodIndicatorValues = {}; // Store raw values for analysis method indicators
+let methodIndicatorConfigs = {}; // Store configs for analysis method indicators
+let activeSignalMarkers = []; // Store current signal markers for hover detection
+
 // Store available symbols from latest analysis
 let availableAnalysisSymbols = [];
 let symbolSelectorInitialized = false;
@@ -381,6 +389,11 @@ function closeAllDropdowns(exceptId = null) {
       triggerId: "sr-zone-dropdown-trigger",
     },
     {
+      panelId: "analysis-method-dropdown-panel",
+      chevronId: null,
+      triggerId: "analysis-method-dropdown-trigger",
+    },
+    {
       panelId: "chart-symbol-selector-panel",
       chevronId: "chart-symbol-chevron",
     },
@@ -731,6 +744,7 @@ function triggerChartDisplay(symbol) {
   initPatternDropdown();
   initChartPatternDropdown();
   initSRZoneDropdown();
+  initAnalysisMethodDropdown();
 
   initAdvancedChart(symbol);
 }
@@ -753,6 +767,11 @@ function initAdvancedChart(symbol) {
 
   // Clear data when switching symbols
   indicatorSeriesMap.clear();
+
+  // Clear analysis method data
+  methodIndicatorValues = {};
+  methodIndicatorConfigs = {};
+  activeSignalMarkers = [];
 
   // Clear pattern list UI
   clearPatternListUI();
@@ -1029,12 +1048,38 @@ async function renderAdvancedChart(symbol, timeframe, interval) {
         )}</strong></div>`;
       }
 
-      // Add indicator values using shared utility
-      tooltipContent += renderTooltipIndicators(
-        indicatorValues,
-        indicatorConfigs,
-        param.time,
+      // Add indicator values using shared utility (MERGE standard + method indicators)
+      const mergedValues = {
+        ...(indicatorValues[param.time] || {}),
+        ...(methodIndicatorValues[param.time] || {}),
+      };
+      const mergedConfigs = {
+        ...indicatorConfigs,
+        ...methodIndicatorConfigs,
+      };
+
+      tooltipContent += renderTooltipIndicators(mergedValues, mergedConfigs);
+
+      // Add signal marker info if hovering on a marker
+      const markerAtTime = activeSignalMarkers.find(
+        (m) => m.time === param.time,
       );
+      if (markerAtTime) {
+        const directionIcon = markerAtTime.direction === "up" ? "🟢" : "🔴";
+        const directionText = markerAtTime.direction === "up" ? "Mua" : "Bán";
+        tooltipContent += `
+          <div style="border-top: 1px solid rgba(128,128,128,0.3); margin-top: 6px; padding-top: 6px;">
+            <div style="font-weight: bold; margin-bottom: 2px;">${
+              markerAtTime.methodName
+            }</div>
+            <div>${directionIcon} <strong>${
+              markerAtTime.type
+            }</strong> (${directionText})</div>
+            <div style="font-size: 11px; opacity: 0.8;">Giá: ${formatPrice(
+              markerAtTime.price,
+            )}</div>
+          </div>`;
+      }
 
       chartTooltip.innerHTML = tooltipContent;
       chartTooltip.style.display = "block";
@@ -1632,6 +1677,7 @@ function toggleChartPatternOnChart(pattern, itemEl) {
             priceLineVisible: false,
             lastValueVisible: false,
           },
+          0,
         );
         resistanceLine.setData(resistanceData);
         lines.push(resistanceLine);
@@ -1646,13 +1692,17 @@ function toggleChartPatternOnChart(pattern, itemEl) {
           time: new Date(pt.date).getTime() / 1000,
           value: pt.price,
         }));
-        const supportLine = priceChart.addSeries(LightweightCharts.LineSeries, {
-          color: "#22c55e",
-          lineWidth: 2,
-          lineStyle: LightweightCharts.LineStyle.Dashed,
-          priceLineVisible: false,
-          lastValueVisible: false,
-        });
+        const supportLine = priceChart.addSeries(
+          LightweightCharts.LineSeries,
+          {
+            color: "#22c55e",
+            lineWidth: 2,
+            lineStyle: LightweightCharts.LineStyle.Dashed,
+            priceLineVisible: false,
+            lastValueVisible: false,
+          },
+          0,
+        );
         supportLine.setData(supportData);
         lines.push(supportLine);
       }
@@ -1664,12 +1714,16 @@ function toggleChartPatternOnChart(pattern, itemEl) {
         time: new Date(pt.date).getTime() / 1000,
         value: pt.price,
       }));
-      const keyPointsLine = priceChart.addSeries(LightweightCharts.LineSeries, {
-        color: lineColor,
-        lineWidth: 2,
-        priceLineVisible: false,
-        lastValueVisible: false,
-      });
+      const keyPointsLine = priceChart.addSeries(
+        LightweightCharts.LineSeries,
+        {
+          color: lineColor,
+          lineWidth: 2,
+          priceLineVisible: false,
+          lastValueVisible: false,
+        },
+        0,
+      );
       keyPointsLine.setData(keyPointsData);
       lines.push(keyPointsLine);
     }
@@ -2025,6 +2079,7 @@ function toggleSRZoneOnChart(zone, type, itemEl, zoneKey) {
             lastValueVisible: false,
             crosshairMarkerVisible: false,
           },
+          0,
         );
 
         // Set data at the upper bound
@@ -2125,5 +2180,575 @@ function clearPatternListUI() {
   const srZoneBadge = document.getElementById("sr-zone-count-badge");
   if (srZoneBadge) {
     srZoneBadge.classList.add("hidden");
+  }
+
+  // Clear analysis method list
+  const analysisMethodListContainer = document.getElementById(
+    "analysis-method-list-container",
+  );
+  if (analysisMethodListContainer) {
+    analysisMethodListContainer.innerHTML = `<div class="flex items-center justify-center h-20 text-xs text-slate-400 italic">Đang tải...</div>`;
+  }
+  const analysisMethodBadge = document.getElementById(
+    "analysis-method-name-badge",
+  );
+  if (analysisMethodBadge) {
+    analysisMethodBadge.classList.add("hidden");
+    analysisMethodBadge.textContent = "";
+  }
+  const analysisMethodActiveLabel = document.getElementById(
+    "analysis-method-active",
+  );
+  if (analysisMethodActiveLabel) {
+    analysisMethodActiveLabel.classList.add("hidden");
+    analysisMethodActiveLabel.textContent = "";
+  }
+  currentAnalysisMethod = null;
+}
+
+// =============================================================================
+// TECHNICAL ANALYSIS METHODS DROPDOWN
+// =============================================================================
+
+/**
+ * Initialize analysis method dropdown
+ */
+function initAnalysisMethodDropdown() {
+  if (analysisMethodDropdownInitialized) return;
+
+  const trigger = document.getElementById("analysis-method-dropdown-trigger");
+  const panel = document.getElementById("analysis-method-dropdown-panel");
+  const container = document.getElementById(
+    "analysis-method-dropdown-container",
+  );
+
+  if (!trigger || !panel) return;
+
+  analysisMethodDropdownInitialized = true;
+
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+
+    // Re-query chevron to handle Lucide replacement
+    const chevron = /** @type {HTMLElement|null} */ (
+      trigger?.querySelector('[data-lucide="chevron-down"]')
+    );
+
+    const isHidden = panel.classList.toggle("hidden");
+    if (!isHidden) {
+      // Close others if we are opening
+      closeAllDropdowns("analysis-method-dropdown-panel");
+
+      if (chevron) chevron.style.transform = "rotate(180deg)";
+      updateDropdownPosition(trigger, panel);
+
+      // Fetch methods on first open
+      const listContainer = document.getElementById(
+        "analysis-method-list-container",
+      );
+      if (
+        listContainer &&
+        listContainer.children.length <= 1 &&
+        currentChartSymbol
+      ) {
+        fetchAnalysisMethods(currentChartSymbol);
+      }
+    } else {
+      if (chevron) chevron.style.transform = "rotate(0deg)";
+    }
+  });
+
+  // Close when clicking outside
+  document.addEventListener("click", (e) => {
+    if (
+      e.target instanceof Node &&
+      container &&
+      !container.contains(e.target)
+    ) {
+      panel.classList.add("hidden");
+
+      const chevron = /** @type {HTMLElement|null} */ (
+        trigger?.querySelector('[data-lucide="chevron-down"]')
+      );
+      if (chevron) chevron.style.transform = "rotate(0deg)";
+    }
+  });
+
+  // Prevent closing when clicking inside panel
+  panel.addEventListener("click", (e) => {
+    e.stopPropagation();
+  });
+}
+
+/**
+ * Fetch analysis methods from API
+ * @param {string} symbol - Stock ticker
+ */
+async function fetchAnalysisMethods(symbol) {
+  const listContainer = document.getElementById(
+    "analysis-method-list-container",
+  );
+  if (!listContainer) return;
+
+  // Show loading
+  listContainer.innerHTML = `<div class="flex items-center justify-center h-20 text-xs text-slate-400 italic">Đang tải...</div>`;
+
+  try {
+    const response = await fetch(
+      `/analysis-methods/${symbol}?start=${currentChartStart}&end=${currentChartEnd}&interval=${currentInterval}`,
+    );
+
+    const data = await response.json();
+
+    if (data.error) {
+      listContainer.innerHTML = `<div class="flex items-center justify-center h-20 text-xs text-red-400">${data.error}</div>`;
+      return;
+    }
+
+    renderAnalysisMethodList(data.methods || []);
+  } catch (err) {
+    console.error("Error fetching analysis methods:", err);
+    listContainer.innerHTML = `<div class="flex items-center justify-center h-20 text-xs text-red-400">Lỗi tải dữ liệu</div>`;
+  }
+}
+
+/**
+ * Render analysis method list
+ * @param {Array} methods - Array of method objects
+ */
+function renderAnalysisMethodList(methods) {
+  const listContainer = document.getElementById(
+    "analysis-method-list-container",
+  );
+  if (!listContainer) return;
+
+  if (!methods || methods.length === 0) {
+    listContainer.innerHTML = `<div class="flex items-center justify-center h-20 text-xs text-slate-400 italic">Không có dữ liệu</div>`;
+    return;
+  }
+
+  const template = /** @type {HTMLTemplateElement} */ (
+    document.getElementById("analysis-method-item-template")
+  );
+  if (!template) return;
+
+  listContainer.innerHTML = "";
+
+  methods.forEach((method) => {
+    const clone = /** @type {HTMLElement} */ (template.content.cloneNode(true));
+    const item = /** @type {HTMLElement} */ (
+      clone.querySelector(".analysis-method-item")
+    );
+    if (!item) return;
+
+    // Set data attribute
+    item.dataset.methodId = method.id;
+
+    // Name
+    const nameEl = item.querySelector(".method-name");
+    if (nameEl) nameEl.textContent = method.name || "";
+
+    // Category
+    const categoryEl = item.querySelector(".method-category");
+    if (categoryEl) categoryEl.textContent = method.category || "";
+
+    // Signal badge
+    const signalEl = /** @type {HTMLElement} */ (
+      item.querySelector(".method-signal")
+    );
+    if (signalEl) {
+      const signal = method.signal || "Neutral";
+      signalEl.textContent = signal;
+
+      // Apply signal colors
+      if (signal === "Bullish") {
+        signalEl.classList.add(
+          "bg-green-100",
+          "text-green-700",
+          "dark:bg-green-900/30",
+          "dark:text-green-400",
+        );
+      } else if (signal === "Bearish") {
+        signalEl.classList.add(
+          "bg-red-100",
+          "text-red-700",
+          "dark:bg-red-900/30",
+          "dark:text-red-400",
+        );
+      } else {
+        signalEl.classList.add(
+          "bg-gray-100",
+          "text-gray-600",
+          "dark:bg-gray-700",
+          "dark:text-gray-400",
+        );
+      }
+    }
+
+    // Confidence
+    const confidenceEl = item.querySelector(".method-confidence");
+    if (confidenceEl) {
+      const confidence = method.confidence || "";
+      confidenceEl.textContent = confidence;
+    }
+
+    // Description
+    const descriptionEl = item.querySelector(".method-description");
+    if (descriptionEl) descriptionEl.textContent = method.description || "";
+
+    // Evaluation (hidden by default, shown when selected)
+    const evaluationEl = item.querySelector(".method-evaluation");
+    if (evaluationEl) evaluationEl.textContent = method.evaluation || "";
+
+    // Mark as selected if this is the current method
+    if (currentAnalysisMethod === method.id) {
+      item.classList.add(
+        "bg-primary-50",
+        "dark:bg-primary-900/20",
+        "border-primary-200",
+        "dark:border-primary-700",
+      );
+      const checkIcon = item.querySelector(".method-check");
+      if (checkIcon) checkIcon.classList.remove("hidden");
+      if (evaluationEl) evaluationEl.classList.remove("hidden");
+    }
+
+    // Click handler
+    item.addEventListener("click", () => {
+      toggleAnalysisMethod(method);
+    });
+
+    listContainer.appendChild(clone);
+  });
+
+  // Re-initialize Lucide icons
+  if (typeof lucide !== "undefined") {
+    lucide.createIcons();
+  }
+}
+
+/**
+ * Toggle analysis method selection (single-select)
+ * @param {Object} method - Method object
+ */
+function toggleAnalysisMethod(method) {
+  const items = document.querySelectorAll(".analysis-method-item");
+  const activeLabel = document.getElementById("analysis-method-active");
+  const badge = document.getElementById("analysis-method-name-badge");
+
+  if (currentAnalysisMethod === method.id) {
+    // Deselect
+    currentAnalysisMethod = null;
+    clearAnalysisMethodVisualization();
+
+    items.forEach((item) => {
+      item.classList.remove(
+        "bg-primary-50",
+        "dark:bg-primary-900/20",
+        "border-primary-200",
+        "dark:border-primary-700",
+      );
+      const checkIcon = item.querySelector(".method-check");
+      if (checkIcon) checkIcon.classList.add("hidden");
+      const evaluationEl = item.querySelector(".method-evaluation");
+      if (evaluationEl) evaluationEl.classList.add("hidden");
+    });
+
+    if (activeLabel) {
+      activeLabel.classList.add("hidden");
+      activeLabel.textContent = "";
+    }
+    if (badge) {
+      badge.classList.add("hidden");
+    }
+  } else {
+    // Select new method (single-select)
+    currentAnalysisMethod = method.id;
+
+    // Clear previous visualizations
+    clearAnalysisMethodVisualization();
+
+    // Update UI
+    items.forEach((item) => {
+      const itemId = /** @type {HTMLElement} */ (item).dataset.methodId;
+      if (itemId === method.id) {
+        item.classList.add(
+          "bg-primary-50",
+          "dark:bg-primary-900/20",
+          "border-primary-200",
+          "dark:border-primary-700",
+        );
+        const checkIcon = item.querySelector(".method-check");
+        if (checkIcon) checkIcon.classList.remove("hidden");
+        const evaluationEl = item.querySelector(".method-evaluation");
+        if (evaluationEl) evaluationEl.classList.remove("hidden");
+      } else {
+        item.classList.remove(
+          "bg-primary-50",
+          "dark:bg-primary-900/20",
+          "border-primary-200",
+          "dark:border-primary-700",
+        );
+        const checkIcon = item.querySelector(".method-check");
+        if (checkIcon) checkIcon.classList.add("hidden");
+        const evaluationEl = item.querySelector(".method-evaluation");
+        if (evaluationEl) evaluationEl.classList.add("hidden");
+      }
+    });
+
+    if (activeLabel) {
+      activeLabel.textContent = method.name;
+      activeLabel.classList.remove("hidden");
+    }
+    if (badge) {
+      badge.textContent = method.name;
+      badge.classList.remove("hidden");
+    }
+
+    // Draw visualization
+    drawAnalysisMethodVisualization(method);
+  }
+}
+
+/**
+ * Clear analysis method visualization from chart
+ */
+function clearAnalysisMethodVisualization() {
+  // Remove any series or primitives we added
+  if (analysisMethodMarkers && analysisMethodMarkers.length > 0) {
+    analysisMethodMarkers.forEach((item) => {
+      if (!item) return;
+
+      // Check if this is a chart markers tracker
+      if (item.type === "chartMarkers") {
+        // Clear markers using the stored primitive
+        if (item.primitive) {
+          item.primitive.setMarkers([]);
+        }
+        return;
+      }
+
+      const seriesObj = item.series || item; // Standardize (could be wrapped or raw priceLine)
+
+      // Distinguish between Series (has setData) and PriceLine
+      const objToRemove = seriesObj;
+
+      if (typeof objToRemove.setData === "function") {
+        // It's a Series (RSI, MACD, etc.)
+        if (priceChart) {
+          try {
+            priceChart.removeSeries(objToRemove);
+          } catch (e) {
+            console.warn("Failed to remove series:", e);
+          }
+        }
+      } else {
+        // It's a PriceLine (Support/Resistance)
+        if (candleSeries) {
+          try {
+            candleSeries.removePriceLine(objToRemove);
+          } catch (e) {
+            // Ignore errors for price lines
+          }
+        }
+      }
+    });
+  }
+  analysisMethodMarkers = [];
+  activeSignalMarkers = [];
+
+  // Clear isolated storage
+  methodIndicatorValues = {};
+  methodIndicatorConfigs = {};
+}
+
+/**
+ * Draw visualization for selected analysis method
+ * @param {Object} method - Method object with id, signal, value, etc.
+ */
+async function drawAnalysisMethodVisualization(method) {
+  if (!priceChart || !candleSeries || !method) return;
+
+  const symbol = currentChartSymbol;
+  // Use current timeframe/interval
+  const start = currentChartStart;
+  const end = currentChartEnd;
+  const interval = currentInterval;
+
+  // Determine indicators to fetch based on method ID
+  let indicatorsToFetch = [];
+
+  switch (method.id) {
+    case "rsi":
+    case "rsi_divergence":
+    case "macd_rsi_confluence":
+      indicatorsToFetch.push("rsi");
+      break;
+    case "macd":
+      indicatorsToFetch.push("macd");
+      break;
+    case "gold":
+    case "golden_death_cross":
+      indicatorsToFetch.push("ma_50", "ma_200");
+      break;
+    case "moving_average":
+      indicatorsToFetch.push("ma_20", "ma_50", "ma_200");
+      break;
+    case "bollinger_bands":
+    case "bb_squeeze":
+      indicatorsToFetch.push("bb");
+      break;
+    case "stochastic":
+      indicatorsToFetch.push("stoch");
+      break;
+    case "adx":
+      indicatorsToFetch.push("adx");
+      break;
+    case "volume":
+      indicatorsToFetch.push("obv", "cmf");
+      break;
+    case "volume_breakout":
+      indicatorsToFetch.push("vol_sma_20");
+      break;
+    case "vwap":
+      indicatorsToFetch.push("vwap");
+      break;
+    case "support_resistance":
+      indicatorsToFetch.push("pivot", "fib");
+      break;
+  }
+
+  // Handle combined methods
+  if (method.id === "macd_rsi_confluence") {
+    indicatorsToFetch.push("macd");
+  }
+
+  // Deduplicate
+  indicatorsToFetch = [...new Set(indicatorsToFetch)];
+
+  if (indicatorsToFetch.length === 0) return;
+
+  // Fetch data
+  const apiResponse = await fetchIndicatorsFromAPI(
+    symbol,
+    start,
+    end,
+    interval,
+    indicatorsToFetch,
+  );
+
+  if (!apiResponse || !apiResponse.indicators) {
+    console.warn("Failed to fetch visualization data");
+    return;
+  }
+
+  // Pass isolated storage objects for analysis methods
+  const ctx = createIndicatorContext(
+    priceChart,
+    candleSeries,
+    methodIndicatorValues,
+    methodIndicatorConfigs,
+    null,
+  );
+
+  const visualizationSeries = [];
+
+  // Render indicators
+  for (const key of indicatorsToFetch) {
+    const apiData = apiResponse.indicators[key];
+    if (apiData && !apiData.error) {
+      const results = renderIndicatorFromAPI(key, apiData, ctx);
+      // results is array of {type, series}
+      if (results) {
+        results.forEach((item) => {
+          // Attach key for cleanup
+          item.key = key;
+          visualizationSeries.push(item);
+        });
+      }
+    }
+  }
+
+  // Store for cleanup
+  analysisMethodMarkers = visualizationSeries;
+
+  // Render signal markers if present in method.visualization
+  if (method.visualization?.signals?.length > 0) {
+    // Store original signal data for hover detection
+    activeSignalMarkers = method.visualization.signals.map((sig) => ({
+      time: sig.time,
+      type: sig.type,
+      price: sig.price,
+      direction: sig.direction,
+      methodName: method.name,
+    }));
+
+    const markers = activeSignalMarkers.map((sig) => ({
+      time: sig.time,
+      position: sig.direction === "up" ? "belowBar" : "aboveBar",
+      color: sig.direction === "up" ? "#10b981" : "#ef4444",
+      shape: sig.direction === "up" ? "arrowUp" : "arrowDown",
+      text: sig.type,
+      size: 1,
+    }));
+
+    // Sort markers by time (required by LightweightCharts)
+    markers.sort((a, b) => a.time - b.time);
+
+    // Use createSeriesMarkers API
+    const markerPrimitive = LightweightCharts.createSeriesMarkers(
+      candleSeries,
+      markers,
+    );
+    // Track the primitive so we can clear it later
+    analysisMethodMarkers.push({
+      type: "chartMarkers",
+      primitive: markerPrimitive,
+    });
+  }
+
+  // Render trend lines for divergence patterns
+  if (method.visualization?.signals?.length > 0) {
+    method.visualization.signals.forEach((sig) => {
+      // Draw price trendline on main chart
+      if (sig.trendline?.price) {
+        const priceTrendLine = priceChart.addSeries(
+          LightweightCharts.LineSeries,
+          {
+            color: sig.direction === "up" ? "#10b981" : "#ef4444",
+            lineWidth: 2,
+            lineStyle: LightweightCharts.LineStyle.Dashed,
+            crosshairMarkerVisible: false,
+            priceLineVisible: false,
+            lastValueVisible: false,
+          },
+          0,
+        );
+        priceTrendLine.setData(sig.trendline.price);
+        analysisMethodMarkers.push({ type: "series", series: priceTrendLine });
+      }
+
+      // Draw RSI trendline on RSI indicator pane
+      if (sig.trendline?.rsi) {
+        // Get RSI pane from config, fallback to 2
+        const rsiConfig = methodIndicatorConfigs["rsi"] || {};
+        const rsiPane = rsiConfig.pane ?? 2;
+
+        const rsiTrendLine = priceChart.addSeries(
+          LightweightCharts.LineSeries,
+          {
+            color: sig.direction === "up" ? "#22c55e" : "#f87171",
+            lineWidth: 2,
+            lineStyle: LightweightCharts.LineStyle.Dashed,
+            crosshairMarkerVisible: false,
+            priceLineVisible: false,
+            lastValueVisible: false,
+          },
+          rsiPane,
+        );
+        rsiTrendLine.setData(sig.trendline.rsi);
+        analysisMethodMarkers.push({ type: "series", series: rsiTrendLine });
+      }
+    });
   }
 }

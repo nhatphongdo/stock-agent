@@ -1,7 +1,7 @@
 import os
 import uvicorn
 import logging
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Query, Path
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
@@ -32,11 +32,20 @@ from app.tools.vietcap_tools import (
     get_latest_price_batch,
     get_company_list,
 )
-from app.tools.technical_indicators import get_price_patterns, create_ohlcv_dataframe
+from app.tools.technical_indicators import (
+    get_price_patterns,
+    create_ohlcv_dataframe,
+    calculate_all_indicators,
+)
 from app.tools.price_patterns import get_chart_patterns, get_support_resistance
 from app.tools.indicator_calculation import (
     calculate_indicators,
     get_available_indicators,
+)
+from app.tools.analysis_methods import (
+    generate_method_evaluations,
+    get_available_analysis_methods,
+    generate_signal_points,
 )
 
 # Load environment variables early
@@ -199,7 +208,14 @@ async def analyze_technical(request: TechnicalAnalysisRequest):
 
 
 @app.get("/candle-patterns/{symbol}")
-async def analyze_patterns(symbol: str, start: str, end: str, interval: str = "1D"):
+async def analyze_patterns(
+    symbol: str = Path(..., description="Stock ticker symbol (e.g., 'VNM')"),
+    start: str = Query(..., description="Start date (YYYY-MM-DD)"),
+    end: str = Query(..., description="End date (YYYY-MM-DD)"),
+    interval: str = Query(
+        "1D", description="Data interval (5m, 15m, 30m, 1H, 1D, 1W, 1M)"
+    ),
+):
     """
     Detects candlestick patterns for a given stock symbol.
 
@@ -217,7 +233,12 @@ async def analyze_patterns(symbol: str, start: str, end: str, interval: str = "1
 
 @app.get("/chart-patterns/{symbol}")
 async def analyze_chart_patterns(
-    symbol: str, start: str, end: str, interval: str = "1D"
+    symbol: str = Path(..., description="Stock ticker symbol (e.g., 'VNM')"),
+    start: str = Query(..., description="Start date (YYYY-MM-DD)"),
+    end: str = Query(..., description="End date (YYYY-MM-DD)"),
+    interval: str = Query(
+        "1D", description="Data interval (5m, 15m, 30m, 1H, 1D, 1W, 1M)"
+    ),
 ):
     """
     Detects chart patterns (Double Top, Head & Shoulders, Wedges, Triangles, etc.)
@@ -237,7 +258,12 @@ async def analyze_chart_patterns(
 
 @app.get("/support-resistance/{symbol}")
 async def analyze_support_resistance(
-    symbol: str, start: str, end: str, interval: str = "1D"
+    symbol: str = Path(..., description="Stock ticker symbol (e.g., 'VNM')"),
+    start: str = Query(..., description="Start date (YYYY-MM-DD)"),
+    end: str = Query(..., description="End date (YYYY-MM-DD)"),
+    interval: str = Query(
+        "1D", description="Data interval (5m, 15m, 30m, 1H, 1D, 1W, 1M)"
+    ),
 ):
     """
     Detects support and resistance zones for a given stock symbol.
@@ -252,6 +278,98 @@ async def analyze_support_resistance(
     if "error" in result:
         raise HTTPException(status_code=404, detail=result["error"])
     return result
+
+
+def _get_visualization_type(method_id: str) -> str:
+    """Get visualization type for a method."""
+    visualization_types = {
+        "rsi": "marker",
+        "macd": "marker",
+        "golden_death_cross": "marker",
+        "volume_breakout": "marker",
+        "stochastic": "marker",
+        "bollinger_bands": "band",
+        "bb_squeeze": "zone",
+        "support_resistance": "line",
+        "moving_average": "line",
+        "adx": "marker",
+        "volume": "marker",
+        "vwap": "line",
+        "rsi_divergence": "trendline",
+        "macd_rsi_confluence": "marker",
+    }
+    return visualization_types.get(method_id, "marker")
+
+
+@app.get("/analysis-methods/{symbol}")
+async def get_analysis_methods(
+    symbol: str = Path(..., description="Stock ticker symbol (e.g., 'VNM')"),
+    start: str = Query(..., description="Start date (YYYY-MM-DD)"),
+    end: str = Query(..., description="End date (YYYY-MM-DD)"),
+    interval: str = Query(
+        "1D", description="Data interval (5m, 15m, 30m, 1H, 1D, 1W, 1M)"
+    ),
+):
+    """
+    Get technical analysis method evaluations for a stock.
+
+    Returns a list of analysis methods with their signals, confidence levels,
+    and descriptions. Each method includes:
+    - id: Unique identifier
+    - name: Method name
+    - category: Category (Momentum, Trend, Volume, etc.)
+    - description: Explanation of the method
+    - evaluation: Current market condition
+    - signal: Bullish, Bearish, or Neutral
+    - confidence: High, Medium, or Low
+    - value: Indicator values used
+
+    Args:
+        symbol: Stock symbol
+        start: Start date in YYYY-MM-DD format
+        end: End date in YYYY-MM-DD format
+        interval: Data interval (5m, 15m, 30m, 1H, 1D, 1W, 1M)
+    """
+
+    # Fetch OHLCV data
+    ohlcv_result = get_stock_ohlcv(
+        symbol=symbol.upper(),
+        start_date=start,
+        end_date=end,
+        interval=interval,
+    )
+
+    if "error" in ohlcv_result or not ohlcv_result.get("data"):
+        raise HTTPException(
+            status_code=404,
+            detail=ohlcv_result.get("error", "No data available"),
+        )
+
+    # Create DataFrame and calculate indicators
+    df = create_ohlcv_dataframe(ohlcv_result.get("data", []))
+    if df.empty:
+        raise HTTPException(status_code=404, detail="Empty data")
+
+    # Calculate all indicators
+    indicators = calculate_all_indicators(df)
+
+    # Generate method evaluations (without timeframe label for main chart)
+    methods = generate_method_evaluations(indicators, ticker=symbol.upper())
+
+    # Add visualization data (signal points) for each method
+    for method in methods:
+        signals = generate_signal_points(df, method["id"])
+        method["visualization"] = {
+            "type": _get_visualization_type(method["id"]),
+            "signals": signals,
+        }
+
+    return {
+        "symbol": symbol.upper(),
+        "interval": interval,
+        "methods": methods,
+        "available_methods": get_available_analysis_methods(),
+    }
 
 
 # Cache for stock symbols (symbol -> company name) with TTL
@@ -330,7 +448,14 @@ async def get_sectors_endpoint():
 
 
 @app.get("/chart/{symbol}")
-async def get_chart_data(symbol: str, start: str, end: str, interval: str = "1D"):
+async def get_chart_data(
+    symbol: str = Path(..., description="Stock ticker symbol (e.g., 'VNM')"),
+    start: str = Query(..., description="Start date (YYYY-MM-DD)"),
+    end: str = Query(..., description="End date (YYYY-MM-DD)"),
+    interval: str = Query(
+        "1D", description="Data interval (5m, 15m, 30m, 1H, 1D, 1W, 1M)"
+    ),
+):
     """
     Returns OHLCV data for a stock symbol to render charts.
 
@@ -353,11 +478,13 @@ class IndicatorRequest(BaseModel):
 
 @app.post("/indicators/{symbol}")
 async def get_indicators(
-    symbol: str,
-    start: str,
-    end: str,
-    request: IndicatorRequest,
-    interval: str = "1D",
+    symbol: str = Path(..., description="Stock ticker symbol (e.g., 'VNM')"),
+    start: str = Query(..., description="Start date (YYYY-MM-DD)"),
+    end: str = Query(..., description="End date (YYYY-MM-DD)"),
+    interval: str = Query(
+        "1D", description="Data interval (5m, 15m, 30m, 1H, 1D, 1W, 1M)"
+    ),
+    request: IndicatorRequest = ...,
 ):
     """
     Calculate technical indicators for a stock symbol.
@@ -407,7 +534,9 @@ async def get_available_indicators_endpoint():
 
 
 @app.get("/price/{symbol}")
-async def get_latest_price(symbol: str):
+async def get_latest_price(
+    symbol: str = Path(..., description="Stock ticker symbol (e.g., 'VNM')"),
+):
     """
     Returns the latest price data for a stock symbol.
     """
@@ -418,7 +547,12 @@ async def get_latest_price(symbol: str):
 
 
 @app.get("/prices")
-async def get_batch_prices(symbols: str):
+async def get_batch_prices(
+    symbols: str = Query(
+        ...,
+        description="Comma-separated list of stock ticker symbols (e.g., 'VNM,SSI,HPG')",
+    ),
+):
     """
     Returns the latest price data for multiple stock symbols.
     Args:

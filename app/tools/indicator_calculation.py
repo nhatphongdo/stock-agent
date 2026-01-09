@@ -3017,6 +3017,7 @@ def calculate_indicator(
             "colors": styling.get("colors", {}),
             "lineStyles": styling.get("lineStyles", {}),
             "priceLines": styling.get("priceLines", {}),
+            "valueFormat": styling.get("valueFormat"),
         }
     except Exception as e:
         return {"series": None, "lastValue": None, "error": str(e)}
@@ -3084,6 +3085,7 @@ def get_available_indicators() -> List[Dict[str, Any]]:
                 "colors": styling.get("colors", {}),
                 "lineStyles": styling.get("lineStyles", {}),
                 "priceLines": styling.get("priceLines", {}),
+                "valueFormat": styling.get("valueFormat"),
             }
         )
     return result
