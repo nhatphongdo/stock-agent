@@ -2642,6 +2642,139 @@ def calc_vwma(
     }
 
 
+def calc_mcdx(
+    df: pd.DataFrame, config: IndicatorConfig, series_included: bool
+) -> Dict[str, Any]:
+    """Calculate MCDX (Money Flow Classification Index).
+
+    MCDX is a volume-based indicator that classifies money flow into three categories:
+    - Banker (Smart Money/Institutional): High values indicate institutional accumulation
+    - Retailer (Small Money): High values indicate retail participation
+    - Hot Money (Speculative): High values indicate speculative trading
+
+    The indicator is typically displayed as stacked bars with three colors.
+    """
+    if df.empty or len(df) < config.mcdx_length:
+        return {"series": None, "lastValue": None}
+
+    close = df["close"]
+    volume = df["volume"]
+    high = df["high"]
+    low = df["low"]
+    length = config.mcdx_length
+
+    # Calculate price momentum using modified RSI approach
+    delta = close.diff()
+    gain = delta.where(delta > 0, 0.0)
+    loss = (-delta).where(delta < 0, 0.0)
+
+    # Use EMA for smoothing
+    avg_gain = gain.ewm(span=length, adjust=False).mean()
+    avg_loss = loss.ewm(span=length, adjust=False).mean()
+
+    # RSI-like calculation
+    rs = avg_gain / avg_loss.replace(0, float("nan"))
+    rsi = 100 - (100 / (1 + rs))
+    rsi = rsi.fillna(50)
+
+    # Volume ratio (current vs average)
+    vol_avg = volume.rolling(window=length).mean()
+    vol_ratio = volume / vol_avg.replace(0, float("nan"))
+    vol_ratio = vol_ratio.fillna(1)
+
+    # Price range analysis
+    price_range = high - low
+    avg_range = price_range.rolling(window=length).mean()
+    range_ratio = price_range / avg_range.replace(0, float("nan"))
+    range_ratio = range_ratio.fillna(1)
+
+    # Calculate money flow components
+    # Banker (Smart Money): Strong volume on steady trend (RSI not extreme)
+    # - Accumulates when RSI is moderate and volume is above average
+
+    # Default to weak
+    banker_score = vol_ratio * config.mcdx_banker_mult_weak
+
+    # Moderate condition: RSI < min_safe AND vol > weak
+    mask_moderate = (rsi < config.mcdx_banker_rsi_safe_min) & (
+        vol_ratio > config.mcdx_banker_vol_weak
+    )
+    banker_score = banker_score.mask(
+        mask_moderate, vol_ratio * config.mcdx_banker_mult_med
+    )
+
+    # Strong condition: RSI inside safe zone AND vol > strong
+    mask_strong = (
+        (rsi >= config.mcdx_banker_rsi_safe_min)
+        & (rsi <= config.mcdx_banker_rsi_safe_max)
+        & (vol_ratio > config.mcdx_banker_vol_strong)
+    )
+    banker_score = banker_score.mask(
+        mask_strong, vol_ratio * config.mcdx_banker_mult_strong
+    )
+
+    # Normalize to 0-100
+    banker = pd.Series(banker_score, index=df.index).clip(0, 2) * config.mcdx_base_scale
+
+    # Hot Money: High volatility, extreme RSI, high volume
+    # Default to low
+    hot_money_score = vol_ratio * config.mcdx_hot_mult_low
+
+    # High condition
+    mask_hot_high = (
+        (rsi > config.mcdx_hot_rsi_high) | (rsi < config.mcdx_hot_rsi_low)
+    ) & (vol_ratio > config.mcdx_hot_vol_high)
+    hot_money_score = hot_money_score.mask(
+        mask_hot_high, vol_ratio * config.mcdx_hot_mult_high
+    )
+
+    # Extreme condition
+    mask_hot_extreme = (
+        (
+            (rsi > config.mcdx_hot_rsi_extreme_high)
+            | (rsi < config.mcdx_hot_rsi_extreme_low)
+        )
+        & (vol_ratio > config.mcdx_hot_vol_extreme)
+        & (range_ratio > config.mcdx_hot_range_extreme)
+    )
+
+    hot_money_score = hot_money_score.mask(
+        mask_hot_extreme, vol_ratio * range_ratio * config.mcdx_hot_mult_extreme
+    )
+
+    hot_money = (
+        pd.Series(hot_money_score, index=df.index).clip(0, 2) * config.mcdx_base_scale
+    )
+
+    # Retailer: Calculate as remainder to sum to ~100%
+    # Retailers typically dominate when volume is low and/or price moves are erratic
+    total = banker + hot_money
+    retailer = (100 - total).clip(0, 100)
+
+    # Normalize all three to ensure they sum to 100
+    total_all = banker + retailer + hot_money
+    total_all = total_all.replace(0, 1)  # Avoid division by zero
+    banker = (banker / total_all * 100).round(2)
+    retailer = (retailer / total_all * 100).round(2)
+    hot_money = (hot_money / total_all * 100).round(2)
+
+    last_value = {
+        "banker": _get_last_value(banker),
+        "retailer": _get_last_value(retailer),
+        "hotMoney": _get_last_value(hot_money),
+    }
+
+    series_data = None
+    if series_included:
+        series_data = {
+            "banker": _series_to_list(banker, df.index),
+            "retailer": _series_to_list(retailer, df.index),
+            "hotMoney": _series_to_list(hot_money, df.index),
+        }
+
+    return {"series": series_data, "lastValue": last_value}
+
+
 # =============================================================================
 # STATISTICS INDICATORS (Pane 1 or 2)
 # =============================================================================
@@ -2961,6 +3094,542 @@ def calc_fib(
 
 
 # =============================================================================
+# SMART MONEY CONCEPTS (SMC)
+# =============================================================================
+
+
+def calc_swing_points(
+    df: pd.DataFrame, config: IndicatorConfig, series_included: bool
+) -> Dict[str, Any]:
+    """Calculate Swing Highs and Lows (Fractals)."""
+    if df.empty or len(df) < config.smc_swing_length * 2 + 1:
+        return {"series": None, "lastValue": None}
+
+    length = config.smc_swing_length
+    high = df["high"]
+    low = df["low"]
+    timestamps = df.index
+
+    # Identify swing points using rolling window
+    # Note: Shifted to align with the center of the window
+    # For a length of 5, we look at 5 before and 5 after? Or just 5 bars total?
+    # Usually "Fractal" is 2 before, 2 after (5 bars).
+    # If length=5, assume 5 left, 5 right -> window=11
+    window = length * 2 + 1
+
+    # Using numpy for efficiency
+    max_rolling = high.rolling(window=window, center=True).max()
+    min_rolling = low.rolling(window=window, center=True).min()
+
+    # Identify peaks/valleys
+    is_swing_high = (
+        (high == max_rolling) & (high > high.shift(1)) & (high > high.shift(-1))
+    )
+    is_swing_low = (low == min_rolling) & (low < low.shift(1)) & (low < low.shift(-1))
+
+    markers = []
+
+    # Store series data
+    high_series = []
+    low_series = []
+
+    # Get indices where swings occur
+    swing_high_indices = is_swing_high[is_swing_high].index
+    swing_low_indices = is_swing_low[is_swing_low].index
+
+    for idx in swing_high_indices:
+        ts = int(idx.timestamp()) - 7 * 60 * 60
+        val = float(high.loc[idx])
+
+        if series_included:
+            high_series.append({"time": ts, "value": val})
+
+        markers.append(
+            {
+                "time": ts,
+                "position": "aboveBar",
+                "color": config.styling["swing_points"]["colors"]["light"]["high"],
+                "shape": "arrowDown",
+                "text": "HH",
+                "size": 1,
+            }
+        )
+
+    for idx in swing_low_indices:
+        ts = int(idx.timestamp()) - 7 * 60 * 60
+        val = float(low.loc[idx])
+
+        if series_included:
+            low_series.append({"time": ts, "value": val})
+
+        markers.append(
+            {
+                "time": ts,
+                "position": "belowBar",
+                "color": config.styling["swing_points"]["colors"]["light"]["low"],
+                "shape": "arrowUp",
+                "text": "LL",
+                "size": 1,
+            }
+        )
+
+    markers.sort(key=lambda x: x["time"])
+    if series_included:
+        high_series.sort(key=lambda x: x["time"])
+        low_series.sort(key=lambda x: x["time"])
+
+    return {
+        "series": {"high": high_series, "low": low_series} if series_included else None,
+        "markers": markers if series_included else [],
+        "lastValue": None,
+    }
+
+
+def calc_fvg(
+    df: pd.DataFrame, config: IndicatorConfig, series_included: bool
+) -> Dict[str, Any]:
+    """Calculate Fair Value Gaps (FVG) - Zone Visualization."""
+    if df.empty or len(df) < 3:
+        return {"series": None, "lastValue": None}
+
+    high = df["high"]
+    low = df["low"]
+    close = df["close"]
+    timestamps = df.index
+
+    # We will return "zone" data for the zones
+    # Series: "bull" and "bear"
+    # To draw a "box", we set top and bottom line
+
+    bull_zones = []
+    bear_zones = []
+
+    # Keep track of active FVGs
+    active_bull = None  # {top, bot}
+    active_bear = None
+
+    prev_high = high.shift(2)
+    prev_low = low.shift(2)
+    is_bull = low > prev_high
+    is_bear = high < prev_low
+
+    if series_included:
+        for i in range(len(df)):
+            ts = int(timestamps[i].timestamp()) - 7 * 60 * 60
+
+            # 1. Update/Add new FVG (Priority to latest)
+            if i >= 2:
+                if is_bull.iloc[i]:
+                    active_bull = {
+                        "top": float(low.iloc[i]),
+                        "bot": float(prev_high.iloc[i]),
+                    }
+                if is_bear.iloc[i]:
+                    active_bear = {
+                        "top": float(prev_low.iloc[i]),
+                        "bot": float(high.iloc[i]),
+                    }
+
+            # 2. Check Mitigation
+            curr_c = close.iloc[i]
+
+            if active_bull:
+                if curr_c < active_bull["bot"]:
+                    active_bull = None
+            if active_bear:
+                if curr_c > active_bear["top"]:
+                    active_bear = None
+
+            # 3. Append to Series (Merge adjacent identical zones)
+            if active_bull:
+                # Check if we can merge with the last added bull zone
+                if (
+                    bull_zones
+                    and bull_zones[-1]["top"] == active_bull["top"]
+                    and bull_zones[-1]["bottom"] == active_bull["bot"]
+                ):
+                    bull_zones[-1]["endTime"] = ts
+                else:
+                    bull_zones.append(
+                        {
+                            "startTime": ts,
+                            "endTime": ts,
+                            "top": active_bull["top"],
+                            "bottom": active_bull["bot"],
+                        }
+                    )
+
+            if active_bear:
+                if (
+                    bear_zones
+                    and bear_zones[-1]["top"] == active_bear["top"]
+                    and bear_zones[-1]["bottom"] == active_bear["bot"]
+                ):
+                    bear_zones[-1]["endTime"] = ts
+                else:
+                    bear_zones.append(
+                        {
+                            "startTime": ts,
+                            "endTime": ts,
+                            "top": active_bear["top"],
+                            "bottom": active_bear["bot"],
+                        }
+                    )
+
+    return {
+        "series": (
+            {
+                "bull": bull_zones,
+                "bear": bear_zones,
+            }
+            if series_included
+            else None
+        ),
+        "lastValue": None,
+    }
+
+
+def calc_structure_break(
+    df: pd.DataFrame, config: IndicatorConfig, series_included: bool
+) -> Dict[str, Any]:
+    """Calculate Market Structure Breaks (BOS/CHoCH)."""
+    # Requires Swing Points calculation first
+    swing_res = calc_swing_points(df, config, False)
+    # We re-calculate locally or reuse logic? Reuse logic better but simpler to copy for now
+    # as we need the arrays, not just markers.
+
+    # Simplified logic:
+    # 1. Identify Swings
+    # 2. Track Trend (High/Low)
+    # 3. Detect Break of last major Swing Low (in uptrend) -> CHoCH/BOS
+
+    # Since this is complex stateful logic, we'll implement a basic version identifying
+    # breaks of recent swing points.
+
+    if df.empty:
+        return {"series": None, "markers": []}
+
+    length = config.smc_swing_length
+    high = df["high"]
+    low = df["low"]
+    close = df["close"]
+    timestamps = df.index
+
+    window = length * 2 + 1
+    max_rolling = high.rolling(window=window, center=True).max()
+    min_rolling = low.rolling(window=window, center=True).min()
+
+    is_swing_high = (
+        (high == max_rolling) & (high > high.shift(1)) & (high > high.shift(-1))
+    )
+    is_swing_low = (low == min_rolling) & (low < low.shift(1)) & (low < low.shift(-1))
+
+    last_h = None
+    last_l = None
+    markers = []
+    bos_series = []
+    choch_series = []
+
+    for i in range(len(df)):
+        # Check for break of structure against LAST CONFIRMED swing
+        # Note: Swings are confirmed L bars later. So at index i, we know swing at i-L.
+
+        # Check if we have a confirmed swing at i - length
+        swing_idx = i - length
+        current_ts = int(timestamps[i].timestamp()) - 7 * 60 * 60
+
+        if swing_idx >= 0:
+            if is_swing_high.iloc[swing_idx]:
+                last_h = high.iloc[swing_idx]
+            if is_swing_low.iloc[swing_idx]:
+                last_l = low.iloc[swing_idx]
+
+        # Check breaks
+        curr_close = close.iloc[i]
+
+        # BOS/CHoCH logic simplified:
+        # If close > last_h -> Bullish Break
+        # If close < last_l -> Bearish Break
+        # Ideally we filter for just the FIRST break.
+
+        if last_h and curr_close > last_h:
+            # Check if this is a fresh break (previous close was below)
+            if df["close"].iloc[i - 1] <= last_h:
+                val = float(last_h)
+                bos_series.append({"time": current_ts, "value": val})
+                markers.append(
+                    {
+                        "time": current_ts,
+                        "position": "aboveBar",
+                        "color": config.styling["structure"]["colors"]["light"]["bos"],
+                        "shape": "arrowUp",
+                        "text": "BOS",
+                        "size": 1,
+                    }
+                )
+                last_h = None  # Reset to avoid repeated signals (simplified)
+
+        if last_l and curr_close < last_l:
+            if df["close"].iloc[i - 1] >= last_l:
+                val = float(last_l)
+                choch_series.append({"time": current_ts, "value": val})
+                markers.append(
+                    {
+                        "time": current_ts,
+                        "position": "belowBar",
+                        "color": config.styling["structure"]["colors"]["light"][
+                            "choch"
+                        ],
+                        "shape": "arrowDown",
+                        "text": "BOS",
+                        "size": 1,
+                    }
+                )
+                last_l = None
+
+    return {
+        "series": (
+            {"bos": bos_series, "choch": choch_series} if series_included else None
+        ),
+        "markers": markers if series_included else [],
+        "lastValue": None,
+    }
+
+
+def calc_order_blocks(
+    df: pd.DataFrame, config: IndicatorConfig, series_included: bool
+) -> Dict[str, Any]:
+    """Calculate Order Blocks."""
+    # Bullish OB: Last bearish candle before a strong move up (that breaks structure or FVG).
+    # Logic:
+    # 1. Identify strong move (Green candle > threshold * ATR/Range?)
+    # 2. Look back for last Red candle.
+    # 3. Mark its High/Low.
+
+    # We will simply mark the zone of the last opposing color candle before a
+    # significant momentum candle (e.g. > 2x average body).
+
+    if df.empty:
+        return {"series": None}
+
+    open_p = df["open"]
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
+
+    # Body size
+    body = (close - open_p).abs()
+    avg_body = body.rolling(window=20).mean()
+
+    # Identify Strong Candles (Momentum)
+    is_strong_bull = (close > open_p) & (body > avg_body * config.smc_ob_threshold)
+    is_strong_bear = (close < open_p) & (body > avg_body * config.smc_ob_threshold)
+
+    ob_high = []
+    ob_low = []
+    timestamps = df.index
+    # Store output series
+    ob_high_series = []
+    ob_low_series = []
+
+    # Loop to find OBs
+    # Inefficient O(N) loop is fine here
+    # Active OBs: list of dict {start_index, high, low, type}
+    active_obs = []
+
+    for i in range(5, len(df)):
+        ts = int(timestamps[i].timestamp()) - 7 * 60 * 60
+
+        # Bullish OB Scan
+        if is_strong_bull.iloc[i]:
+            for k in range(1, 6):
+                idx = i - k
+                if close.iloc[idx] < open_p.iloc[idx]:  # Red candle
+                    active_obs.append(
+                        {
+                            "type": "bull",
+                            "high": float(high.iloc[idx]),
+                            "low": float(low.iloc[idx]),
+                            "created_at": i,
+                        }
+                    )
+                    break
+
+        # Bearish OB Scan
+        if is_strong_bear.iloc[i]:
+            for k in range(1, 6):
+                idx = i - k
+                if close.iloc[idx] > open_p.iloc[idx]:  # Green candle
+                    active_obs.append(
+                        {
+                            "type": "bear",
+                            "high": float(high.iloc[idx]),
+                            "low": float(low.iloc[idx]),
+                            "created_at": i,
+                        }
+                    )
+                    break
+
+        # Check for mitigation (if price enters zone)
+        # Simplify: Remove if close crosses below low (bull) or above high (bear)
+        new_active_obs = []
+        for ob in active_obs:
+            is_valid = True
+            curr_c = close.iloc[i]
+
+            # Simple invalidation rule: Close beyond OB zone
+            # This logic can be refined: e.g., if retest happens, we keep showing until broken
+            if ob["type"] == "bull":
+                if curr_c < ob["low"]:
+                    is_valid = False
+            else:  # bear
+                if curr_c > ob["high"]:
+                    is_valid = False
+
+            if is_valid:
+                new_active_obs.append(ob)
+        active_obs = new_active_obs
+
+        # Limit count
+        if len(active_obs) > 5:
+            active_obs = active_obs[-5:]
+
+        # Emit Series Data for active OBs
+        # We will output only the LEVELS of the detected OBs (support/resistance)
+        # Simple Visualization: Mark the active OBs *at creation time* + extend a bit?
+        # Or just mark creation candles.
+        # Let's just mark creation candles with levels.
+
+    # Re-run loop for simple output
+    for i in range(5, len(df)):
+        ts = int(timestamps[i].timestamp()) - 7 * 60 * 60
+        if is_strong_bull.iloc[i]:
+            for k in range(1, 6):
+                idx = i - k
+                if close.iloc[idx] < open_p.iloc[idx]:
+                    ob_low_series.append(
+                        {"time": ts, "value": float(low.iloc[idx])}
+                    )  # Mark support level
+                    break
+        if is_strong_bear.iloc[i]:
+            for k in range(1, 6):
+                idx = i - k
+                if close.iloc[idx] > open_p.iloc[idx]:
+                    ob_high_series.append(
+                        {"time": ts, "value": float(high.iloc[idx])}
+                    )  # Mark resistance level
+                    break
+
+    return {
+        "series": (
+            {"ob_high": ob_high_series, "ob_low": ob_low_series}
+            if series_included
+            else None
+        ),
+        "lastValue": None,
+    }
+
+
+def calc_liquidity(
+    df: pd.DataFrame, config: IndicatorConfig, series_included: bool
+) -> Dict[str, Any]:
+    """Calculate Liquidity Grabs (Sweeps)."""
+    # Sweep: Price wicks below a previous Swing Low but closes above it.
+
+    swing_res = calc_swing_points(df, config, False)
+    # Re-using simple logic for dependency avoidance in this snippet
+    length = config.smc_liquidity_length
+    high = df["high"]
+    low = df["low"]
+    close = df["close"]
+    timestamps = df.index
+
+    # Simple Local Min/Max for liquidity Pools
+    # Identify pools (equal highs/lows or recent swings)
+
+    window = length * 2 + 1
+    min_rolling = low.rolling(window=window, center=True).min()
+    max_rolling = high.rolling(window=window, center=True).max()
+
+    is_swing_low = low == min_rolling
+    is_swing_high = high == max_rolling
+
+    # We store recent swing lows
+    recent_lows = []
+    recent_highs = []
+    markers = []
+    liq_high_series = []
+    liq_low_series = []
+
+    for i in range(len(df)):
+        ts = int(timestamps[i].timestamp()) - 7 * 60 * 60
+
+        # Register Swings
+        if i >= length:
+            if is_swing_low.iloc[i - length]:
+                recent_lows.append(float(low.iloc[i - length]))
+                if len(recent_lows) > 5:
+                    recent_lows.pop(0)
+            if is_swing_high.iloc[i - length]:
+                recent_highs.append(float(high.iloc[i - length]))
+                if len(recent_highs) > 5:
+                    recent_highs.pop(0)
+
+        # Check Sweeps
+        curr_l = low.iloc[i]
+        curr_h = high.iloc[i]
+        curr_c = close.iloc[i]
+
+        # Sweep Low
+        for sl in recent_lows:
+            if curr_l < sl and curr_c > sl:
+                val = float(sl)
+                liq_low_series.append({"time": ts, "value": val})
+                markers.append(
+                    {
+                        "time": ts,
+                        "position": "belowBar",
+                        "color": config.styling["liquidity"]["colors"]["light"][
+                            "liq_low"
+                        ],
+                        "shape": "circle",
+                        "text": "Liq",
+                        "size": 1,
+                    }
+                )
+                break
+
+        # Sweep High
+        for sh in recent_highs:
+            if curr_h > sh and curr_c < sh:
+                val = float(sh)
+                liq_high_series.append({"time": ts, "value": val})
+                markers.append(
+                    {
+                        "time": ts,
+                        "position": "aboveBar",
+                        "color": config.styling["liquidity"]["colors"]["light"][
+                            "liq_high"
+                        ],
+                        "shape": "circle",
+                        "text": "Liq",
+                        "size": 1,
+                    }
+                )
+                break
+
+    return {
+        "series": (
+            {"liq_high": liq_high_series, "liq_low": liq_low_series}
+            if series_included
+            else None
+        ),
+        "markers": markers,
+        "lastValue": None,
+    }
+
+
+# =============================================================================
 # MAIN API FUNCTIONS
 # =============================================================================
 
@@ -3018,6 +3687,9 @@ def calculate_indicator(
             "lineStyles": styling.get("lineStyles", {}),
             "priceLines": styling.get("priceLines", {}),
             "valueFormat": styling.get("valueFormat"),
+            "type": styling.get("type"),
+            "stacked": styling.get("stacked"),
+            "stackOrder": styling.get("stackOrder"),
         }
     except Exception as e:
         return {"series": None, "lastValue": None, "error": str(e)}
@@ -3086,6 +3758,9 @@ def get_available_indicators() -> List[Dict[str, Any]]:
                 "lineStyles": styling.get("lineStyles", {}),
                 "priceLines": styling.get("priceLines", {}),
                 "valueFormat": styling.get("valueFormat"),
+                "type": styling.get("type"),
+                "stacked": styling.get("stacked"),
+                "stackOrder": styling.get("stackOrder"),
             }
         )
     return result
@@ -3913,6 +4588,13 @@ def init_indicators():
         "Khối lượng",
         order=456,
     )(calc_vwma)
+    register_indicator(
+        "mcdx",
+        f"MCDX({DEFAULT_CONFIG.mcdx_length})",
+        "Chỉ số phân loại dòng tiền",
+        "Khối lượng",
+        order=457,
+    )(calc_mcdx)
 
     # Statistics Indicators
     register_indicator(
@@ -4040,6 +4722,43 @@ def init_indicators():
         "Hỗ trợ/Kháng cự",
         order=801,
     )(calc_fib)
+
+    # Smart Money Concepts
+    register_indicator(
+        "swing_points",
+        f"Swing Points({DEFAULT_CONFIG.smc_swing_length})",
+        "Các điểm đảo chiều Swing High/Low",
+        "Smart Money",
+        order=900,
+    )(calc_swing_points)
+    register_indicator(
+        "fvg",
+        "Fair Value Gaps",
+        "Khoảng trống giá trị hợp lý",
+        "Smart Money",
+        order=901,
+    )(calc_fvg)
+    register_indicator(
+        "structure",
+        "Structure (BOS/CHoCH)",
+        "Cấu trúc thị trường (BOS/CHoCH)",
+        "Smart Money",
+        order=902,
+    )(calc_structure_break)
+    register_indicator(
+        "order_blocks",
+        f"Order Blocks({DEFAULT_CONFIG.smc_ob_period})",
+        "Khối lệnh Order Blocks",
+        "Smart Money",
+        order=903,
+    )(calc_order_blocks)
+    register_indicator(
+        "liquidity",
+        "Liquidity Grabs",
+        "Quét thanh khoản",
+        "Smart Money",
+        order=904,
+    )(calc_liquidity)
 
 
 # Initialize indicators

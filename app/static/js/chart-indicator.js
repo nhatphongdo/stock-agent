@@ -10,6 +10,11 @@ const LINE_SERIES_DEFAULTS = {
   lastValueVisible: false,
 };
 
+const HISTOGRAM_SERIES_DEFAULTS = {
+  priceLineVisible: false,
+  lastValueVisible: false,
+};
+
 // Track in-flight requests per panel to enable cancellation
 const indicatorAbortControllers = new Map();
 
@@ -118,10 +123,162 @@ function renderIndicatorFromAPI(indicatorKey, apiData, ctx) {
     };
 
     let series = null;
-    for (const key of seriesKeys) {
-      const values = apiData.series[key];
-      if (lineStyles[key] === -1) {
+    const isStacked = apiData.stacked && apiData.type === "histogram";
+
+    if (isStacked) {
+      const stackOrder = apiData.stackOrder || seriesKeys;
+      const timeMap = new Map();
+
+      // 1. Group data by time
+      seriesKeys.forEach((key) => {
+        const values = apiData.series[key];
+        if (Array.isArray(values)) {
+          values.forEach(({ time, value }) => {
+            // Ensure time is a primitive for Map key if it's not already
+            const timeKey =
+              typeof time === "object" ? JSON.stringify(time) : time;
+            if (!timeMap.has(timeKey)) timeMap.set(timeKey, { time });
+            timeMap.get(timeKey)[key] = value;
+          });
+        }
+      });
+
+      // 2. Compute cumulative values & Store Tooltip Values
+      const cumulativeSeries = {};
+      stackOrder.forEach((key) => (cumulativeSeries[key] = []));
+
+      // Sort by time (assuming string/number comparison works, otherwise rely on API order)
+      // We'll reconstruct based on sorted keys
+      const sortedTimeKeys = Array.from(timeMap.keys()).sort();
+
+      sortedTimeKeys.forEach((timeKey) => {
+        let currentSum = 0;
+        const dataAtTime = timeMap.get(timeKey);
+        const time = dataAtTime.time; // specific time object/value
+
+        stackOrder.forEach((key) => {
+          const val = dataAtTime[key] || 0;
+          currentSum += val;
+          cumulativeSeries[key].push({ time, value: currentSum });
+
+          // Store tooltip value (Original Value)
+          ctx.indicatorValues[time] = ctx.indicatorValues[time] || {};
+          ctx.indicatorValues[time][indicatorKey] =
+            ctx.indicatorValues[time][indicatorKey] || {};
+          ctx.indicatorValues[time][indicatorKey][key] = val;
+        });
+      });
+
+      // 3. Render in Reverse Order
+      [...stackOrder].reverse().forEach((key) => {
+        if (apiData.series[key] && !priceLines[key]) {
+          series = ctx.addHistogramSeries(
+            cumulativeSeries[key],
+            {
+              ...HISTOGRAM_SERIES_DEFAULTS,
+              color: colors[key],
+            },
+            apiData.pane,
+          );
+          seriesList.push({ type: "series", series, pane: apiData.pane });
+        }
+      });
+    } else if (apiData.type === "zone") {
+      for (const key of seriesKeys) {
+        const values = apiData.series[key];
+        if (!values) continue;
+
+        for (const value of values) {
+          const color = colors[key] || "#2563eb";
+          const t1 = value.startTime;
+          const t2 = value.endTime;
+
+          const zoneArea = ctx.addBaselineSeries(
+            [
+              { time: t1, value: value.bottom },
+              { time: t2, value: value.bottom },
+            ],
+            {
+              baseValue: { type: "price", price: value.top },
+              topLineColor: "transparent",
+              topFillColor1: color,
+              topFillColor2: color,
+              bottomLineColor: "transparent",
+              bottomFillColor1: color,
+              bottomFillColor2: color,
+              lineWidth: 0,
+              priceLineVisible: false,
+              lastValueVisible: false,
+              crosshairMarkerVisible: false,
+            },
+            apiData.pane,
+          );
+          seriesList.push({
+            type: "series",
+            series: zoneArea,
+            pane: apiData.pane,
+          });
+
+          ctx.indicatorValues[t1] = ctx.indicatorValues[t1] || {};
+          ctx.indicatorValues[t1][indicatorKey] =
+            ctx.indicatorValues[t1][indicatorKey] || {};
+          ctx.indicatorValues[t1][indicatorKey][key] = `${formatPrice(
+            value.top,
+          )} - ${formatPrice(value.bottom)}`;
+        }
+      }
+    } else {
+      // Standard Rendering
+      for (const key of seriesKeys) {
+        const values = apiData.series[key];
+        // Check if we should render this series
+        // If style is HIDDEN (-1), we usually skip, UNLESS it's a marker indicator
+        if (lineStyles[key] === -1 && apiData.type !== "marker") {
+          if (!priceLines[key]) {
+            // Store value for tooltip
+            values.forEach(({ time, value }) => {
+              ctx.indicatorValues[time] = ctx.indicatorValues[time] || {};
+              ctx.indicatorValues[time][indicatorKey] =
+                ctx.indicatorValues[time][indicatorKey] || {};
+              ctx.indicatorValues[time][indicatorKey][key] = value;
+            });
+          }
+          continue;
+        }
+
         if (!priceLines[key]) {
+          if (apiData.type === "histogram") {
+            series = ctx.addHistogramSeries(
+              values,
+              {
+                ...HISTOGRAM_SERIES_DEFAULTS,
+                color: colors[key],
+              },
+              apiData.pane,
+            );
+            seriesList.push({ type: "series", series, pane: apiData.pane });
+          } else if (apiData.type === "marker") {
+            // Attach markers to the first available series
+            if (ctx.candleSeries) {
+              const markersPrimitive = LightweightCharts.createSeriesMarkers(
+                ctx.candleSeries,
+                apiData.markers,
+              );
+              seriesList.push({ type: "marker", primitive: markersPrimitive });
+            }
+          } else {
+            series = ctx.addLineSeries(
+              values,
+              {
+                ...LINE_SERIES_DEFAULTS,
+                color: colors[key],
+                lineStyle: lineStyles[key],
+              },
+              apiData.pane,
+            );
+            seriesList.push({ type: "series", series, pane: apiData.pane });
+          }
+
           // Store value for tooltip
           values.forEach(({ time, value }) => {
             ctx.indicatorValues[time] = ctx.indicatorValues[time] || {};
@@ -129,38 +286,17 @@ function renderIndicatorFromAPI(indicatorKey, apiData, ctx) {
               ctx.indicatorValues[time][indicatorKey] || {};
             ctx.indicatorValues[time][indicatorKey][key] = value;
           });
-        }
-        continue;
-      }
-      if (!priceLines[key]) {
-        series = ctx.addLineSeries(
-          values,
-          {
+        } else if (typeof values === "number" && !isNaN(values)) {
+          series = ctx.candleSeries.createPriceLine({
             ...LINE_SERIES_DEFAULTS,
+            price: values,
             color: colors[key],
-            lineStyle: lineStyles[key],
-          },
-          apiData.pane,
-        );
-        seriesList.push({ type: "series", series, pane: apiData.pane });
-
-        // Store value for tooltip
-        values.forEach(({ time, value }) => {
-          ctx.indicatorValues[time] = ctx.indicatorValues[time] || {};
-          ctx.indicatorValues[time][indicatorKey] =
-            ctx.indicatorValues[time][indicatorKey] || {};
-          ctx.indicatorValues[time][indicatorKey][key] = value;
-        });
-      } else if (typeof values === "number" && !isNaN(values)) {
-        series = ctx.candleSeries.createPriceLine({
-          ...LINE_SERIES_DEFAULTS,
-          price: values,
-          color: colors[key],
-          axisLabelVisible: true,
-          title: priceLines[key],
-          pane: apiData.pane,
-        });
-        seriesList.push({ type: "priceLines", series, pane: apiData.pane });
+            axisLabelVisible: true,
+            title: priceLines[key],
+            pane: apiData.pane,
+          });
+          seriesList.push({ type: "priceLines", series, pane: apiData.pane });
+        }
       }
     }
 
@@ -358,9 +494,33 @@ function createIndicatorContext(
       }
       return series;
     },
+    addHistogramSeries: (seriesData, options, pane = 0) => {
+      const series = chart.addSeries(
+        LightweightCharts.HistogramSeries,
+        options,
+        pane,
+      );
+      series.setData(seriesData);
+      if (indicatorSeriesArray) {
+        indicatorSeriesArray.push(series);
+      }
+      return series;
+    },
     indicatorValues,
     indicatorConfigs,
     candleSeries,
+    addBaselineSeries: (seriesData, options, pane = 0) => {
+      const series = chart.addSeries(
+        LightweightCharts.BaselineSeries,
+        options,
+        pane,
+      );
+      series.setData(seriesData);
+      if (indicatorSeriesArray) {
+        indicatorSeriesArray.push(series);
+      }
+      return series;
+    },
   };
 }
 
@@ -390,6 +550,12 @@ function clearAllIndicators(
           chart.removeSeries(item.series);
         } catch (e) {
           console.warn("Failed to remove series:", e);
+        }
+      } else if (item.type === "marker") {
+        try {
+          item.primitive.setMarkers([]);
+        } catch (e) {
+          console.warn("Failed to remove marker:", e);
         }
       } else if (item.type === "priceLines" && candleSeries) {
         try {

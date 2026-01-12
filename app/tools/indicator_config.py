@@ -380,6 +380,33 @@ class IndicatorConfig:
     # TSV
     tsv_length: int = 13
 
+    # MCDX (Money Flow Classification Index)
+    mcdx_length: int = 14
+
+    # MCDX Banker Parameters
+    mcdx_banker_rsi_safe_min: int = 40
+    mcdx_banker_rsi_safe_max: int = 60
+    mcdx_banker_vol_strong: float = 1.2
+    mcdx_banker_vol_weak: float = 0.8
+    mcdx_banker_mult_strong: float = 0.8
+    mcdx_banker_mult_med: float = 0.5
+    mcdx_banker_mult_weak: float = 0.2
+
+    # MCDX Hot Money Parameters
+    mcdx_hot_rsi_extreme_high: int = 70
+    mcdx_hot_rsi_extreme_low: int = 30
+    mcdx_hot_rsi_high: int = 65
+    mcdx_hot_rsi_low: int = 35
+    mcdx_hot_vol_extreme: float = 1.5
+    mcdx_hot_vol_high: float = 1.0
+    mcdx_hot_range_extreme: float = 1.2
+    mcdx_hot_mult_extreme: float = 0.5
+    mcdx_hot_mult_high: float = 0.3
+    mcdx_hot_mult_low: float = 0.1
+
+    # MCDX Base Scale
+    mcdx_base_scale: int = 50
+
     # ==========================================================================
     # STATISTICS INDICATORS
     # ==========================================================================
@@ -436,6 +463,23 @@ class IndicatorConfig:
 
     # Series tail length for charts
     chart_series_length: int = 100
+
+    # ==========================================================================
+    # SMART MONEY CONCEPTS (SMC)
+    # ==========================================================================
+
+    # Swing Points
+    smc_swing_length: int = 5
+
+    # FVG
+    smc_fvg_visibility: bool = True
+
+    # Order Blocks
+    smc_ob_period: int = 5
+    smc_ob_threshold: float = 2.0
+
+    # Liquidity
+    smc_liquidity_length: int = 10
 
     # ==========================================================================
     # PERFORMANCE INDICATORS
@@ -532,13 +576,49 @@ def _create_default_styling() -> Dict[str, Any]:
         "slate": (SLATE_DARK, SLATE),
     }
 
-    def get_dark_color(light_color: str) -> str:
+    def get_light_color(base: str, opacity: float = 1.0) -> str:
+        """Get color for light mode with optional opacity."""
+        # Base colors are hex strings
+        if opacity < 1.0:
+            if base.startswith("#") and len(base) == 7:
+                # Append alpha hex if it's 6-char hex?
+                # Actually browser supports #RRGGBBAA
+                alpha_int = int(opacity * 255)
+                alpha_hex = f"{alpha_int:02x}"
+                return f"{base}{alpha_hex}"
+            elif base.startswith("rgba"):
+                # Replace alpha
+                return base.rsplit(",", 1)[0] + f", {opacity})"
+            # Fallback
+            return f"{base}b3" if len(base) == 7 else base
+        return base
+
+    def get_dark_color(light_color: str, opacity: float = 1.0) -> str:
         """Get the corresponding dark mode color for a light mode color."""
+        # Find dark counterpart
+        found_dark = None
         for _, (dark, light) in COLORS.items():
             if light == light_color:
-                return dark
-        # If no mapping found, add transparency to the original color
-        return f"{light_color}b3"
+                found_dark = dark
+                break
+
+        target = found_dark if found_dark else light_color
+
+        # Handle opacity
+        if opacity < 1.0:
+            if target.startswith("#") and len(target) == 7:
+                # Append alpha hex if it's 6-char hex?
+                # Actually browser supports #RRGGBBAA
+                alpha_int = int(opacity * 255)
+                alpha_hex = f"{alpha_int:02x}"
+                return f"{target}{alpha_hex}"
+            elif target.startswith("rgba"):
+                # Replace alpha
+                return target.rsplit(",", 1)[0] + f", {opacity})"
+            # Fallback
+            return f"{target}b3" if len(target) == 7 else target
+
+        return target
 
     # Line styles
     HIDDEN = -1
@@ -1106,6 +1186,23 @@ def _create_default_styling() -> Dict[str, Any]:
         "lineStyles": {"kvo": SOLID, "signal": DASHED},
         "valueFormat": PRICE,
     }
+    # MCDX - Money Flow Classification with stacked bar colors
+    config["mcdx"] = {
+        "pane": 2,
+        "type": "histogram",
+        "stacked": True,
+        "stackOrder": ["banker", "hotMoney", "retailer"],
+        "colors": {
+            "dark": {
+                "banker": get_dark_color(RED),
+                "retailer": get_dark_color(GREEN),
+                "hotMoney": get_dark_color(YELLOW),
+            },
+            "light": {"banker": RED, "retailer": GREEN, "hotMoney": YELLOW},
+        },
+        "lineStyles": {"banker": SOLID, "retailer": SOLID, "hotMoney": SOLID},
+        "valueFormat": PERCENTAGE,
+    }
 
     # ------------------------------------------------------------------
     # STATISTICS (Pane 1)
@@ -1144,6 +1241,68 @@ def _create_default_styling() -> Dict[str, Any]:
     # ------------------------------------------------------------------
     config["log_return"] = single_color(BLUE, pane=2)
     config["percent_return"] = single_color(GREEN, pane=2)
+
+    # ------------------------------------------------------------------
+    # SMART MONEY CONCEPTS
+    # ------------------------------------------------------------------
+    config["swing_points"] = {
+        "pane": 0,
+        "type": "marker",
+        "colors": {
+            "dark": {"high": get_dark_color(RED), "low": get_dark_color(GREEN)},
+            "light": {"high": RED, "low": GREEN},
+        },
+        "lineStyles": {"high": HIDDEN, "low": HIDDEN},  # Markers only
+        "valueFormat": PRICE,
+    }
+    config["fvg"] = {
+        "pane": 0,
+        "type": "zone",
+        "colors": {
+            "dark": {
+                "bull": get_dark_color(GREEN, 0.5),  # Transparent opacity
+                "bear": get_dark_color(RED, 0.5),
+            },
+            "light": {
+                "bull": GREEN,
+                "bear": RED,
+            },
+        },
+        "lineStyles": {},
+        "valueFormat": PRICE,
+    }
+    config["structure"] = {
+        "pane": 0,
+        "type": "marker",
+        "colors": {
+            "dark": {"bos": get_dark_color(ORANGE), "choch": get_dark_color(PURPLE)},
+            "light": {"bos": ORANGE, "choch": PURPLE},
+        },
+        "lineStyles": {"bos": HIDDEN, "choch": HIDDEN},  # Markers only
+        "valueFormat": PRICE,
+    }
+    config["order_blocks"] = {
+        "pane": 0,
+        "colors": {
+            "dark": {"ob_high": get_dark_color(BLUE), "ob_low": get_dark_color(BLUE)},
+            "light": {"ob_high": BLUE, "ob_low": BLUE},
+        },
+        "lineStyles": {"ob_high": SOLID, "ob_low": SOLID},
+        "valueFormat": PRICE,
+    }
+    config["liquidity"] = {
+        "pane": 0,
+        "type": "marker",
+        "colors": {
+            "dark": {
+                "liq_high": get_dark_color(YELLOW),
+                "liq_low": get_dark_color(YELLOW),
+            },
+            "light": {"liq_high": YELLOW, "liq_low": YELLOW},
+        },
+        "lineStyles": {"liq_high": HIDDEN, "liq_low": HIDDEN},  # Markers only
+        "valueFormat": PRICE,
+    }
 
     # ------------------------------------------------------------------
     # MISC
