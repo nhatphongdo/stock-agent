@@ -326,6 +326,109 @@ def detect_support_resistance_zones(
     return {"support_zones": support_zones, "resistance_zones": resistance_zones}
 
 
+def detect_supply_demand_zones(
+    df: pd.DataFrame,
+    lookback: int = SR_LOOKBACK,
+    strong_move_pct: float = 0.025,
+    consolidation_candles: int = 3,
+    move_candles: int = 5,
+    min_consolidation_range_pct: float = 0.03,
+) -> dict:
+    """
+    Detect supply and demand zones based on price action.
+
+    Supply Zone: Consolidation area before a strong bearish move
+    Demand Zone: Consolidation area before a strong bullish move
+
+    Args:
+        df: DataFrame with OHLCV data
+        lookback: Number of candles to analyze
+        strong_move_pct: Minimum percentage move to qualify as "strong" (2.5%)
+        consolidation_candles: Number of candles to consider as consolidation base
+        move_candles: Number of candles after consolidation to check for move
+        min_consolidation_range_pct: Maximum range for consolidation zone (3%)
+
+    Returns:
+        {
+            "supply_zones": [{"price": float, "range": [low, high], "strength": float, "date": str}],
+            "demand_zones": [{"price": float, "range": [low, high], "strength": float, "date": str}]
+        }
+    """
+    df_recent = df.tail(lookback).copy()
+
+    if len(df_recent) < consolidation_candles + move_candles + 1:
+        return {"supply_zones": [], "demand_zones": []}
+
+    supply_zones = []
+    demand_zones = []
+
+    for i in range(len(df_recent) - consolidation_candles - move_candles):
+        # Get consolidation base
+        base_start = i
+        base_end = i + consolidation_candles
+
+        base_candles = df_recent.iloc[base_start:base_end]
+        base_high = base_candles["high"].max()
+        base_low = base_candles["low"].min()
+        base_range_pct = (base_high - base_low) / base_low
+
+        # Skip if base is too wide (not a consolidation)
+        if base_range_pct > min_consolidation_range_pct:
+            continue
+
+        # Check move in the N candles after consolidation
+        move_start = base_end
+        move_end = min(base_end + move_candles, len(df_recent))
+        move_candles_data = df_recent.iloc[move_start:move_end]
+
+        if len(move_candles_data) == 0:
+            continue
+
+        # Find max high and min low in the move period
+        move_max_high = move_candles_data["high"].max()
+        move_min_low = move_candles_data["low"].min()
+
+        # Calculate move from base
+        move_up = (move_max_high - base_high) / base_high
+        move_down = (base_low - move_min_low) / base_low
+
+        zone_date = df_recent.index[base_start]
+        zone_date_str = (
+            zone_date.strftime(DATETIME_FORMAT)
+            if hasattr(zone_date, "strftime")
+            else str(zone_date)
+        )
+
+        # Demand zone: strong bullish move after consolidation
+        if move_up >= strong_move_pct:
+            demand_zones.append(
+                {
+                    "price": round((base_high + base_low) / 2, 2),
+                    "range": [round(base_low, 2), round(base_high, 2)],
+                    "strength": round(move_up * 100, 1),
+                    "date": zone_date_str,
+                }
+            )
+
+        # Supply zone: strong bearish move after consolidation
+        if move_down >= strong_move_pct:
+            supply_zones.append(
+                {
+                    "price": round((base_high + base_low) / 2, 2),
+                    "range": [round(base_low, 2), round(base_high, 2)],
+                    "strength": round(move_down * 100, 1),
+                    "date": zone_date_str,
+                }
+            )
+
+    # Sort by strength (descending) and keep top zones
+    supply_zones.sort(key=lambda x: x["strength"], reverse=True)
+    demand_zones.sort(key=lambda x: x["strength"], reverse=True)
+
+    # Limit to top 5 zones each
+    return {"supply_zones": supply_zones[:5], "demand_zones": demand_zones[:5]}
+
+
 # =============================================================================
 # CHART PATTERN DETECTION - Helper Functions
 # =============================================================================
@@ -1680,7 +1783,7 @@ def get_support_resistance(
     interval: str = "1D",
 ) -> dict:
     """
-    Detect support/resistance zones for a given stock.
+    Detect support/resistance zones and supply/demand zones for a given stock.
 
     Args:
         ticker: Stock ticker symbol
@@ -1689,7 +1792,7 @@ def get_support_resistance(
         interval: 5m, 15m, 30m, 1H, 1D (default), 1W, 1M
 
     Returns:
-        Dictionary with S/R zones
+        Dictionary with S/R zones and supply/demand zones
     """
     try:
         ohlcv_data = get_stock_ohlcv(
@@ -1708,11 +1811,22 @@ def get_support_resistance(
 
         df = create_ohlcv_dataframe(candles)
 
-        zones = detect_support_resistance_zones(df)
-        zones["ticker"] = ticker
-        zones["current_price"] = round(df["close"].iloc[-1], 2)
+        # Get support/resistance zones
+        sr_zones = detect_support_resistance_zones(df)
 
-        return zones
+        # Get supply/demand zones
+        sd_zones = detect_supply_demand_zones(df)
+
+        result = {
+            "ticker": ticker,
+            "current_price": round(df["close"].iloc[-1], 2),
+            "support_zones": sr_zones.get("support_zones", []),
+            "resistance_zones": sr_zones.get("resistance_zones", []),
+            "supply_zones": sd_zones.get("supply_zones", []),
+            "demand_zones": sd_zones.get("demand_zones", []),
+        }
+
+        return result
 
     except Exception as e:
         return {"error": str(e), "ticker": ticker}

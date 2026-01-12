@@ -70,7 +70,9 @@ def generate_method_evaluations(
     # Only show timeframe label if specified (for Analysis chart)
     if timeframe:
         timeframe_label = (
-            "ngắn hạn (1D)" if timeframe == "short_term" else "dài hạn (1W)"
+            "ngắn hạn (1Y theo ngày)"
+            if timeframe == "short_term"
+            else "dài hạn (5Y theo ngày)"
         )
     else:
         timeframe_label = ""  # Empty for main chart

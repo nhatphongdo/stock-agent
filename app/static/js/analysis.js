@@ -17,6 +17,7 @@ function resetAnalysisState() {
   // Reset initialization flags so event listeners are re-attached to new DOM elements;
   analysisIndicatorDropdownInitialized = false;
   analysisChartExpandInitialized = false;
+  linesDropdownInitialized = false;
   clearAnalysisDisplay();
 }
 
@@ -70,9 +71,20 @@ let lastAnalysisOHLCVData = null; // Store last OHLCV data for re-rendering
 let analysisSupportResistanceLines = []; // Store summary key_levels lines
 let lastIndicatorsData = null; // Store indicators data for pivot/fib chart indicators
 let lastSummaryKeyLevels = null; // Store last summary key_levels for re-rendering
+let lastSummaryPriceTargets = null; // Store last summary price_targets for re-rendering
+let analysisPriceTargetLines = []; // Store price target lines on chart
+let lastSupplyDemandZones = null; // Store last sd_zones for re-rendering
+let analysisSupplyDemandSeries = []; // Store supply/demand zone series on chart
 let analysisIndicatorSeriesMap = new Map(); // Map indicator key -> array of series
 let analysisChartStart = null; // Store chart date range for API calls
 let analysisChartEnd = null; // Store chart date range for API calls
+
+// Lines dropdown toggle states
+let linesDropdownInitialized = false;
+let showKeyLevels = false; // Whether to show support/resistance key levels (default unchecked)
+let showPriceTargets = false; // Whether to show entry/target/SL lines (default unchecked)
+let supplyZoneVisibility = {}; // Map zone index -> visible boolean (default false)
+let demandZoneVisibility = {}; // Map zone index -> visible boolean (default false)
 
 // Initialize analysis indicator dropdown toggle
 function initAnalysisIndicatorDropdown() {
@@ -168,6 +180,16 @@ function initAnalysisIndicatorDropdown() {
     const isOpen = !panel.classList.contains("hidden");
     panel.classList.toggle("hidden");
     chevron?.classList.toggle("rotate-180", !isOpen);
+
+    // Close lines dropdown when opening indicator dropdown
+    if (!isOpen) {
+      const linesPanel = document.getElementById(
+        "analysis-lines-dropdown-panel",
+      );
+      const linesChevron = document.getElementById("analysis-lines-chevron");
+      if (linesPanel) linesPanel.classList.add("hidden");
+      if (linesChevron) linesChevron.style.transform = "rotate(0deg)";
+    }
   });
 
   // Close dropdown when clicking outside
@@ -206,6 +228,172 @@ function initAnalysisIndicatorDropdown() {
 
   // Initialize expand button
   initAnalysisChartExpandButton();
+
+  // Initialize lines dropdown
+  initAnalysisLinesDropdown();
+}
+
+/**
+ * Initialize analysis lines/zones toggle dropdown
+ */
+function initAnalysisLinesDropdown() {
+  if (linesDropdownInitialized) return;
+
+  const trigger = document.getElementById("analysis-lines-dropdown-trigger");
+  const panel = document.getElementById("analysis-lines-dropdown-panel");
+  const chevron = document.getElementById("analysis-lines-chevron");
+
+  if (!trigger || !panel) return;
+
+  linesDropdownInitialized = true;
+
+  // Toggle dropdown on button click
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = !panel.classList.contains("hidden");
+    panel.classList.toggle("hidden");
+    if (chevron)
+      chevron.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
+
+    // Close indicator dropdown when opening lines dropdown
+    if (!isOpen) {
+      const indicatorPanel = document.getElementById(
+        "analysis-indicator-dropdown-panel",
+      );
+      const indicatorChevron = document.getElementById(
+        "analysis-indicator-chevron",
+      );
+      if (indicatorPanel) indicatorPanel.classList.add("hidden");
+      if (indicatorChevron) indicatorChevron.classList.remove("rotate-180");
+    }
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener("click", (e) => {
+    const target = /** @type {Node} */ (e.target);
+    const container = document.getElementById(
+      "analysis-lines-dropdown-container",
+    );
+    if (container && !container.contains(target)) {
+      panel.classList.add("hidden");
+      if (chevron) chevron.style.transform = "rotate(0deg)";
+    }
+  });
+
+  // Prevent closing when clicking inside panel
+  panel.addEventListener("click", (e) => {
+    e.stopPropagation();
+  });
+
+  // Key Levels toggle
+  const keyLevelsCheckbox = /** @type {HTMLInputElement} */ (
+    document.getElementById("toggle-key-levels")
+  );
+  if (keyLevelsCheckbox) {
+    keyLevelsCheckbox.addEventListener("change", () => {
+      showKeyLevels = keyLevelsCheckbox.checked;
+      drawSummaryKeyLevels();
+    });
+  }
+
+  // Price Targets toggle
+  const priceTargetsCheckbox = /** @type {HTMLInputElement} */ (
+    document.getElementById("toggle-price-targets")
+  );
+  if (priceTargetsCheckbox) {
+    priceTargetsCheckbox.addEventListener("change", () => {
+      showPriceTargets = priceTargetsCheckbox.checked;
+      drawSummaryPriceTargets();
+    });
+  }
+}
+
+/**
+ * Populate supply/demand zones in the lines dropdown
+ */
+function populateLinesDropdownZones() {
+  const supplyList = document.getElementById("analysis-supply-zones-list");
+  const demandList = document.getElementById("analysis-demand-zones-list");
+
+  if (!supplyList || !demandList) return;
+
+  const supplyZones = lastSupplyDemandZones?.supply_zones || [];
+  const demandZones = lastSupplyDemandZones?.demand_zones || [];
+
+  // Populate supply zones
+  if (supplyZones.length === 0) {
+    supplyList.innerHTML =
+      '<div class="text-xs text-slate-400 px-2 py-1 italic">Không có vùng cung</div>';
+  } else {
+    supplyList.innerHTML = "";
+    supplyZones.slice(0, 5).forEach((zone, i) => {
+      // Initialize visibility to false if not set (default unchecked)
+      if (supplyZoneVisibility[i] === undefined) {
+        supplyZoneVisibility[i] = false;
+      }
+      const label = document.createElement("label");
+      label.className =
+        "flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer";
+      label.innerHTML = `
+        <input type="checkbox" data-type="supply" data-index="${i}" ${
+          supplyZoneVisibility[i] ? "checked" : ""
+        } class="w-4 h-4 rounded border-slate-300 accent-blue-500 zone-toggle">
+        <span class="text-xs text-slate-600 dark:text-slate-300">Supply ${
+          i + 1
+        }: ${formatPrice(zone.price)} (${zone.strength}%)</span>
+      `;
+      supplyList.appendChild(label);
+    });
+  }
+
+  // Populate demand zones
+  if (demandZones.length === 0) {
+    demandList.innerHTML =
+      '<div class="text-xs text-slate-400 px-2 py-1 italic">Không có vùng cầu</div>';
+  } else {
+    demandList.innerHTML = "";
+    demandZones.slice(0, 5).forEach((zone, i) => {
+      // Initialize visibility to false if not set (default unchecked)
+      if (demandZoneVisibility[i] === undefined) {
+        demandZoneVisibility[i] = false;
+      }
+      const label = document.createElement("label");
+      label.className =
+        "flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer";
+      label.innerHTML = `
+        <input type="checkbox" data-type="demand" data-index="${i}" ${
+          demandZoneVisibility[i] ? "checked" : ""
+        } class="w-4 h-4 rounded border-slate-300 accent-blue-500 zone-toggle">
+        <span class="text-xs text-slate-600 dark:text-slate-300">Demand ${
+          i + 1
+        }: ${formatPrice(zone.price)} (${zone.strength}%)</span>
+      `;
+      demandList.appendChild(label);
+    });
+  }
+
+  // Add event listeners for zone toggles
+  const panel = document.getElementById("analysis-lines-dropdown-panel");
+  if (panel) {
+    panel.querySelectorAll(".zone-toggle").forEach((checkbox) => {
+      checkbox.addEventListener("change", (e) => {
+        const target = /** @type {HTMLInputElement} */ (e.target);
+        const type = target.dataset.type;
+        const index = parseInt(target.dataset.index || "0", 10);
+        if (type === "supply") {
+          supplyZoneVisibility[index] = target.checked;
+        } else if (type === "demand") {
+          demandZoneVisibility[index] = target.checked;
+        }
+        drawSupplyDemandZones();
+      });
+    });
+  }
+
+  // Refresh lucide icons
+  if (typeof lucide !== "undefined") {
+    lucide.createIcons();
+  }
 }
 
 // Initialize analysis chart expand/fullscreen button
@@ -380,6 +568,8 @@ function refreshAnalysisChart() {
   const isDark = document.documentElement.classList.contains("dark");
   const theme = isDark ? CONFIG.CHART_THEMES.dark : CONFIG.CHART_THEMES.light;
   drawSummaryKeyLevels();
+  drawSummaryPriceTargets();
+  drawSupplyDemandZones();
   if (typeof analysisChart !== "undefined" && analysisChart) {
     analysisChart.applyOptions(theme);
     analysisChart.timeScale().fitContent();
@@ -492,6 +682,11 @@ function drawSummaryKeyLevels() {
     return;
   }
 
+  // Check visibility toggle
+  if (!showKeyLevels) {
+    return;
+  }
+
   if (!lastSummaryKeyLevels) {
     return;
   }
@@ -519,6 +714,186 @@ function drawSummaryKeyLevels() {
 
   // Draw support lines
   supportLevels.forEach((level, i) => addElegantLine(level, false, i));
+}
+
+/**
+ * Draw price target lines from analysis summary price_targets
+ * Shows entry, target_1, target_2, and stop_loss levels
+ */
+function drawSummaryPriceTargets() {
+  // Remove existing price target lines first
+  analysisPriceTargetLines.forEach((line) => {
+    try {
+      if (analysisCandleSeries) {
+        analysisCandleSeries.removePriceLine(line);
+      }
+    } catch (e) {
+      console.warn("Could not remove price target line:", e);
+    }
+  });
+  analysisPriceTargetLines = [];
+
+  // Check if chart is ready
+  if (!analysisChart || !analysisCandleSeries) {
+    return;
+  }
+
+  // Check visibility toggle
+  if (!showPriceTargets) {
+    return;
+  }
+
+  if (!lastSummaryPriceTargets) {
+    return;
+  }
+
+  const pt = lastSummaryPriceTargets;
+
+  // Helper to add price target line
+  const addPriceTargetLine = (price, color, title, lineStyle) => {
+    if (price && typeof price === "number" && !isNaN(price)) {
+      const line = analysisCandleSeries.createPriceLine({
+        price: price,
+        color: color,
+        lineWidth: 2,
+        lineStyle: lineStyle,
+        axisLabelVisible: true,
+        title: title,
+      });
+      analysisPriceTargetLines.push(line);
+    }
+  };
+
+  // Draw entry line (blue, dashed)
+  addPriceTargetLine(
+    pt.entry,
+    "#3b82f6cc",
+    "Entry",
+    LightweightCharts.LineStyle.Dashed,
+  );
+
+  // Draw target 1 line (green, solid)
+  addPriceTargetLine(
+    pt.target_1,
+    "#22c55ecc",
+    "T1",
+    LightweightCharts.LineStyle.Solid,
+  );
+
+  // Draw target 2 line (green lighter, solid)
+  addPriceTargetLine(
+    pt.target_2,
+    "#22c55e99",
+    "T2",
+    LightweightCharts.LineStyle.Solid,
+  );
+
+  // Draw stop loss line (red, dashed)
+  addPriceTargetLine(
+    pt.stop_loss,
+    "#ef4444cc",
+    "SL",
+    LightweightCharts.LineStyle.Dashed,
+  );
+}
+
+/**
+ * Draw supply and demand zones on analysis chart
+ * Supply zones (orange): Areas where selling pressure was strong
+ * Demand zones (blue): Areas where buying pressure was strong
+ */
+function drawSupplyDemandZones() {
+  // Remove existing sd zone elements first
+  analysisSupplyDemandSeries.forEach((item) => {
+    try {
+      if (item.type === "priceLine" && analysisCandleSeries) {
+        analysisCandleSeries.removePriceLine(item.element);
+      } else if (item.type === "series" && analysisChart) {
+        analysisChart.removeSeries(item.element);
+      }
+    } catch (e) {
+      console.warn("Could not remove supply/demand element:", e);
+    }
+  });
+  analysisSupplyDemandSeries = [];
+
+  // Check if chart is ready
+  if (!analysisChart || !analysisCandleSeries) {
+    return;
+  }
+
+  if (!lastSupplyDemandZones) {
+    return;
+  }
+
+  const supplyZones = lastSupplyDemandZones.supply_zones || [];
+  const demandZones = lastSupplyDemandZones.demand_zones || [];
+
+  // Get time range from candle data
+  const candleData = analysisCandleSeries.data();
+  if (!candleData || candleData.length === 0) {
+    return;
+  }
+  const startTime = candleData[0].time;
+  const endTime = candleData[candleData.length - 1].time;
+
+  // Helper to add a filled zone
+  const addFilledZone = (zone, color, title) => {
+    if (!zone.range || zone.range.length !== 2) return;
+
+    // Create center line
+    const centerLine = analysisCandleSeries.createPriceLine({
+      price: zone.price,
+      color: color,
+      lineWidth: 2,
+      lineStyle: LightweightCharts.LineStyle.Solid,
+      axisLabelVisible: true,
+      title: title,
+    });
+    analysisSupplyDemandSeries.push({ type: "priceLine", element: centerLine });
+
+    // Create filled area using BaselineSeries
+    if (zone.range[0] !== zone.price || zone.range[1] !== zone.price) {
+      const zoneArea = analysisChart.addSeries(
+        LightweightCharts.BaselineSeries,
+        {
+          baseValue: { type: "price", price: zone.range[0] },
+          topLineColor: color + "60",
+          topFillColor1: color + "30",
+          topFillColor2: color + "30",
+          bottomLineColor: "transparent",
+          bottomFillColor1: "transparent",
+          bottomFillColor2: "transparent",
+          lineWidth: 1,
+          priceLineVisible: false,
+          lastValueVisible: false,
+          crosshairMarkerVisible: false,
+        },
+        0,
+      );
+
+      zoneArea.setData([
+        { time: startTime, value: zone.range[1] },
+        { time: endTime, value: zone.range[1] },
+      ]);
+
+      analysisSupplyDemandSeries.push({ type: "series", element: zoneArea });
+    }
+  };
+
+  // Draw supply zones (orange) - check visibility for each
+  supplyZones.slice(0, 5).forEach((zone, i) => {
+    // Skip if visibility is explicitly false
+    if (supplyZoneVisibility[i] === false) return;
+    addFilledZone(zone, "#f97316", `Sp${i + 1}`);
+  });
+
+  // Draw demand zones (blue) - check visibility for each
+  demandZones.slice(0, 5).forEach((zone, i) => {
+    // Skip if visibility is explicitly false
+    if (demandZoneVisibility[i] === false) return;
+    addFilledZone(zone, "#3b82f6", `Dm${i + 1}`);
+  });
 }
 
 /**
@@ -623,6 +998,14 @@ async function renderAnalysisChart(ohlcv_data) {
   // Draw support/resistance levels from summary key_levels
   analysisSupportResistanceLines = [];
   drawSummaryKeyLevels();
+
+  // Draw price target lines
+  analysisPriceTargetLines = [];
+  drawSummaryPriceTargets();
+
+  // Draw supply/demand zones
+  analysisSupplyDemandSeries = [];
+  drawSupplyDemandZones();
 
   // Add all enabled indicators using batch load
   handleIndicatorChange({
@@ -1052,6 +1435,13 @@ async function fetchTechnicalAnalysis(symbol, companyName) {
             const ohlcv = shortTerm.ohlcv || [];
             updateIndicatorsDisplay(indicators, methods, gauges, ohlcv);
 
+            // Store and draw supply/demand zones (short-term by default)
+            if (shortTerm.sd_zones) {
+              lastSupplyDemandZones = shortTerm.sd_zones;
+              populateLinesDropdownZones();
+              drawSupplyDemandZones();
+            }
+
             // Setup timeframe card switching
             const cardShort = document.getElementById("tech-card-short");
             const cardLong = document.getElementById("tech-card-long");
@@ -1070,6 +1460,8 @@ async function fetchTechnicalAnalysis(symbol, companyName) {
               cardShort.onclick = () => {
                 cardShort.className = activeShortClass;
                 cardLong.className = inactiveLongClass;
+                lastSupplyDemandZones = shortTerm.sd_zones;
+                populateLinesDropdownZones();
                 updateIndicatorsDisplay(
                   shortTerm.indicators || {},
                   shortTerm.methods || [],
@@ -1080,6 +1472,8 @@ async function fetchTechnicalAnalysis(symbol, companyName) {
               cardLong.onclick = () => {
                 cardLong.className = activeLongClass;
                 cardShort.className = inactiveShortClass;
+                lastSupplyDemandZones = longTerm.sd_zones;
+                populateLinesDropdownZones();
                 updateIndicatorsDisplay(
                   longTerm.indicators || {},
                   longTerm.methods || [],
@@ -1909,6 +2303,12 @@ function handleAnalysisSummary(summary) {
   // Store summary levels for drawing later
   if (summary.key_levels) {
     lastSummaryKeyLevels = summary.key_levels;
+  }
+
+  // Store and draw price targets
+  if (summary.price_targets) {
+    lastSummaryPriceTargets = summary.price_targets;
+    drawSummaryPriceTargets();
   }
 
   // Initialize collapsible cards after content update

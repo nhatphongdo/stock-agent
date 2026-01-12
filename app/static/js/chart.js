@@ -1889,9 +1889,17 @@ function renderSRZoneList(data) {
 
   const supportZones = data.support_zones || [];
   const resistanceZones = data.resistance_zones || [];
+  const supplyZones = data.supply_zones || [];
+  const demandZones = data.demand_zones || [];
   const currentPrice = data.current_price;
 
-  if (supportZones.length === 0 && resistanceZones.length === 0) {
+  const totalZones =
+    supportZones.length +
+    resistanceZones.length +
+    supplyZones.length +
+    demandZones.length;
+
+  if (totalZones === 0) {
     const infoTemplate = /** @type {HTMLTemplateElement} */ (
       document.getElementById("text-info-template")
     );
@@ -1930,16 +1938,43 @@ function renderSRZoneList(data) {
       listContainer.appendChild(item);
     });
   }
+
+  // Header for supply zones
+  if (supplyZones.length > 0) {
+    const header = document.createElement("div");
+    header.className =
+      "text-xs font-semibold text-orange-500 dark:text-orange-400 mb-1 mt-2 px-2";
+    header.textContent = `Vùng cung (${supplyZones.length})`;
+    listContainer.appendChild(header);
+
+    supplyZones.forEach((zone) => {
+      const item = createSRZoneItem(zone, "supply", currentPrice);
+      listContainer.appendChild(item);
+    });
+  }
+
+  // Header for demand zones
+  if (demandZones.length > 0) {
+    const header = document.createElement("div");
+    header.className =
+      "text-xs font-semibold text-blue-500 dark:text-blue-400 mb-1 mt-2 px-2";
+    header.textContent = `Vùng cầu (${demandZones.length})`;
+    listContainer.appendChild(header);
+
+    demandZones.forEach((zone) => {
+      const item = createSRZoneItem(zone, "demand", currentPrice);
+      listContainer.appendChild(item);
+    });
+  }
 }
 
 /**
  * Create S/R zone list item
  * @param {object} zone - Zone data
- * @param {string} type - "support" or "resistance"
+ * @param {string} type - "support", "resistance", "supply", or "demand"
  * @param {number} currentPrice - Current stock price
  */
 function createSRZoneItem(zone, type, currentPrice) {
-  const isSupport = type === "support";
   const distancePercent = ((currentPrice - zone.price) / zone.price) * 100;
   const distanceLabel =
     distancePercent > 0
@@ -1953,13 +1988,19 @@ function createSRZoneItem(zone, type, currentPrice) {
       .firstElementChild
   );
 
-  // Set price and color
+  // Set price and color based on type
   const priceEl = item.querySelector(".sr-zone-price");
   priceEl.textContent = formatPrice(zone.price);
-  priceEl.classList.add(
-    isSupport ? "text-green-600" : "text-red-600",
-    isSupport ? "dark:text-green-400" : "dark:text-red-400",
-  );
+
+  // Color mapping for different zone types
+  const colorClasses = {
+    support: ["text-green-600", "dark:text-green-400"],
+    resistance: ["text-red-600", "dark:text-red-400"],
+    supply: ["text-orange-600", "dark:text-orange-400"],
+    demand: ["text-blue-600", "dark:text-blue-400"],
+  };
+  const colors = colorClasses[type] || colorClasses.support;
+  priceEl.classList.add(...colors);
 
   // Set strength
   item.querySelector(".sr-zone-strength").textContent = `x${zone.strength}`;
@@ -2040,8 +2081,21 @@ function toggleSRZoneOnChart(zone, type, itemEl, zoneKey) {
     );
   } else {
     // Add zone as a band with upper and lower lines
-    const isSupport = type === "support";
-    const color = isSupport ? "#22c55e" : "#ef4444";
+    // Color mapping for different zone types
+    const colorMap = {
+      support: "#22c55e",
+      resistance: "#ef4444",
+      supply: "#f97316",
+      demand: "#3b82f6",
+    };
+    const titleMap = {
+      support: "S",
+      resistance: "R",
+      supply: "Sp",
+      demand: "Dm",
+    };
+    const color = colorMap[type] || "#22c55e";
+    const title = titleMap[type] || "S";
     const lines = [];
 
     // Create center line
@@ -2051,7 +2105,7 @@ function toggleSRZoneOnChart(zone, type, itemEl, zoneKey) {
       lineWidth: 2,
       lineStyle: LightweightCharts.LineStyle.Solid,
       axisLabelVisible: true,
-      title: isSupport ? "S" : "R",
+      title: title,
     });
     lines.push(centerLine);
 
@@ -2328,7 +2382,7 @@ function renderAnalysisMethodList(methods) {
   }
 
   const template = /** @type {HTMLTemplateElement} */ (
-    document.getElementById("analysis-method-item-template")
+    document.getElementById("analysis-method-dropdown-item-template")
   );
   if (!template) return;
 

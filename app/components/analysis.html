@@ -249,6 +249,73 @@
           </div>
         </div>
 
+        <!-- Lines/Zones Toggle Dropdown -->
+        <div class="relative" id="analysis-lines-dropdown-container">
+          <button
+            id="analysis-lines-dropdown-trigger"
+            class="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 bg-white/60 dark:bg-slate-800/60 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-colors"
+          >
+            <i data-lucide="layers" class="w-3 h-3"></i>
+            <span>Đường/Vùng</span>
+            <i data-lucide="chevron-down" class="w-3 h-3 ml-0.5 transition-transform" id="analysis-lines-chevron"></i>
+          </button>
+
+          <!-- Dropdown Panel -->
+          <div
+            id="analysis-lines-dropdown-panel"
+            class="hidden absolute top-full right-0 mt-2 w-64 max-h-[400px] overflow-y-auto p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-50 custom-scrollbar chart-dropdown-panel"
+          >
+            <div class="space-y-3">
+              <!-- Key Levels Group -->
+              <div>
+                <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">
+                  Mức giá quan trọng
+                </div>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    id="toggle-key-levels"
+                    class="w-4 h-4 rounded border-slate-300 accent-blue-500"
+                  />
+                  <span class="text-xs text-slate-600 dark:text-slate-300">Hỗ trợ/Kháng cự</span>
+                </label>
+                <label
+                  class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    id="toggle-price-targets"
+                    class="w-4 h-4 rounded border-slate-300 accent-blue-500"
+                  />
+                  <span class="text-xs text-slate-600 dark:text-slate-300">Mục tiêu giá (Entry/T1/T2/SL)</span>
+                </label>
+              </div>
+
+              <!-- Supply Zones Group -->
+              <div>
+                <div class="text-[10px] font-bold text-orange-500 dark:text-orange-400 uppercase tracking-wider mb-1.5">
+                  Vùng cung (Supply)
+                </div>
+                <div id="analysis-supply-zones-list" class="space-y-0.5">
+                  <div class="text-xs text-slate-400 px-2 py-1 italic">Chưa có dữ liệu</div>
+                </div>
+              </div>
+
+              <!-- Demand Zones Group -->
+              <div>
+                <div class="text-[10px] font-bold text-blue-500 dark:text-blue-400 uppercase tracking-wider mb-1.5">
+                  Vùng cầu (Demand)
+                </div>
+                <div id="analysis-demand-zones-list" class="space-y-0.5">
+                  <div class="text-xs text-slate-400 px-2 py-1 italic">Chưa có dữ liệu</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <button
           id="analysis-chart-expand-btn"
           class="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-all text-slate-400 hover:text-primary-500 mr-1"
