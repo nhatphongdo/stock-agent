@@ -253,11 +253,15 @@
   max-height: none;
   overflow: visible;
   opacity: 1;
-  padding: 1rem 0;
+  padding-top: 1rem;
 }
 
 .collapsed-section-content > * {
   margin-bottom: 1.5rem;
+}
+
+.collapsed-section-content > *:last-child {
+  margin-bottom: 0;
 }
 
 /* Voice Input Button States */
