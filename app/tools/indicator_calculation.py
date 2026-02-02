@@ -524,6 +524,8 @@ def calc_ichimoku(
 
     # Combined for easier handling
     combined = pd.concat([result, span], axis=1)
+    # Deduplicate columns (keep last to prefer span values if duplicates exist)
+    combined = combined.loc[:, ~combined.columns.duplicated(keep="last")]
     cols = combined.columns.tolist()
 
     # Identifying columns (Tenkan, Kijun, Chikou, Span A, Span B)

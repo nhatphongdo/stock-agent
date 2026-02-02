@@ -331,7 +331,7 @@ def get_company_info(ticker: str) -> dict:
 
 
 def get_ohlcv_data(
-    ticker: str | list[str],
+    ticker: str,
     count_back: int = 250,
     timeframe: str = "ONE_DAY",
     to_time: Optional[int] = None,
@@ -352,7 +352,7 @@ def get_ohlcv_data(
         symbols = [ticker] if isinstance(ticker, str) else ticker
         url = "https://trading.vietcap.com.vn/api/chart/OHLCChart/gap-chart"
         payload = {
-            "symbols": symbols,
+            "symbols": [ticker],
             "timeFrame": timeframe,
             "countBack": count_back,
             "to": to_time if to_time else int(time.time()),
@@ -360,7 +360,7 @@ def get_ohlcv_data(
         data = _make_request("POST", url, json=payload, headers=VIETCAP_HEADERS)
 
         if not data or not isinstance(data, list):
-            return {"error": "No data found", "tickers": symbols}
+            return {"error": "No data found", "ticker": ticker}
 
         results = {}
         for stock_data in data:
@@ -416,13 +416,14 @@ def get_latest_price_batch(tickers: list[str]) -> dict:
     if not tickers:
         return {}
 
-    # Get data of 1 trading day for buffer, 6.5 hours * 60 minutes
-    data = get_ohlcv_data(tickers, count_back=390, timeframe="ONE_MINUTE")
-    if "error" in data:
-        return data
-
     results = {}
     for ticker in tickers:
+        # Get data of 1 trading day for buffer, 6.5 hours * 60 minutes
+        data = get_ohlcv_data(ticker, count_back=390, timeframe="ONE_MINUTE")
+        if "error" in data:
+            results[ticker] = {"error": "No data found", "ticker": ticker}
+            continue
+
         candles = data.get(ticker, [])
         if candles:
             latest = candles[-1]
